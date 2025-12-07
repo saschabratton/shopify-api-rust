@@ -15,6 +15,7 @@
 //! - Token refresh for expiring access tokens via [`auth::oauth`]
 //! - Session management for authenticated API calls
 //! - Async HTTP client with retry logic and rate limit handling
+//! - REST API client with convenient methods for Admin API operations
 //!
 //! ## Quick Start
 //!
@@ -150,7 +151,37 @@
 //! let json = serde_json::to_string(&offline_session).unwrap();
 //! ```
 //!
-//! ## Making API Requests
+//! ## Making REST API Requests
+//!
+//! The [`RestClient`] provides convenient methods for REST API operations:
+//!
+//! ```rust,ignore
+//! use shopify_api::{RestClient, Session, ShopDomain, AuthScopes};
+//!
+//! // Create a session
+//! let session = Session::new(
+//!     "session-id".to_string(),
+//!     ShopDomain::new("my-store").unwrap(),
+//!     "access-token".to_string(),
+//!     AuthScopes::new(),
+//!     false,
+//!     None,
+//! );
+//!
+//! // Create a REST client
+//! let client = RestClient::new(&session, None)?;
+//!
+//! // GET request
+//! let response = client.get("products", None).await?;
+//!
+//! // POST request with body
+//! let body = serde_json::json!({"product": {"title": "New Product"}});
+//! let response = client.post("products", body, None).await?;
+//! ```
+//!
+//! ## Making Low-Level HTTP Requests
+//!
+//! For more control, use the low-level [`HttpClient`]:
 //!
 //! ```rust,ignore
 //! use shopify_api::{Session, ShopDomain, AuthScopes};
@@ -203,6 +234,9 @@ pub use clients::{
     HttpResponse, HttpResponseError, InvalidHttpRequestError, MaxHttpRetriesExceededError,
     PaginationInfo,
 };
+
+// Re-export REST client types
+pub use clients::{RestClient, RestError};
 
 // Re-export OAuth types for convenience
 pub use auth::oauth::{

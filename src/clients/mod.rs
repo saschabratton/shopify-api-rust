@@ -13,6 +13,8 @@
 //! - [`HttpResponse`]: A parsed response from the API
 //! - [`HttpMethod`]: Supported HTTP methods (GET, POST, PUT, DELETE)
 //! - [`DataType`]: Content types for request bodies
+//! - [`rest::RestClient`]: Higher-level REST API client
+//! - [`rest::RestError`]: REST-specific error types
 //!
 //! # Example
 //!
@@ -55,6 +57,7 @@ mod errors;
 mod http_client;
 mod http_request;
 mod http_response;
+pub mod rest;
 
 pub use errors::{
     HttpError, HttpResponseError, InvalidHttpRequestError, MaxHttpRetriesExceededError,
@@ -62,3 +65,6 @@ pub use errors::{
 pub use http_client::HttpClient;
 pub use http_request::{DataType, HttpMethod, HttpRequest, HttpRequestBuilder};
 pub use http_response::{ApiCallLimit, HttpResponse, PaginationInfo};
+
+// Re-export REST client types at the clients module level
+pub use rest::{RestClient, RestError};
