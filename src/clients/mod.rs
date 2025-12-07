@@ -15,6 +15,8 @@
 //! - [`DataType`]: Content types for request bodies
 //! - [`rest::RestClient`]: Higher-level REST API client
 //! - [`rest::RestError`]: REST-specific error types
+//! - [`graphql::GraphqlClient`]: Higher-level GraphQL API client
+//! - [`graphql::GraphqlError`]: GraphQL-specific error types
 //!
 //! # Example
 //!
@@ -54,6 +56,7 @@
 //! [`HttpRequest::builder`] with `.tries(n)` to enable retries.
 
 mod errors;
+pub mod graphql;
 mod http_client;
 mod http_request;
 mod http_response;
@@ -68,3 +71,6 @@ pub use http_response::{ApiCallLimit, HttpResponse, PaginationInfo};
 
 // Re-export REST client types at the clients module level
 pub use rest::{RestClient, RestError};
+
+// Re-export GraphQL client types at the clients module level
+pub use graphql::{GraphqlClient, GraphqlError};

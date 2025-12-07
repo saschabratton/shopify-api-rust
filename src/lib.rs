@@ -16,6 +16,7 @@
 //! - Session management for authenticated API calls
 //! - Async HTTP client with retry logic and rate limit handling
 //! - REST API client with convenient methods for Admin API operations
+//! - GraphQL API client for modern Admin API operations (recommended)
 //!
 //! ## Quick Start
 //!
@@ -151,7 +152,46 @@
 //! let json = serde_json::to_string(&offline_session).unwrap();
 //! ```
 //!
-//! ## Making REST API Requests
+//! ## Making GraphQL API Requests (Recommended)
+//!
+//! The [`GraphqlClient`] provides methods for GraphQL Admin API operations:
+//!
+//! ```rust,ignore
+//! use shopify_api::{GraphqlClient, Session, ShopDomain, AuthScopes};
+//! use serde_json::json;
+//!
+//! // Create a session
+//! let session = Session::new(
+//!     "session-id".to_string(),
+//!     ShopDomain::new("my-store").unwrap(),
+//!     "access-token".to_string(),
+//!     AuthScopes::new(),
+//!     false,
+//!     None,
+//! );
+//!
+//! // Create a GraphQL client (no deprecation warning - this is the recommended API)
+//! let client = GraphqlClient::new(&session, None);
+//!
+//! // Simple query
+//! let response = client.query("query { shop { name } }", None, None, None).await?;
+//! println!("Shop: {}", response.body["data"]["shop"]["name"]);
+//!
+//! // Query with variables
+//! let response = client.query(
+//!     "query GetProduct($id: ID!) { product(id: $id) { title } }",
+//!     Some(json!({ "id": "gid://shopify/Product/123" })),
+//!     None,
+//!     None
+//! ).await?;
+//!
+//! // Check for GraphQL errors (returned with HTTP 200)
+//! if let Some(errors) = response.body.get("errors") {
+//!     println!("GraphQL errors: {}", errors);
+//! }
+//! ```
+//!
+//! ## Making REST API Requests (Deprecated)
 //!
 //! The [`RestClient`] provides convenient methods for REST API operations:
 //!
@@ -168,7 +208,7 @@
 //!     None,
 //! );
 //!
-//! // Create a REST client
+//! // Create a REST client (logs deprecation warning)
 //! let client = RestClient::new(&session, None)?;
 //!
 //! // GET request
@@ -237,6 +277,9 @@ pub use clients::{
 
 // Re-export REST client types
 pub use clients::{RestClient, RestError};
+
+// Re-export GraphQL client types
+pub use clients::{GraphqlClient, GraphqlError};
 
 // Re-export OAuth types for convenience
 pub use auth::oauth::{
