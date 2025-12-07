@@ -47,6 +47,13 @@ use crate::error::ConfigError;
 /// `ShopifyConfig` is `Clone`, `Send`, and `Sync`, making it safe to share
 /// across threads and async tasks.
 ///
+/// # Key Rotation
+///
+/// The `old_api_secret_key` field supports seamless key rotation. When
+/// validating OAuth HMAC signatures, the SDK will try the primary key first,
+/// then fall back to the old key if configured. This allows in-flight OAuth
+/// flows to complete during key rotation.
+///
 /// # Example
 ///
 /// ```rust
@@ -65,6 +72,7 @@ use crate::error::ConfigError;
 pub struct ShopifyConfig {
     api_key: ApiKey,
     api_secret_key: ApiSecretKey,
+    old_api_secret_key: Option<ApiSecretKey>,
     scopes: AuthScopes,
     host: Option<HostUrl>,
     api_version: ApiVersion,
@@ -101,6 +109,15 @@ impl ShopifyConfig {
     #[must_use]
     pub const fn api_secret_key(&self) -> &ApiSecretKey {
         &self.api_secret_key
+    }
+
+    /// Returns the old API secret key, if configured.
+    ///
+    /// This is used during key rotation to validate HMAC signatures
+    /// created with the previous secret key.
+    #[must_use]
+    pub const fn old_api_secret_key(&self) -> Option<&ApiSecretKey> {
+        self.old_api_secret_key.as_ref()
     }
 
     /// Returns the OAuth scopes.
@@ -152,6 +169,7 @@ const _: fn() = || {
 /// - `scopes`: Empty
 /// - `host`: `None`
 /// - `user_agent_prefix`: `None`
+/// - `old_api_secret_key`: `None`
 ///
 /// # Example
 ///
@@ -172,6 +190,7 @@ const _: fn() = || {
 pub struct ShopifyConfigBuilder {
     api_key: Option<ApiKey>,
     api_secret_key: Option<ApiSecretKey>,
+    old_api_secret_key: Option<ApiSecretKey>,
     scopes: Option<AuthScopes>,
     host: Option<HostUrl>,
     api_version: Option<ApiVersion>,
@@ -197,6 +216,31 @@ impl ShopifyConfigBuilder {
     #[must_use]
     pub fn api_secret_key(mut self, key: ApiSecretKey) -> Self {
         self.api_secret_key = Some(key);
+        self
+    }
+
+    /// Sets the old API secret key for key rotation support.
+    ///
+    /// When validating OAuth HMAC signatures, the SDK will try the primary
+    /// secret key first, then fall back to this old key if validation fails.
+    /// This allows in-flight OAuth flows to complete during key rotation.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
+    ///
+    /// // During key rotation, configure both keys
+    /// let config = ShopifyConfig::builder()
+    ///     .api_key(ApiKey::new("key").unwrap())
+    ///     .api_secret_key(ApiSecretKey::new("new-secret").unwrap())
+    ///     .old_api_secret_key(ApiSecretKey::new("old-secret").unwrap())
+    ///     .build()
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn old_api_secret_key(mut self, key: ApiSecretKey) -> Self {
+        self.old_api_secret_key = Some(key);
         self
     }
 
@@ -254,6 +298,7 @@ impl ShopifyConfigBuilder {
         Ok(ShopifyConfig {
             api_key,
             api_secret_key,
+            old_api_secret_key: self.old_api_secret_key,
             scopes: self.scopes.unwrap_or_default(),
             host: self.host,
             api_version: self.api_version.unwrap_or_else(ApiVersion::latest),
@@ -306,6 +351,7 @@ mod tests {
         assert!(config.scopes().is_empty());
         assert!(config.host().is_none());
         assert!(config.user_agent_prefix().is_none());
+        assert!(config.old_api_secret_key().is_none());
     }
 
     #[test]
@@ -350,5 +396,29 @@ mod tests {
         assert!(!config.is_embedded());
         assert_eq!(config.host(), Some(&host));
         assert_eq!(config.user_agent_prefix(), Some("MyApp/1.0"));
+    }
+
+    #[test]
+    fn test_old_api_secret_key_configuration() {
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("new-secret").unwrap())
+            .old_api_secret_key(ApiSecretKey::new("old-secret").unwrap())
+            .build()
+            .unwrap();
+
+        assert!(config.old_api_secret_key().is_some());
+        assert_eq!(config.old_api_secret_key().unwrap().as_ref(), "old-secret");
+    }
+
+    #[test]
+    fn test_old_api_secret_key_is_optional() {
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        assert!(config.old_api_secret_key().is_none());
     }
 }

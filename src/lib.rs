@@ -9,6 +9,7 @@
 //! - Type-safe configuration via [`ShopifyConfig`] and [`ShopifyConfigBuilder`]
 //! - Validated newtypes for API credentials and domain values
 //! - OAuth scope handling with implied scope support
+//! - OAuth 2.0 authorization code flow via [`auth::oauth`]
 //! - Session management for authenticated API calls
 //! - Async HTTP client with retry logic and rate limit handling
 //!
@@ -25,6 +26,34 @@
 //!     .api_version(ApiVersion::latest())
 //!     .build()
 //!     .unwrap();
+//! ```
+//!
+//! ## OAuth Authentication
+//!
+//! For apps that need to authenticate with Shopify stores:
+//!
+//! ```rust,ignore
+//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl};
+//! use shopify_api::auth::oauth::{begin_auth, validate_auth_callback, AuthQuery};
+//!
+//! // Step 1: Configure the SDK
+//! let config = ShopifyConfig::builder()
+//!     .api_key(ApiKey::new("your-api-key").unwrap())
+//!     .api_secret_key(ApiSecretKey::new("your-secret").unwrap())
+//!     .host(HostUrl::new("https://your-app.com").unwrap())
+//!     .scopes("read_products".parse().unwrap())
+//!     .build()
+//!     .unwrap();
+//!
+//! // Step 2: Begin authorization
+//! let shop = ShopDomain::new("example-shop").unwrap();
+//! let result = begin_auth(&config, &shop, "/auth/callback", true, None)?;
+//! // Redirect user to result.auth_url
+//! // Store result.state in session
+//!
+//! // Step 3: Handle callback
+//! let session = validate_auth_callback(&config, &query, &stored_state).await?;
+//! // session is now ready for API calls
 //! ```
 //!
 //! ## Session Management
@@ -101,4 +130,9 @@ pub use clients::{
     ApiCallLimit, DataType, HttpClient, HttpError, HttpMethod, HttpRequest, HttpRequestBuilder,
     HttpResponse, HttpResponseError, InvalidHttpRequestError, MaxHttpRetriesExceededError,
     PaginationInfo,
+};
+
+// Re-export OAuth types for convenience
+pub use auth::oauth::{
+    begin_auth, validate_auth_callback, AuthQuery, BeginAuthResult, OAuthError, StateParam,
 };

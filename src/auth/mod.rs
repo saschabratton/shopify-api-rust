@@ -8,6 +8,7 @@
 //! - [`AuthScopes`]: A set of OAuth scopes with implied scope handling
 //! - [`Session`]: Represents an authenticated session for API calls
 //! - [`AssociatedUser`]: User information for online (user-specific) sessions
+//! - [`oauth`]: OAuth 2.0 authorization code flow implementation
 //!
 //! # Session Types
 //!
@@ -17,6 +18,21 @@
 //!   user sessions. Used for background tasks and webhooks.
 //! - **Online sessions**: User-specific tokens that expire and are tied to a
 //!   particular user. Include associated user information.
+//!
+//! # OAuth Flow
+//!
+//! For apps that need to authenticate with Shopify stores, use the OAuth module:
+//!
+//! ```rust,ignore
+//! use shopify_api::auth::oauth::{begin_auth, validate_auth_callback};
+//!
+//! // 1. Generate authorization URL
+//! let result = begin_auth(&config, &shop, "/callback", true, None)?;
+//! // Redirect user to result.auth_url
+//!
+//! // 2. Handle callback and get session
+//! let session = validate_auth_callback(&config, &query, &state).await?;
+//! ```
 //!
 //! # Example
 //!
@@ -38,6 +54,7 @@
 //! ```
 
 mod associated_user;
+pub mod oauth;
 mod scopes;
 pub mod session;
 
