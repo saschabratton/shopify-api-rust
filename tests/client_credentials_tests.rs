@@ -122,6 +122,8 @@ async fn test_session_fields_correctly_populated() {
         associated_user_scope: None,
         associated_user: None,
         session: Some("shopify-session-id".to_string()),
+        refresh_token: None,
+        refresh_token_expires_in: None,
     };
 
     let offline_session = Session::from_access_token_response(shop, &offline_response);
@@ -198,6 +200,8 @@ fn test_session_id_format_for_client_credentials() {
         associated_user_scope: None,
         associated_user: None,
         session: None,
+        refresh_token: None,
+        refresh_token_expires_in: None,
     };
 
     let session = Session::from_access_token_response(shop, &response);

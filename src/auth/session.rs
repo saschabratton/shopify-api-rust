@@ -1113,10 +1113,7 @@ mod tests {
         let session = Session::from_access_token_response(shop, &response);
         let after = Utc::now();
 
-        assert_eq!(
-            session.refresh_token,
-            Some("refresh-token-xyz".to_string())
-        );
+        assert_eq!(session.refresh_token, Some("refresh-token-xyz".to_string()));
         assert!(session.refresh_token_expires_at.is_some());
 
         let expires_at = session.refresh_token_expires_at.unwrap();

@@ -73,7 +73,7 @@ use crate::config::{ShopDomain, ShopifyConfig};
 use serde::Serialize;
 
 /// Grant type for token exchange (RFC 8693).
-/// Reused from token_exchange for migration.
+/// Reused from `token_exchange` for migration.
 const TOKEN_EXCHANGE_GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:token-exchange";
 
 /// Grant type for refresh token requests.
@@ -398,10 +398,7 @@ mod tests {
         let result = refresh_access_token(&config, &shop, "test-refresh-token").await;
 
         // The request will fail, but we've verified URL construction works
-        assert!(matches!(
-            result,
-            Err(OAuthError::TokenRefreshFailed { .. })
-        ));
+        assert!(matches!(result, Err(OAuthError::TokenRefreshFailed { .. })));
     }
 
     // === migrate_to_expiring_token tests ===
@@ -432,10 +429,7 @@ mod tests {
         let result = migrate_to_expiring_token(&config, &shop, "old-token").await;
 
         // The request will fail, but we've verified URL construction works
-        assert!(matches!(
-            result,
-            Err(OAuthError::TokenRefreshFailed { .. })
-        ));
+        assert!(matches!(result, Err(OAuthError::TokenRefreshFailed { .. })));
     }
 
     // === Send + Sync tests ===

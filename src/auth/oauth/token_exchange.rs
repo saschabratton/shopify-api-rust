@@ -78,7 +78,7 @@ const ID_TOKEN_TYPE: &str = "urn:ietf:params:oauth:token-type:id_token";
 
 /// Requested token type for token exchange.
 ///
-/// This enum is available within the oauth module for use by token_refresh.
+/// This enum is available within the oauth module for use by `token_refresh`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum RequestedTokenType {
     /// Online access token - user-specific, expires.

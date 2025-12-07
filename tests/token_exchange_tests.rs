@@ -291,6 +291,8 @@ async fn test_session_fields_correctly_populated() {
         associated_user_scope: None,
         associated_user: None,
         session: Some("shopify-session-id".to_string()),
+        refresh_token: None,
+        refresh_token_expires_in: None,
     };
 
     let offline_session = Session::from_access_token_response(shop.clone(), &offline_response);
@@ -328,6 +330,8 @@ async fn test_session_fields_correctly_populated() {
             collaborator: false,
         }),
         session: Some("online-session-id".to_string()),
+        refresh_token: None,
+        refresh_token_expires_in: None,
     };
 
     let online_session = Session::from_access_token_response(shop, &online_response);

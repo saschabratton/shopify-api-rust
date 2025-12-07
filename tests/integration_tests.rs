@@ -148,6 +148,8 @@ fn test_offline_session_workflow_with_factory_method() {
         associated_user_scope: None,
         associated_user: None,
         session: None,
+        refresh_token: None,
+        refresh_token_expires_in: None,
     };
 
     // Create session from response
@@ -193,6 +195,8 @@ fn test_online_session_workflow_with_associated_user() {
             collaborator: false,
         }),
         session: Some("shopify_session_abc123".to_string()),
+        refresh_token: None,
+        refresh_token_expires_in: None,
     };
 
     // Create session from response
