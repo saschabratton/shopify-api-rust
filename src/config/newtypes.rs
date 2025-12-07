@@ -4,6 +4,7 @@
 //! their contents on construction. Invalid values are rejected with clear error messages.
 
 use crate::error::ConfigError;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 
 /// A validated Shopify API key.
@@ -101,6 +102,18 @@ impl fmt::Debug for ApiSecretKey {
 /// - `shop-name` - normalized to `shop-name.myshopify.com`
 /// - `shop-name.myshopify.com` - used as-is
 ///
+/// # Serialization
+///
+/// `ShopDomain` serializes to and deserializes from the full domain string:
+///
+/// ```rust
+/// use shopify_api::ShopDomain;
+///
+/// let domain = ShopDomain::new("my-store").unwrap();
+/// let json = serde_json::to_string(&domain).unwrap();
+/// assert_eq!(json, r#""my-store.myshopify.com""#);
+/// ```
+///
 /// # Example
 ///
 /// ```rust
@@ -188,6 +201,25 @@ impl ShopDomain {
 impl AsRef<str> for ShopDomain {
     fn as_ref(&self) -> &str {
         &self.full_domain
+    }
+}
+
+impl Serialize for ShopDomain {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.full_domain)
+    }
+}
+
+impl<'de> Deserialize<'de> for ShopDomain {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Self::new(s).map_err(de::Error::custom)
     }
 }
 
@@ -358,5 +390,29 @@ mod tests {
 
         // Invalid scheme
         assert!(HostUrl::new("://example.com").is_err());
+    }
+
+    // ShopDomain serialization tests
+    #[test]
+    fn test_shop_domain_serializes_to_string() {
+        let domain = ShopDomain::new("my-store").unwrap();
+        let json = serde_json::to_string(&domain).unwrap();
+        assert_eq!(json, r#""my-store.myshopify.com""#);
+    }
+
+    #[test]
+    fn test_shop_domain_deserializes_from_string() {
+        let json = r#""test-shop.myshopify.com""#;
+        let domain: ShopDomain = serde_json::from_str(json).unwrap();
+        assert_eq!(domain.as_ref(), "test-shop.myshopify.com");
+        assert_eq!(domain.shop_name(), "test-shop");
+    }
+
+    #[test]
+    fn test_shop_domain_round_trip_serialization() {
+        let original = ShopDomain::new("my-store").unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let restored: ShopDomain = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, restored);
     }
 }

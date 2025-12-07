@@ -4,6 +4,7 @@
 //! including parsing and implied scope handling.
 
 use crate::error::ConfigError;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt;
 use std::str::FromStr;
@@ -20,6 +21,19 @@ use std::str::FromStr;
 /// - `unauthenticated_write_products` implies `unauthenticated_read_products`
 ///
 /// This type automatically expands implied scopes when parsing.
+///
+/// # Serialization
+///
+/// `AuthScopes` serializes to and deserializes from a comma-separated string
+/// for compact JSON representation:
+///
+/// ```rust
+/// use shopify_api::AuthScopes;
+///
+/// let scopes: AuthScopes = "read_products,write_orders".parse().unwrap();
+/// let json = serde_json::to_string(&scopes).unwrap();
+/// // JSON: "\"read_orders,read_products,write_orders\""
+/// ```
 ///
 /// # Example
 ///
@@ -145,6 +159,26 @@ impl fmt::Display for AuthScopes {
     }
 }
 
+impl Serialize for AuthScopes {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Serialize as a comma-separated string using the Display implementation
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for AuthScopes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        s.parse().map_err(de::Error::custom)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -204,5 +238,45 @@ mod tests {
         assert!(scopes.iter().any(|s| s == "write_orders"));
         // write_orders implies read_orders
         assert!(scopes.iter().any(|s| s == "read_orders"));
+    }
+
+    // === Serde tests for Task Group 1 ===
+
+    #[test]
+    fn test_auth_scopes_serializes_to_comma_separated_string() {
+        let scopes: AuthScopes = "read_products,write_orders".parse().unwrap();
+        let json = serde_json::to_string(&scopes).unwrap();
+        // Should be a JSON string containing comma-separated scopes
+        // The order is sorted, so we need to check the parsed result
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(parsed.is_string());
+        let scope_str = parsed.as_str().unwrap();
+        assert!(scope_str.contains("read_products"));
+        assert!(scope_str.contains("write_orders"));
+        assert!(scope_str.contains("read_orders")); // implied
+    }
+
+    #[test]
+    fn test_auth_scopes_deserializes_from_comma_separated_string() {
+        let json = r#""read_products,write_orders""#;
+        let scopes: AuthScopes = serde_json::from_str(json).unwrap();
+        assert!(scopes.iter().any(|s| s == "read_products"));
+        assert!(scopes.iter().any(|s| s == "write_orders"));
+        assert!(scopes.iter().any(|s| s == "read_orders")); // implied scope added
+    }
+
+    #[test]
+    fn test_empty_auth_scopes_serializes_to_empty_string() {
+        let scopes = AuthScopes::new();
+        let json = serde_json::to_string(&scopes).unwrap();
+        assert_eq!(json, r#""""#);
+    }
+
+    #[test]
+    fn test_auth_scopes_round_trip_serialization() {
+        let original: AuthScopes = "read_products,write_orders,read_customers".parse().unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: AuthScopes = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
     }
 }

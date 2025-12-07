@@ -27,6 +27,28 @@
 //!     .unwrap();
 //! ```
 //!
+//! ## Session Management
+//!
+//! Sessions represent authenticated connections to a Shopify store. They can be
+//! either offline (app-level) or online (user-specific):
+//!
+//! ```rust
+//! use shopify_api::{Session, ShopDomain, AuthScopes, AssociatedUser};
+//!
+//! // Create an offline session (no expiration, no user)
+//! let offline_session = Session::new(
+//!     Session::generate_offline_id(&ShopDomain::new("my-store").unwrap()),
+//!     ShopDomain::new("my-store").unwrap(),
+//!     "access-token".to_string(),
+//!     "read_products".parse().unwrap(),
+//!     false,
+//!     None,
+//! );
+//!
+//! // Sessions can be serialized for storage
+//! let json = serde_json::to_string(&offline_session).unwrap();
+//! ```
+//!
 //! ## Making API Requests
 //!
 //! ```rust,ignore
@@ -60,6 +82,7 @@
 //! - **Fail-fast validation**: All newtypes validate on construction
 //! - **Thread-safe**: All types are `Send + Sync`
 //! - **Async-first**: Designed for use with Tokio async runtime
+//! - **Immutable sessions**: Sessions are immutable after creation
 
 pub mod auth;
 pub mod clients;
@@ -67,7 +90,7 @@ pub mod config;
 pub mod error;
 
 // Re-export public types at crate root for convenience
-pub use auth::{AuthScopes, Session};
+pub use auth::{AssociatedUser, AuthScopes, Session};
 pub use config::{
     ApiKey, ApiSecretKey, ApiVersion, HostUrl, ShopDomain, ShopifyConfig, ShopifyConfigBuilder,
 };
