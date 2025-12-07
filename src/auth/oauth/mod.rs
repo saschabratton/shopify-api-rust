@@ -4,6 +4,7 @@
 //!
 //! - **Authorization Code Grant**: Traditional OAuth flow with redirects
 //! - **Token Exchange**: For embedded apps using App Bridge session tokens
+//! - **Client Credentials Grant**: For private/organization apps without user interaction
 //!
 //! # Authorization Code Grant
 //!
@@ -23,6 +24,17 @@
 //! - [`exchange_offline_token`]: Exchange session token for app-level access token
 //!
 //! Token exchange does not require redirects, making it ideal for embedded app contexts.
+//! Requires `is_embedded(true)` configuration.
+//!
+//! # Client Credentials Grant (for Private/Organization Apps)
+//!
+//! Client credentials is used by private and organization apps for server-to-server
+//! authentication without user interaction:
+//!
+//! - [`exchange_client_credentials`]: Obtain an offline access token using app credentials
+//!
+//! This flow is ideal for background services, automated processes, and apps that
+//! operate without a UI. Requires `is_embedded(false)` configuration (the default).
 //!
 //! # Security Features
 //!
@@ -103,6 +115,28 @@
 //! println!("Offline token obtained");
 //! ```
 //!
+//! # Example: Client Credentials Flow (Private/Organization Apps)
+//!
+//! ```rust,ignore
+//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_api::auth::oauth::{exchange_client_credentials, OAuthError};
+//!
+//! // Configure the SDK (must NOT be embedded)
+//! let config = ShopifyConfig::builder()
+//!     .api_key(ApiKey::new("your-api-key").unwrap())
+//!     .api_secret_key(ApiSecretKey::new("your-secret").unwrap())
+//!     // is_embedded defaults to false, which is required
+//!     .build()
+//!     .unwrap();
+//!
+//! let shop = ShopDomain::new("example-shop").unwrap();
+//!
+//! // Exchange client credentials for an offline access token
+//! let session = exchange_client_credentials(&config, &shop).await?;
+//! println!("Access token: {}", session.access_token);
+//! println!("Session ID: {}", session.id); // "offline_example-shop.myshopify.com"
+//! ```
+//!
 //! # Online vs Offline Access Tokens
 //!
 //! Shopify supports two types of access tokens:
@@ -113,7 +147,8 @@
 //!   - Include user information in the session
 //!   - Use for user-facing operations where user identity matters
 //!
-//! - **Offline tokens** (`is_online = false` in `begin_auth`, or via `exchange_offline_token`):
+//! - **Offline tokens** (`is_online = false` in `begin_auth`, or via `exchange_offline_token`,
+//!   or via `exchange_client_credentials`):
 //!   - App-level access
 //!   - Do not expire
 //!   - No user information
@@ -146,6 +181,7 @@
 
 mod auth_query;
 mod begin_auth;
+mod client_credentials;
 mod error;
 pub mod hmac;
 mod jwt_payload;
@@ -155,6 +191,7 @@ mod validate_callback;
 
 pub use auth_query::AuthQuery;
 pub use begin_auth::{begin_auth, BeginAuthResult};
+pub use client_credentials::exchange_client_credentials;
 pub use error::OAuthError;
 pub use hmac::{compute_signature, constant_time_compare, validate_hmac};
 pub use state::StateParam;
@@ -177,5 +214,12 @@ mod tests {
         // This test verifies that exchange_offline_token is properly exported
         // The function exists and is accessible - compilation proves this
         let _ = exchange_offline_token as fn(_, _, _) -> _;
+    }
+
+    #[test]
+    fn test_exchange_client_credentials_is_accessible_from_auth_oauth() {
+        // This test verifies that exchange_client_credentials is properly exported
+        // The function exists and is accessible - compilation proves this
+        let _ = exchange_client_credentials as fn(_, _) -> _;
     }
 }

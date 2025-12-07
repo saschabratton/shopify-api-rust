@@ -1,17 +1,20 @@
 //! OAuth-specific error types for the Shopify API SDK.
 //!
 //! This module contains error types for OAuth operations including HMAC validation,
-//! state verification, token exchange failures, and JWT validation for embedded apps.
+//! state verification, token exchange failures, client credentials failures, and
+//! JWT validation for embedded apps.
 //!
 //! # Error Types
 //!
 //! - [`OAuthError::InvalidHmac`]: HMAC signature validation failed
 //! - [`OAuthError::StateMismatch`]: OAuth state parameter doesn't match expected
 //! - [`OAuthError::TokenExchangeFailed`]: Token exchange request failed
+//! - [`OAuthError::ClientCredentialsFailed`]: Client credentials exchange request failed
 //! - [`OAuthError::InvalidCallback`]: Callback parameters are malformed
 //! - [`OAuthError::MissingHostConfig`]: Host URL not configured for redirect URI
 //! - [`OAuthError::InvalidJwt`]: JWT validation failed (for token exchange)
 //! - [`OAuthError::NotEmbeddedApp`]: Token exchange requires embedded app configuration
+//! - [`OAuthError::NotPrivateApp`]: Client credentials requires non-embedded app configuration
 //! - [`OAuthError::HttpError`]: Wrapped HTTP client error
 //!
 //! # Example
@@ -32,6 +35,12 @@
 //!     reason: "Token expired".to_string(),
 //! };
 //! assert!(error.to_string().contains("Token expired"));
+//!
+//! let error = OAuthError::ClientCredentialsFailed {
+//!     status: 401,
+//!     message: "Invalid credentials".to_string(),
+//! };
+//! assert!(error.to_string().contains("401"));
 //! ```
 
 use crate::clients::HttpError;
@@ -40,7 +49,7 @@ use thiserror::Error;
 /// Errors that can occur during OAuth operations.
 ///
 /// This enum covers all failure modes in OAuth flows, including the authorization
-/// code flow, token exchange, and JWT validation for embedded apps.
+/// code flow, token exchange, client credentials, and JWT validation for embedded apps.
 ///
 /// # Thread Safety
 ///
@@ -62,6 +71,9 @@ use thiserror::Error;
 ///         OAuthError::TokenExchangeFailed { status, message } => {
 ///             eprintln!("Token exchange failed ({}): {}", status, message);
 ///         }
+///         OAuthError::ClientCredentialsFailed { status, message } => {
+///             eprintln!("Client credentials failed ({}): {}", status, message);
+///         }
 ///         OAuthError::InvalidCallback { reason } => {
 ///             eprintln!("Invalid callback: {}", reason);
 ///         }
@@ -73,6 +85,9 @@ use thiserror::Error;
 ///         }
 ///         OAuthError::NotEmbeddedApp => {
 ///             eprintln!("Token exchange only works for embedded apps");
+///         }
+///         OAuthError::NotPrivateApp => {
+///             eprintln!("Client credentials only works for private apps");
 ///         }
 ///         OAuthError::HttpError(e) => {
 ///             eprintln!("HTTP error: {}", e);
@@ -112,6 +127,32 @@ pub enum OAuthError {
         /// The HTTP status code returned.
         status: u16,
         /// The error message from the response.
+        message: String,
+    },
+
+    /// Client credentials exchange request failed.
+    ///
+    /// The POST request to obtain an access token using client credentials
+    /// returned a non-success HTTP status. This error is specific to the
+    /// Client Credentials Grant flow used by private/organization apps.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::auth::oauth::OAuthError;
+    ///
+    /// let error = OAuthError::ClientCredentialsFailed {
+    ///     status: 401,
+    ///     message: "Invalid client credentials".to_string(),
+    /// };
+    /// assert!(error.to_string().contains("Client credentials"));
+    /// assert!(error.to_string().contains("401"));
+    /// ```
+    #[error("Client credentials exchange failed with status {status}: {message}")]
+    ClientCredentialsFailed {
+        /// The HTTP status code returned (0 for network errors).
+        status: u16,
+        /// The error message from the response or network error description.
         message: String,
     },
 
@@ -175,6 +216,27 @@ pub enum OAuthError {
     /// ```
     #[error("Token exchange requires an embedded app configuration")]
     NotEmbeddedApp,
+
+    /// Client credentials requires a non-embedded app configuration.
+    ///
+    /// Client Credentials Grant OAuth flow is only available for private or
+    /// organization apps that are NOT embedded in the Shopify admin. Ensure
+    /// that `ShopifyConfigBuilder::is_embedded(false)` is set (or not set,
+    /// as `false` is the default).
+    ///
+    /// This error is the inverse of [`NotEmbeddedApp`](OAuthError::NotEmbeddedApp),
+    /// which is used for token exchange flows that require embedded apps.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::auth::oauth::OAuthError;
+    ///
+    /// let error = OAuthError::NotPrivateApp;
+    /// assert!(error.to_string().contains("non-embedded"));
+    /// ```
+    #[error("Client credentials requires a non-embedded app configuration")]
+    NotPrivateApp,
 
     /// Wrapped HTTP client error.
     ///
@@ -271,6 +333,15 @@ mod tests {
 
         let error: &dyn std::error::Error = &OAuthError::NotEmbeddedApp;
         let _ = error;
+
+        let error: &dyn std::error::Error = &OAuthError::ClientCredentialsFailed {
+            status: 401,
+            message: "test".to_string(),
+        };
+        let _ = error;
+
+        let error: &dyn std::error::Error = &OAuthError::NotPrivateApp;
+        let _ = error;
     }
 
     #[test]
@@ -361,6 +432,72 @@ mod tests {
 
         std::thread::spawn(move || {
             let _ = not_embedded;
+        })
+        .join()
+        .unwrap();
+    }
+
+    // === Tests for ClientCredentialsFailed and NotPrivateApp variants ===
+
+    #[test]
+    fn test_client_credentials_failed_formats_error_message_with_status_and_message() {
+        let error = OAuthError::ClientCredentialsFailed {
+            status: 401,
+            message: "Invalid client credentials".to_string(),
+        };
+        let message = error.to_string();
+        assert!(message.contains("Client credentials"));
+        assert!(message.contains("401"));
+        assert!(message.contains("Invalid client credentials"));
+    }
+
+    #[test]
+    fn test_not_private_app_has_correct_error_message() {
+        let error = OAuthError::NotPrivateApp;
+        let message = error.to_string();
+        assert!(message.contains("non-embedded"));
+        assert!(message.contains("Client credentials"));
+    }
+
+    #[test]
+    fn test_client_credentials_variants_implement_std_error() {
+        // ClientCredentialsFailed implements std::error::Error
+        let client_creds_error: &dyn std::error::Error = &OAuthError::ClientCredentialsFailed {
+            status: 500,
+            message: "Server error".to_string(),
+        };
+        assert!(client_creds_error
+            .to_string()
+            .contains("Client credentials"));
+
+        // NotPrivateApp implements std::error::Error
+        let not_private_error: &dyn std::error::Error = &OAuthError::NotPrivateApp;
+        assert!(not_private_error.to_string().contains("non-embedded"));
+    }
+
+    #[test]
+    fn test_client_credentials_variants_are_send_sync() {
+        fn assert_send_sync<T: Send + Sync>() {}
+
+        // These compile-time assertions verify Send + Sync
+        assert_send_sync::<OAuthError>();
+
+        // Also verify the specific variants at runtime
+        let client_creds_failed = OAuthError::ClientCredentialsFailed {
+            status: 401,
+            message: "test".to_string(),
+        };
+        let not_private = OAuthError::NotPrivateApp;
+
+        // Can be sent across threads
+        std::thread::spawn(move || {
+            let _ = client_creds_failed;
+        })
+        .join()
+        .unwrap();
+
+        std::thread::spawn(move || {
+            let _ = not_private;
         })
         .join()
         .unwrap();
