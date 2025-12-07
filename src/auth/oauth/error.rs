@@ -1,8 +1,8 @@
 //! OAuth-specific error types for the Shopify API SDK.
 //!
 //! This module contains error types for OAuth operations including HMAC validation,
-//! state verification, token exchange failures, client credentials failures, and
-//! JWT validation for embedded apps.
+//! state verification, token exchange failures, client credentials failures,
+//! token refresh failures, and JWT validation for embedded apps.
 //!
 //! # Error Types
 //!
@@ -10,6 +10,7 @@
 //! - [`OAuthError::StateMismatch`]: OAuth state parameter doesn't match expected
 //! - [`OAuthError::TokenExchangeFailed`]: Token exchange request failed
 //! - [`OAuthError::ClientCredentialsFailed`]: Client credentials exchange request failed
+//! - [`OAuthError::TokenRefreshFailed`]: Token refresh or migration request failed
 //! - [`OAuthError::InvalidCallback`]: Callback parameters are malformed
 //! - [`OAuthError::MissingHostConfig`]: Host URL not configured for redirect URI
 //! - [`OAuthError::InvalidJwt`]: JWT validation failed (for token exchange)
@@ -41,6 +42,12 @@
 //!     message: "Invalid credentials".to_string(),
 //! };
 //! assert!(error.to_string().contains("401"));
+//!
+//! let error = OAuthError::TokenRefreshFailed {
+//!     status: 400,
+//!     message: "Invalid refresh token".to_string(),
+//! };
+//! assert!(error.to_string().contains("400"));
 //! ```
 
 use crate::clients::HttpError;
@@ -49,7 +56,8 @@ use thiserror::Error;
 /// Errors that can occur during OAuth operations.
 ///
 /// This enum covers all failure modes in OAuth flows, including the authorization
-/// code flow, token exchange, client credentials, and JWT validation for embedded apps.
+/// code flow, token exchange, client credentials, token refresh, and JWT validation
+/// for embedded apps.
 ///
 /// # Thread Safety
 ///
@@ -73,6 +81,9 @@ use thiserror::Error;
 ///         }
 ///         OAuthError::ClientCredentialsFailed { status, message } => {
 ///             eprintln!("Client credentials failed ({}): {}", status, message);
+///         }
+///         OAuthError::TokenRefreshFailed { status, message } => {
+///             eprintln!("Token refresh failed ({}): {}", status, message);
 ///         }
 ///         OAuthError::InvalidCallback { reason } => {
 ///             eprintln!("Invalid callback: {}", reason);
@@ -150,6 +161,32 @@ pub enum OAuthError {
     /// ```
     #[error("Client credentials exchange failed with status {status}: {message}")]
     ClientCredentialsFailed {
+        /// The HTTP status code returned (0 for network errors).
+        status: u16,
+        /// The error message from the response or network error description.
+        message: String,
+    },
+
+    /// Token refresh or migration request failed.
+    ///
+    /// The POST request to refresh an access token or migrate to expiring tokens
+    /// returned a non-success HTTP status. This error is used for both the
+    /// `refresh_access_token` and `migrate_to_expiring_token` functions.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::auth::oauth::OAuthError;
+    ///
+    /// let error = OAuthError::TokenRefreshFailed {
+    ///     status: 400,
+    ///     message: "Invalid refresh token".to_string(),
+    /// };
+    /// assert!(error.to_string().contains("Token refresh"));
+    /// assert!(error.to_string().contains("400"));
+    /// ```
+    #[error("Token refresh failed with status {status}: {message}")]
+    TokenRefreshFailed {
         /// The HTTP status code returned (0 for network errors).
         status: u16,
         /// The error message from the response or network error description.
@@ -342,6 +379,12 @@ mod tests {
 
         let error: &dyn std::error::Error = &OAuthError::NotPrivateApp;
         let _ = error;
+
+        let error: &dyn std::error::Error = &OAuthError::TokenRefreshFailed {
+            status: 400,
+            message: "test".to_string(),
+        };
+        let _ = error;
     }
 
     #[test]
@@ -498,6 +541,58 @@ mod tests {
 
         std::thread::spawn(move || {
             let _ = not_private;
+        })
+        .join()
+        .unwrap();
+    }
+
+    // === Tests for TokenRefreshFailed variant ===
+
+    #[test]
+    fn test_token_refresh_failed_formats_error_message_with_status_and_message() {
+        let error = OAuthError::TokenRefreshFailed {
+            status: 400,
+            message: "Invalid refresh token".to_string(),
+        };
+        let message = error.to_string();
+        assert!(message.contains("Token refresh"));
+        assert!(message.contains("400"));
+        assert!(message.contains("Invalid refresh token"));
+    }
+
+    #[test]
+    fn test_token_refresh_failed_with_network_error_status_zero() {
+        let error = OAuthError::TokenRefreshFailed {
+            status: 0,
+            message: "Network error: connection refused".to_string(),
+        };
+        let message = error.to_string();
+        assert!(message.contains("Token refresh"));
+        assert!(message.contains("0"));
+        assert!(message.contains("Network error"));
+    }
+
+    #[test]
+    fn test_token_refresh_failed_implements_std_error() {
+        let error: &dyn std::error::Error = &OAuthError::TokenRefreshFailed {
+            status: 401,
+            message: "Unauthorized".to_string(),
+        };
+        assert!(error.to_string().contains("Token refresh"));
+    }
+
+    #[test]
+    fn test_token_refresh_failed_is_send_sync() {
+        fn assert_send_sync<T: Send + Sync>() {}
+        assert_send_sync::<OAuthError>();
+
+        let token_refresh_failed = OAuthError::TokenRefreshFailed {
+            status: 400,
+            message: "test".to_string(),
+        };
+
+        std::thread::spawn(move || {
+            let _ = token_refresh_failed;
         })
         .join()
         .unwrap();

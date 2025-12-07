@@ -5,6 +5,7 @@
 //! - **Authorization Code Grant**: Traditional OAuth flow with redirects
 //! - **Token Exchange**: For embedded apps using App Bridge session tokens
 //! - **Client Credentials Grant**: For private/organization apps without user interaction
+//! - **Token Refresh**: For refreshing expiring access tokens
 //!
 //! # Authorization Code Grant
 //!
@@ -35,6 +36,15 @@
 //!
 //! This flow is ideal for background services, automated processes, and apps that
 //! operate without a UI. Requires `is_embedded(false)` configuration (the default).
+//!
+//! # Token Refresh (for Expiring Tokens)
+//!
+//! Token refresh is used for apps with expiring offline access tokens:
+//!
+//! - [`refresh_access_token`]: Refresh an expiring access token using a refresh token
+//! - [`migrate_to_expiring_token`]: One-time migration from non-expiring to expiring tokens
+//!
+//! Expiring tokens provide enhanced security by requiring periodic token rotation.
 //!
 //! # Security Features
 //!
@@ -137,6 +147,25 @@
 //! println!("Session ID: {}", session.id); // "offline_example-shop.myshopify.com"
 //! ```
 //!
+//! # Example: Token Refresh Flow (Expiring Tokens)
+//!
+//! ```rust,ignore
+//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_api::auth::oauth::{refresh_access_token, migrate_to_expiring_token, OAuthError};
+//!
+//! // Refresh an expiring access token
+//! if session.expired() {
+//!     if let Some(refresh_token) = &session.refresh_token {
+//!         let new_session = refresh_access_token(&config, &shop, refresh_token).await?;
+//!         println!("New access token: {}", new_session.access_token);
+//!     }
+//! }
+//!
+//! // Or migrate from non-expiring to expiring tokens (one-time, irreversible)
+//! let new_session = migrate_to_expiring_token(&config, &shop, &old_access_token).await?;
+//! println!("Migration successful!");
+//! ```
+//!
 //! # Online vs Offline Access Tokens
 //!
 //! Shopify supports two types of access tokens:
@@ -150,7 +179,7 @@
 //! - **Offline tokens** (`is_online = false` in `begin_auth`, or via `exchange_offline_token`,
 //!   or via `exchange_client_credentials`):
 //!   - App-level access
-//!   - Do not expire
+//!   - Do not expire (unless using expiring tokens)
 //!   - No user information
 //!   - Use for background tasks, webhooks, and automated operations
 //!
@@ -187,6 +216,7 @@ pub mod hmac;
 mod jwt_payload;
 mod state;
 mod token_exchange;
+mod token_refresh;
 mod validate_callback;
 
 pub use auth_query::AuthQuery;
@@ -196,6 +226,7 @@ pub use error::OAuthError;
 pub use hmac::{compute_signature, constant_time_compare, validate_hmac};
 pub use state::StateParam;
 pub use token_exchange::{exchange_offline_token, exchange_online_token};
+pub use token_refresh::{migrate_to_expiring_token, refresh_access_token};
 pub use validate_callback::validate_auth_callback;
 
 #[cfg(test)]
@@ -221,5 +252,19 @@ mod tests {
         // This test verifies that exchange_client_credentials is properly exported
         // The function exists and is accessible - compilation proves this
         let _ = exchange_client_credentials as fn(_, _) -> _;
+    }
+
+    #[test]
+    fn test_refresh_access_token_is_accessible_from_auth_oauth() {
+        // This test verifies that refresh_access_token is properly exported
+        // The function exists and is accessible - compilation proves this
+        let _ = refresh_access_token as fn(_, _, _) -> _;
+    }
+
+    #[test]
+    fn test_migrate_to_expiring_token_is_accessible_from_auth_oauth() {
+        // This test verifies that migrate_to_expiring_token is properly exported
+        // The function exists and is accessible - compilation proves this
+        let _ = migrate_to_expiring_token as fn(_, _, _) -> _;
     }
 }

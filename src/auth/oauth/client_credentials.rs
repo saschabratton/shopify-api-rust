@@ -248,6 +248,8 @@ mod tests {
             associated_user_scope: None,
             associated_user: None,
             session: None,
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
 
         let session = Session::from_access_token_response(shop, &response);

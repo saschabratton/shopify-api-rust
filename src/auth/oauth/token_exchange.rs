@@ -78,7 +78,7 @@ const ID_TOKEN_TYPE: &str = "urn:ietf:params:oauth:token-type:id_token";
 
 /// Requested token type for token exchange.
 ///
-/// This enum is module-private and not exported from `auth::oauth`.
+/// This enum is available within the oauth module for use by token_refresh.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum RequestedTokenType {
     /// Online access token - user-specific, expires.
@@ -89,7 +89,7 @@ pub(super) enum RequestedTokenType {
 
 impl RequestedTokenType {
     /// Returns the URN string representation for the Shopify API.
-    const fn as_urn(self) -> &'static str {
+    pub(super) const fn as_urn(self) -> &'static str {
         match self {
             Self::OnlineAccessToken => "urn:shopify:params:oauth:token-type:online-access-token",
             Self::OfflineAccessToken => "urn:shopify:params:oauth:token-type:offline-access-token",
@@ -513,6 +513,8 @@ mod tests {
             associated_user_scope: None,
             associated_user: None,
             session: None,
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
 
         let session = Session::from_access_token_response(shop, &response);

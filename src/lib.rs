@@ -12,6 +12,7 @@
 //! - OAuth 2.0 authorization code flow via [`auth::oauth`]
 //! - Token exchange for embedded apps via [`auth::oauth`]
 //! - Client credentials for private/organization apps via [`auth::oauth`]
+//! - Token refresh for expiring access tokens via [`auth::oauth`]
 //! - Session management for authenticated API calls
 //! - Async HTTP client with retry logic and rate limit handling
 //!
@@ -107,6 +108,26 @@
 //! println!("Access token: {}", session.access_token);
 //! ```
 //!
+//! ## Token Refresh (Expiring Tokens)
+//!
+//! For apps using expiring offline access tokens:
+//!
+//! ```rust,ignore
+//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_api::auth::oauth::{refresh_access_token, migrate_to_expiring_token};
+//!
+//! // Refresh an expiring access token
+//! if session.expired() {
+//!     if let Some(refresh_token) = &session.refresh_token {
+//!         let new_session = refresh_access_token(&config, &shop, refresh_token).await?;
+//!         println!("New access token: {}", new_session.access_token);
+//!     }
+//! }
+//!
+//! // Or migrate from non-expiring to expiring tokens (one-time, irreversible)
+//! let new_session = migrate_to_expiring_token(&config, &shop, &old_access_token).await?;
+//! ```
+//!
 //! ## Session Management
 //!
 //! Sessions represent authenticated connections to a Shopify store. They can be
@@ -186,5 +207,6 @@ pub use clients::{
 // Re-export OAuth types for convenience
 pub use auth::oauth::{
     begin_auth, exchange_client_credentials, exchange_offline_token, exchange_online_token,
-    validate_auth_callback, AuthQuery, BeginAuthResult, OAuthError, StateParam,
+    migrate_to_expiring_token, refresh_access_token, validate_auth_callback, AuthQuery,
+    BeginAuthResult, OAuthError, StateParam,
 };

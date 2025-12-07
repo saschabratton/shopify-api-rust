@@ -9,9 +9,9 @@
 //! Shopify supports two types of access tokens, each with its own session pattern:
 //!
 //! - **Offline sessions** (`is_online = false`):
-//!   - App-level tokens that persist indefinitely
+//!   - App-level tokens that persist indefinitely (or until expiration for expiring tokens)
 //!   - ID format: `"offline_{shop}"` (e.g., `"offline_my-store.myshopify.com"`)
-//!   - No expiration, no associated user
+//!   - May include refresh tokens for token refresh flow
 //!   - Used for background tasks, webhooks, and server-side operations
 //!
 //! - **Online sessions** (`is_online = true`):
@@ -51,6 +51,10 @@ use crate::auth::AuthScopes;
 use crate::config::ShopDomain;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
+
+/// Buffer time (in seconds) before considering a refresh token expired.
+/// Matches the Ruby SDK's behavior.
+const REFRESH_TOKEN_EXPIRY_BUFFER_SECONDS: i64 = 60;
 
 /// Represents an authenticated session for Shopify API calls.
 ///
@@ -124,7 +128,7 @@ pub struct Session {
 
     /// When this session expires, if applicable.
     ///
-    /// Offline sessions have `None` (they don't expire).
+    /// Offline sessions have `None` (they don't expire) unless using expiring tokens.
     /// Online sessions have a specific expiration time.
     pub expires: Option<DateTime<Utc>>,
 
@@ -146,13 +150,31 @@ pub struct Session {
     /// These may be different from the app's granted scopes, representing
     /// what the specific user is allowed to do.
     pub associated_user_scopes: Option<AuthScopes>,
+
+    /// The refresh token for obtaining new access tokens.
+    ///
+    /// Only present for expiring offline tokens. Use with [`refresh_access_token`]
+    /// to obtain a new access token before the current one expires.
+    ///
+    /// [`refresh_access_token`]: crate::auth::oauth::refresh_access_token
+    #[serde(default)]
+    pub refresh_token: Option<String>,
+
+    /// When the refresh token expires, if applicable.
+    ///
+    /// `None` indicates the refresh token does not expire or is not present.
+    /// Use [`refresh_token_expired`](Session::refresh_token_expired) to check
+    /// if the refresh token needs to be renewed.
+    #[serde(default)]
+    pub refresh_token_expires_at: Option<DateTime<Utc>>,
 }
 
 impl Session {
     /// Creates a new session with the specified parameters.
     ///
     /// This constructor maintains backward compatibility with existing code.
-    /// New fields (`associated_user` and `associated_user_scopes`) default to `None`.
+    /// New fields (`associated_user`, `associated_user_scopes`, `refresh_token`,
+    /// and `refresh_token_expires_at`) default to `None`.
     ///
     /// For online sessions with user information, use [`Session::with_user`] instead.
     ///
@@ -199,6 +221,8 @@ impl Session {
             shopify_session_id: None,
             associated_user: None,
             associated_user_scopes: None,
+            refresh_token: None,
+            refresh_token_expires_at: None,
         }
     }
 
@@ -267,6 +291,8 @@ impl Session {
             shopify_session_id: None,
             associated_user: Some(associated_user),
             associated_user_scopes,
+            refresh_token: None,
+            refresh_token_expires_at: None,
         }
     }
 
@@ -314,6 +340,7 @@ impl Session {
     /// - Parses scopes from the response
     /// - Calculates expiration time from `expires_in` seconds
     /// - Sets `is_online` based on presence of associated user
+    /// - Populates refresh token fields if present in the response
     ///
     /// # Arguments
     ///
@@ -334,6 +361,8 @@ impl Session {
     ///     associated_user_scope: None,
     ///     associated_user: None,
     ///     session: None,
+    ///     refresh_token: None,
+    ///     refresh_token_expires_in: None,
     /// };
     ///
     /// let session = Session::from_access_token_response(shop, &response);
@@ -371,6 +400,12 @@ impl Session {
             collaborator: u.collaborator,
         });
 
+        let refresh_token = response.refresh_token.clone();
+
+        let refresh_token_expires_at = response
+            .refresh_token_expires_in
+            .map(|secs| Utc::now() + Duration::seconds(i64::from(secs)));
+
         Self {
             id,
             shop,
@@ -382,6 +417,8 @@ impl Session {
             shopify_session_id: response.session.clone(),
             associated_user,
             associated_user_scopes,
+            refresh_token,
+            refresh_token_expires_at,
         }
     }
 
@@ -397,6 +434,40 @@ impl Session {
     #[must_use]
     pub fn is_active(&self) -> bool {
         !self.access_token.is_empty() && !self.expired()
+    }
+
+    /// Returns `true` if the refresh token has expired or will expire within 60 seconds.
+    ///
+    /// This method uses a 60-second buffer (matching the Ruby SDK) to ensure
+    /// you have time to refresh the token before it actually expires.
+    ///
+    /// Returns `false` if:
+    /// - No `refresh_token_expires_at` is set (token doesn't expire)
+    /// - The refresh token has more than 60 seconds before expiration
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::{Session, ShopDomain, AuthScopes};
+    /// use chrono::{Utc, Duration};
+    ///
+    /// // Session without refresh token expiration
+    /// let session = Session::new(
+    ///     "session-id".to_string(),
+    ///     ShopDomain::new("my-store").unwrap(),
+    ///     "access-token".to_string(),
+    ///     AuthScopes::new(),
+    ///     false,
+    ///     None,
+    /// );
+    /// assert!(!session.refresh_token_expired());
+    /// ```
+    #[must_use]
+    pub fn refresh_token_expired(&self) -> bool {
+        self.refresh_token_expires_at.is_some_and(|expires_at| {
+            let buffer = Duration::seconds(REFRESH_TOKEN_EXPIRY_BUFFER_SECONDS);
+            Utc::now() + buffer > expires_at
+        })
     }
 }
 
@@ -427,6 +498,16 @@ pub struct AccessTokenResponse {
     /// Shopify-provided session ID.
     #[serde(rename = "session")]
     pub session: Option<String>,
+
+    /// The refresh token for obtaining new access tokens.
+    ///
+    /// Only present for expiring offline tokens.
+    pub refresh_token: Option<String>,
+
+    /// Number of seconds until the refresh token expires.
+    ///
+    /// Only present for expiring offline tokens.
+    pub refresh_token_expires_in: Option<u32>,
 }
 
 /// User information from an OAuth access token response.
@@ -649,6 +730,9 @@ mod tests {
         assert_eq!(session.access_token, "token123");
         assert!(!session.is_online);
         assert!(session.associated_user.is_none());
+        // Verify refresh token fields default to None
+        assert!(session.refresh_token.is_none());
+        assert!(session.refresh_token_expires_at.is_none());
     }
 
     #[test]
@@ -740,6 +824,8 @@ mod tests {
             associated_user_scope: None,
             associated_user: None,
             session: None,
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
 
         let session = Session::from_access_token_response(shop, &response);
@@ -770,6 +856,8 @@ mod tests {
                 collaborator: false,
             }),
             session: Some("shopify-session-id".to_string()),
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
 
         let session = Session::from_access_token_response(shop, &response);
@@ -808,6 +896,8 @@ mod tests {
                 collaborator: false,
             }),
             session: None,
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
 
         let before = Utc::now();
@@ -834,6 +924,8 @@ mod tests {
             associated_user_scope: None,
             associated_user: None,
             session: None,
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
 
         let session = Session::from_access_token_response(shop, &response);
@@ -856,6 +948,8 @@ mod tests {
             associated_user_scope: None,
             associated_user: None,
             session: None,
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
         let offline_session = Session::from_access_token_response(shop.clone(), &offline_response);
         assert!(!offline_session.is_online);
@@ -877,8 +971,253 @@ mod tests {
                 collaborator: false,
             }),
             session: None,
+            refresh_token: None,
+            refresh_token_expires_in: None,
         };
         let online_session = Session::from_access_token_response(shop, &online_response);
         assert!(online_session.is_online);
+    }
+
+    // === Refresh token tests ===
+
+    #[test]
+    fn test_session_serialization_includes_refresh_token_field() {
+        let mut session = Session::new(
+            "offline_my-store.myshopify.com".to_string(),
+            sample_shop(),
+            "access-token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        session.refresh_token = Some("refresh-token-123".to_string());
+
+        let json = serde_json::to_string(&session).unwrap();
+        assert!(json.contains("refresh_token"));
+        assert!(json.contains("refresh-token-123"));
+    }
+
+    #[test]
+    fn test_session_serialization_includes_refresh_token_expires_at_field() {
+        let mut session = Session::new(
+            "offline_my-store.myshopify.com".to_string(),
+            sample_shop(),
+            "access-token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        session.refresh_token_expires_at = Some(Utc::now() + Duration::days(30));
+
+        let json = serde_json::to_string(&session).unwrap();
+        assert!(json.contains("refresh_token_expires_at"));
+    }
+
+    #[test]
+    fn test_session_deserialization_handles_missing_refresh_token_fields_backward_compat() {
+        // Old format without refresh token fields
+        let json = r#"{
+            "id": "test-session",
+            "shop": "test-shop.myshopify.com",
+            "access_token": "token123",
+            "scopes": "read_products",
+            "is_online": false,
+            "expires": null,
+            "state": null,
+            "shopify_session_id": null,
+            "associated_user": null,
+            "associated_user_scopes": null
+        }"#;
+
+        let session: Session = serde_json::from_str(json).unwrap();
+        assert!(session.refresh_token.is_none());
+        assert!(session.refresh_token_expires_at.is_none());
+    }
+
+    #[test]
+    fn test_refresh_token_expired_returns_false_when_expires_at_is_none() {
+        let session = Session::new(
+            "id".to_string(),
+            sample_shop(),
+            "token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        assert!(!session.refresh_token_expired());
+    }
+
+    #[test]
+    fn test_refresh_token_expired_returns_false_when_expires_at_is_in_future_more_than_60s() {
+        let mut session = Session::new(
+            "id".to_string(),
+            sample_shop(),
+            "token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        // Set refresh token expires at 2 hours from now (well past 60 second buffer)
+        session.refresh_token_expires_at = Some(Utc::now() + Duration::hours(2));
+
+        assert!(!session.refresh_token_expired());
+    }
+
+    #[test]
+    fn test_refresh_token_expired_returns_true_when_expires_at_is_within_60_seconds() {
+        let mut session = Session::new(
+            "id".to_string(),
+            sample_shop(),
+            "token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        // Set refresh token expires at 30 seconds from now (within 60 second buffer)
+        session.refresh_token_expires_at = Some(Utc::now() + Duration::seconds(30));
+
+        assert!(session.refresh_token_expired());
+    }
+
+    #[test]
+    fn test_refresh_token_expired_returns_true_when_already_expired() {
+        let mut session = Session::new(
+            "id".to_string(),
+            sample_shop(),
+            "token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        // Set refresh token expires at 1 hour ago
+        session.refresh_token_expires_at = Some(Utc::now() - Duration::hours(1));
+
+        assert!(session.refresh_token_expired());
+    }
+
+    #[test]
+    fn test_from_access_token_response_populates_refresh_token_fields() {
+        let shop = ShopDomain::new("my-store").unwrap();
+        let response = AccessTokenResponse {
+            access_token: "access-token".to_string(),
+            scope: "read_products".to_string(),
+            expires_in: Some(86400), // 24 hours
+            associated_user_scope: None,
+            associated_user: None,
+            session: None,
+            refresh_token: Some("refresh-token-xyz".to_string()),
+            refresh_token_expires_in: Some(2592000), // 30 days
+        };
+
+        let before = Utc::now();
+        let session = Session::from_access_token_response(shop, &response);
+        let after = Utc::now();
+
+        assert_eq!(
+            session.refresh_token,
+            Some("refresh-token-xyz".to_string())
+        );
+        assert!(session.refresh_token_expires_at.is_some());
+
+        let expires_at = session.refresh_token_expires_at.unwrap();
+        let expected_min = before + Duration::seconds(2592000);
+        let expected_max = after + Duration::seconds(2592000);
+
+        assert!(expires_at >= expected_min && expires_at <= expected_max);
+    }
+
+    #[test]
+    fn test_access_token_response_deserializes_refresh_token_field() {
+        let json = r#"{
+            "access_token": "test-token",
+            "scope": "read_products",
+            "refresh_token": "refresh-abc"
+        }"#;
+
+        let response: AccessTokenResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.refresh_token, Some("refresh-abc".to_string()));
+    }
+
+    #[test]
+    fn test_access_token_response_deserializes_refresh_token_expires_in_field() {
+        let json = r#"{
+            "access_token": "test-token",
+            "scope": "read_products",
+            "refresh_token_expires_in": 2592000
+        }"#;
+
+        let response: AccessTokenResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.refresh_token_expires_in, Some(2592000));
+    }
+
+    #[test]
+    fn test_access_token_response_handles_missing_optional_refresh_token_fields() {
+        let json = r#"{
+            "access_token": "test-token",
+            "scope": "read_products"
+        }"#;
+
+        let response: AccessTokenResponse = serde_json::from_str(json).unwrap();
+        assert!(response.refresh_token.is_none());
+        assert!(response.refresh_token_expires_in.is_none());
+    }
+
+    #[test]
+    fn test_refresh_token_expired_at_boundary_61_seconds_is_false() {
+        // Use 61 seconds to avoid timing issues (1 second buffer)
+        let mut session = Session::new(
+            "id".to_string(),
+            sample_shop(),
+            "token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        // Set refresh token expires at 61 seconds from now (just past buffer)
+        session.refresh_token_expires_at = Some(Utc::now() + Duration::seconds(61));
+
+        // Should NOT be expired (61 > 60)
+        assert!(!session.refresh_token_expired());
+    }
+
+    #[test]
+    fn test_refresh_token_expired_at_58_seconds_is_true() {
+        // Use 58 seconds to avoid timing issues (within buffer)
+        let mut session = Session::new(
+            "id".to_string(),
+            sample_shop(),
+            "token".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        // Set refresh token expires at 58 seconds from now (within buffer)
+        session.refresh_token_expires_at = Some(Utc::now() + Duration::seconds(58));
+
+        // Should be expired (58 < 60)
+        assert!(session.refresh_token_expired());
+    }
+
+    #[test]
+    fn test_session_roundtrip_serialization_with_refresh_token() {
+        let mut original = Session::new(
+            "offline_test-shop.myshopify.com".to_string(),
+            sample_shop(),
+            "access-token-123".to_string(),
+            sample_scopes(),
+            false,
+            None,
+        );
+        original.refresh_token = Some("refresh-token-xyz".to_string());
+        original.refresh_token_expires_at = Some(Utc::now() + Duration::days(30));
+
+        let json = serde_json::to_string(&original).unwrap();
+        let restored: Session = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(original.refresh_token, restored.refresh_token);
+        assert_eq!(
+            original.refresh_token_expires_at,
+            restored.refresh_token_expires_at
+        );
     }
 }
