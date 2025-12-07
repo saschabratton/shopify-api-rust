@@ -10,6 +10,7 @@
 //! - Validated newtypes for API credentials and domain values
 //! - OAuth scope handling with implied scope support
 //! - OAuth 2.0 authorization code flow via [`auth::oauth`]
+//! - Token exchange for embedded apps via [`auth::oauth`]
 //! - Session management for authenticated API calls
 //! - Async HTTP client with retry logic and rate limit handling
 //!
@@ -54,6 +55,32 @@
 //! // Step 3: Handle callback
 //! let session = validate_auth_callback(&config, &query, &stored_state).await?;
 //! // session is now ready for API calls
+//! ```
+//!
+//! ## Token Exchange (Embedded Apps)
+//!
+//! For embedded apps using App Bridge session tokens:
+//!
+//! ```rust,ignore
+//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_api::auth::oauth::{exchange_online_token, exchange_offline_token};
+//!
+//! // Configure the SDK (must be embedded)
+//! let config = ShopifyConfig::builder()
+//!     .api_key(ApiKey::new("your-api-key").unwrap())
+//!     .api_secret_key(ApiSecretKey::new("your-secret").unwrap())
+//!     .is_embedded(true)
+//!     .build()
+//!     .unwrap();
+//!
+//! let shop = ShopDomain::new("example-shop").unwrap();
+//! let session_token = "eyJ..."; // JWT from App Bridge
+//!
+//! // Exchange for an online access token
+//! let session = exchange_online_token(&config, &shop, session_token).await?;
+//!
+//! // Or exchange for an offline access token
+//! let session = exchange_offline_token(&config, &shop, session_token).await?;
 //! ```
 //!
 //! ## Session Management
@@ -134,5 +161,6 @@ pub use clients::{
 
 // Re-export OAuth types for convenience
 pub use auth::oauth::{
-    begin_auth, validate_auth_callback, AuthQuery, BeginAuthResult, OAuthError, StateParam,
+    begin_auth, exchange_offline_token, exchange_online_token, validate_auth_callback, AuthQuery,
+    BeginAuthResult, OAuthError, StateParam,
 };

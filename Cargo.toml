@@ -30,6 +30,9 @@ rand = "0.8"
 base64 = "0.22"
 urlencoding = "2.1"
 
+# JWT handling for token exchange
+jsonwebtoken = "9"
+
 [dev-dependencies]
 wiremock = "0.5"
 tokio-test = "0.4"

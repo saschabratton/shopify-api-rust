@@ -1,7 +1,7 @@
 //! OAuth-specific error types for the Shopify API SDK.
 //!
 //! This module contains error types for OAuth operations including HMAC validation,
-//! state verification, and token exchange failures.
+//! state verification, token exchange failures, and JWT validation for embedded apps.
 //!
 //! # Error Types
 //!
@@ -10,6 +10,8 @@
 //! - [`OAuthError::TokenExchangeFailed`]: Token exchange request failed
 //! - [`OAuthError::InvalidCallback`]: Callback parameters are malformed
 //! - [`OAuthError::MissingHostConfig`]: Host URL not configured for redirect URI
+//! - [`OAuthError::InvalidJwt`]: JWT validation failed (for token exchange)
+//! - [`OAuthError::NotEmbeddedApp`]: Token exchange requires embedded app configuration
 //! - [`OAuthError::HttpError`]: Wrapped HTTP client error
 //!
 //! # Example
@@ -25,6 +27,11 @@
 //!     received: "xyz789".to_string(),
 //! };
 //! assert!(error.to_string().contains("abc123"));
+//!
+//! let error = OAuthError::InvalidJwt {
+//!     reason: "Token expired".to_string(),
+//! };
+//! assert!(error.to_string().contains("Token expired"));
 //! ```
 
 use crate::clients::HttpError;
@@ -32,8 +39,8 @@ use thiserror::Error;
 
 /// Errors that can occur during OAuth operations.
 ///
-/// This enum covers all failure modes in the OAuth authorization code flow,
-/// from HMAC validation to token exchange.
+/// This enum covers all failure modes in OAuth flows, including the authorization
+/// code flow, token exchange, and JWT validation for embedded apps.
 ///
 /// # Thread Safety
 ///
@@ -60,6 +67,12 @@ use thiserror::Error;
 ///         }
 ///         OAuthError::MissingHostConfig => {
 ///             eprintln!("Configuration error: Host URL not configured");
+///         }
+///         OAuthError::InvalidJwt { reason } => {
+///             eprintln!("JWT validation failed: {}", reason);
+///         }
+///         OAuthError::NotEmbeddedApp => {
+///             eprintln!("Token exchange only works for embedded apps");
 ///         }
 ///         OAuthError::HttpError(e) => {
 ///             eprintln!("HTTP error: {}", e);
@@ -118,6 +131,50 @@ pub enum OAuthError {
     /// redirect URI. Configure this via `ShopifyConfigBuilder::host()`.
     #[error("Host URL must be configured in ShopifyConfig for OAuth")]
     MissingHostConfig,
+
+    /// JWT validation failed.
+    ///
+    /// This error occurs during token exchange when the session token (JWT)
+    /// provided by App Bridge cannot be validated. Common causes include:
+    ///
+    /// - Token is expired or not yet valid
+    /// - Token was signed with a different secret key
+    /// - Token's audience (`aud`) claim doesn't match the app's API key
+    /// - Token structure is malformed
+    /// - Shopify rejected the token during token exchange
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::auth::oauth::OAuthError;
+    ///
+    /// let error = OAuthError::InvalidJwt {
+    ///     reason: "Session token had invalid API key".to_string(),
+    /// };
+    /// assert!(error.to_string().contains("Invalid JWT"));
+    /// ```
+    #[error("Invalid JWT: {reason}")]
+    InvalidJwt {
+        /// Description of why the JWT validation failed.
+        reason: String,
+    },
+
+    /// Token exchange requires an embedded app configuration.
+    ///
+    /// Token exchange OAuth flow is only available for embedded apps that
+    /// receive session tokens from Shopify App Bridge. Ensure that
+    /// `ShopifyConfigBuilder::is_embedded(true)` is set.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::auth::oauth::OAuthError;
+    ///
+    /// let error = OAuthError::NotEmbeddedApp;
+    /// assert!(error.to_string().contains("embedded app"));
+    /// ```
+    #[error("Token exchange requires an embedded app configuration")]
+    NotEmbeddedApp,
 
     /// Wrapped HTTP client error.
     ///
@@ -206,6 +263,14 @@ mod tests {
 
         let error: &dyn std::error::Error = &OAuthError::MissingHostConfig;
         let _ = error;
+
+        let error: &dyn std::error::Error = &OAuthError::InvalidJwt {
+            reason: "test".to_string(),
+        };
+        let _ = error;
+
+        let error: &dyn std::error::Error = &OAuthError::NotEmbeddedApp;
+        let _ = error;
     }
 
     #[test]
@@ -239,5 +304,65 @@ mod tests {
     fn test_oauth_error_is_send_sync() {
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<OAuthError>();
+    }
+
+    // === New tests for InvalidJwt and NotEmbeddedApp variants ===
+
+    #[test]
+    fn test_invalid_jwt_formats_error_message_with_reason() {
+        let error = OAuthError::InvalidJwt {
+            reason: "Token expired".to_string(),
+        };
+        let message = error.to_string();
+        assert!(message.contains("Invalid JWT"));
+        assert!(message.contains("Token expired"));
+    }
+
+    #[test]
+    fn test_not_embedded_app_has_correct_error_message() {
+        let error = OAuthError::NotEmbeddedApp;
+        let message = error.to_string();
+        assert!(message.contains("embedded app"));
+        assert!(message.contains("Token exchange"));
+    }
+
+    #[test]
+    fn test_new_variants_implement_std_error() {
+        // InvalidJwt implements std::error::Error
+        let invalid_jwt_error: &dyn std::error::Error = &OAuthError::InvalidJwt {
+            reason: "test reason".to_string(),
+        };
+        assert!(invalid_jwt_error.to_string().contains("Invalid JWT"));
+
+        // NotEmbeddedApp implements std::error::Error
+        let not_embedded_error: &dyn std::error::Error = &OAuthError::NotEmbeddedApp;
+        assert!(not_embedded_error.to_string().contains("embedded app"));
+    }
+
+    #[test]
+    fn test_new_variants_are_send_sync() {
+        fn assert_send_sync<T: Send + Sync>() {}
+
+        // These compile-time assertions verify Send + Sync
+        assert_send_sync::<OAuthError>();
+
+        // Also verify the specific variants at runtime
+        let invalid_jwt = OAuthError::InvalidJwt {
+            reason: "test".to_string(),
+        };
+        let not_embedded = OAuthError::NotEmbeddedApp;
+
+        // Can be sent across threads
+        std::thread::spawn(move || {
+            let _ = invalid_jwt;
+        })
+        .join()
+        .unwrap();
+
+        std::thread::spawn(move || {
+            let _ = not_embedded;
+        })
+        .join()
+        .unwrap();
     }
 }

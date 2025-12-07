@@ -1,18 +1,28 @@
-//! OAuth 2.0 Authorization Code Grant implementation for Shopify.
+//! OAuth 2.0 implementation for Shopify apps.
 //!
-//! This module provides a complete implementation of the OAuth 2.0 authorization
-//! code flow for Shopify apps. It handles authorization URL generation, callback
-//! validation with HMAC verification, and token exchange.
+//! This module provides complete OAuth implementations for Shopify apps:
 //!
-//! # Overview
+//! - **Authorization Code Grant**: Traditional OAuth flow with redirects
+//! - **Token Exchange**: For embedded apps using App Bridge session tokens
 //!
-//! The OAuth flow for Shopify apps consists of two main steps:
+//! # Authorization Code Grant
+//!
+//! The authorization code flow is used for standalone apps and initial app installation:
 //!
 //! 1. **Authorization Initiation** ([`begin_auth`]): Generate an authorization URL
 //!    and redirect the user to Shopify to grant access.
 //!
 //! 2. **Callback Validation** ([`validate_auth_callback`]): When the user is
 //!    redirected back, validate the callback and exchange the code for an access token.
+//!
+//! # Token Exchange (for Embedded Apps)
+//!
+//! Token exchange is used by embedded apps that receive session tokens from App Bridge:
+//!
+//! - [`exchange_online_token`]: Exchange session token for user-specific access token
+//! - [`exchange_offline_token`]: Exchange session token for app-level access token
+//!
+//! Token exchange does not require redirects, making it ideal for embedded app contexts.
 //!
 //! # Security Features
 //!
@@ -22,8 +32,9 @@
 //!   algorithms to prevent timing attacks
 //! - **Key Rotation Support**: Old API secret keys can be configured for seamless
 //!   key rotation without breaking in-flight OAuth flows
+//! - **JWT Validation**: Session tokens are validated before token exchange
 //!
-//! # Example: Complete OAuth Flow
+//! # Example: Authorization Code Flow
 //!
 //! ```rust,ignore
 //! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl, AuthScopes};
@@ -65,17 +76,44 @@
 //! }
 //! ```
 //!
+//! # Example: Token Exchange Flow (Embedded Apps)
+//!
+//! ```rust,ignore
+//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_api::auth::oauth::{exchange_online_token, exchange_offline_token, OAuthError};
+//!
+//! // Configure the SDK (must be embedded app)
+//! let config = ShopifyConfig::builder()
+//!     .api_key(ApiKey::new("your-api-key").unwrap())
+//!     .api_secret_key(ApiSecretKey::new("your-secret").unwrap())
+//!     .is_embedded(true)
+//!     .build()
+//!     .unwrap();
+//!
+//! // Get shop domain and session token from App Bridge
+//! let shop = ShopDomain::new("example-shop").unwrap();
+//! let session_token = "eyJ..."; // JWT from App Bridge
+//!
+//! // Exchange for an online access token (user-specific, expires)
+//! let session = exchange_online_token(&config, &shop, session_token).await?;
+//! println!("User ID: {:?}", session.associated_user.map(|u| u.id));
+//!
+//! // Or exchange for an offline access token (app-level, doesn't expire)
+//! let session = exchange_offline_token(&config, &shop, session_token).await?;
+//! println!("Offline token obtained");
+//! ```
+//!
 //! # Online vs Offline Access Tokens
 //!
 //! Shopify supports two types of access tokens:
 //!
-//! - **Online tokens** (`is_online = true` in `begin_auth`):
+//! - **Online tokens** (`is_online = true` in `begin_auth`, or via `exchange_online_token`):
 //!   - Tied to a specific user
 //!   - Expire (typically after 24 hours)
 //!   - Include user information in the session
 //!   - Use for user-facing operations where user identity matters
 //!
-//! - **Offline tokens** (`is_online = false` in `begin_auth`):
+//! - **Offline tokens** (`is_online = false` in `begin_auth`, or via `exchange_offline_token`):
 //!   - App-level access
 //!   - Do not expire
 //!   - No user information
@@ -110,7 +148,9 @@ mod auth_query;
 mod begin_auth;
 mod error;
 pub mod hmac;
+mod jwt_payload;
 mod state;
+mod token_exchange;
 mod validate_callback;
 
 pub use auth_query::AuthQuery;
@@ -118,4 +158,24 @@ pub use begin_auth::{begin_auth, BeginAuthResult};
 pub use error::OAuthError;
 pub use hmac::{compute_signature, constant_time_compare, validate_hmac};
 pub use state::StateParam;
+pub use token_exchange::{exchange_offline_token, exchange_online_token};
 pub use validate_callback::validate_auth_callback;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_exchange_online_token_is_accessible_from_auth_oauth() {
+        // This test verifies that exchange_online_token is properly exported
+        // The function exists and is accessible - compilation proves this
+        let _ = exchange_online_token as fn(_, _, _) -> _;
+    }
+
+    #[test]
+    fn test_exchange_offline_token_is_accessible_from_auth_oauth() {
+        // This test verifies that exchange_offline_token is properly exported
+        // The function exists and is accessible - compilation proves this
+        let _ = exchange_offline_token as fn(_, _, _) -> _;
+    }
+}
