@@ -53,6 +53,62 @@
 //! - `Order::close()` - Close an order
 //! - `Order::open()` - Re-open a closed order
 //!
+//! ## DraftOrder Resource (B2B/Wholesale)
+//!
+//! - [`DraftOrder`] - A draft order for B2B/wholesale workflows
+//! - [`DraftOrderStatus`] - The status of a draft order (Open, InvoiceSent, Completed)
+//! - [`DraftOrderLineItem`] - A line item in a draft order
+//! - [`AppliedDiscount`] - A discount applied to a draft order or line item
+//! - [`DraftOrderInvoice`] - Invoice details for sending to customers
+//! - [`DraftOrderCompleteParams`] - Parameters for completing a draft order
+//! - [`DraftOrderListParams`] - Parameters for listing draft orders
+//! - [`DraftOrderFindParams`] - Parameters for finding a single draft order
+//! - [`DraftOrderCountParams`] - Parameters for counting draft orders
+//!
+//! The DraftOrder resource provides resource-specific operations:
+//! - `DraftOrder::complete()` - Convert draft to actual order (PUT method)
+//! - `DraftOrder::send_invoice()` - Send invoice email to customer
+//!
+//! ## FulfillmentOrder Resource (Modern Fulfillment Workflows)
+//!
+//! - [`FulfillmentOrder`] - A fulfillment order (auto-created by Shopify)
+//! - [`FulfillmentOrderStatus`] - The status of a fulfillment order
+//! - [`FulfillmentOrderRequestStatus`] - The request status of a fulfillment order
+//! - [`HoldReason`] - Reasons for placing a fulfillment order on hold
+//! - [`FulfillmentOrderHoldParams`] - Parameters for hold operation
+//! - [`FulfillmentOrderMoveParams`] - Parameters for move operation
+//! - [`FulfillmentOrderRescheduleParams`] - Parameters for reschedule operation
+//! - [`FulfillmentOrderLineItem`] - A line item in a fulfillment order
+//! - [`FulfillmentOrderLineItemInput`] - Input for fulfillment order line items
+//! - [`FulfillmentOrderListParams`] - Parameters for listing fulfillment orders
+//! - [`FulfillmentOrderFindParams`] - Parameters for finding a single fulfillment order
+//!
+//! FulfillmentOrder is primarily read-only with special operations:
+//! - `cancel()`, `close()`, `hold()`, `move_location()`, `open()`, `release_hold()`, `reschedule()`
+//!
+//! Related structs for fulfillment service integration:
+//! - [`FulfillmentRequest`] - Request fulfillment from a service (create, accept, reject)
+//! - [`CancellationRequest`] - Request cancellation of fulfillment (create, accept, reject)
+//!
+//! ## GiftCard Resource (Shopify Plus)
+//!
+//! - [`GiftCard`] - A gift card in a Shopify store
+//! - [`GiftCardListParams`] - Parameters for listing gift cards
+//! - [`GiftCardFindParams`] - Parameters for finding a single gift card
+//! - [`GiftCardCountParams`] - Parameters for counting gift cards
+//!
+//! **Note**: The `read_gift_cards` and `write_gift_cards` scopes require
+//! approval from Shopify Support.
+//!
+//! The GiftCard resource provides resource-specific operations:
+//! - `GiftCard::disable()` - Disable a gift card (cannot be re-enabled)
+//! - `GiftCard::search()` - Search for gift cards by query
+//!
+//! Key constraints:
+//! - `code` is write-only (only `last_characters` readable after creation)
+//! - No Delete operation - use `disable()` instead
+//! - Only `expires_on`, `note`, `template_suffix` are updatable
+//!
 //! ## Transaction Resource (Nested under Order)
 //!
 //! - [`Transaction`] - A payment transaction nested under an order
@@ -379,6 +435,13 @@
 //! use shopify_api::rest::resources::v2025_10::{
 //!     RefundResource, RefundListParams, RefundCalculateParams
 //! };
+//! use shopify_api::rest::resources::v2025_10::{
+//!     DraftOrder, DraftOrderListParams, DraftOrderStatus, DraftOrderInvoice
+//! };
+//! use shopify_api::rest::resources::v2025_10::{
+//!     FulfillmentOrder, FulfillmentOrderListParams, FulfillmentRequest, CancellationRequest
+//! };
+//! use shopify_api::rest::resources::v2025_10::{GiftCard, GiftCardListParams};
 //! use shopify_api::rest::resources::v2025_10::common::{
 //!     MetafieldOwner, WebhookTopic, WebhookFormat, BlogCommentable, ThemeRole,
 //!     ChargeStatus, ChargeCurrency
@@ -402,6 +465,47 @@
 //!
 //! // List variants under a product (nested path)
 //! let variants = Variant::all_with_parent(&client, "product_id", 123, None).await?;
+//!
+//! // Work with draft orders (B2B/wholesale)
+//! let mut draft = DraftOrder {
+//!     line_items: Some(vec![DraftOrderLineItem {
+//!         variant_id: Some(123456),
+//!         quantity: Some(2),
+//!         ..Default::default()
+//!     }]),
+//!     ..Default::default()
+//! };
+//! let saved = draft.save(&client).await?;
+//!
+//! // Send invoice and complete draft order
+//! let invoice = DraftOrderInvoice {
+//!     to: Some("customer@example.com".to_string()),
+//!     ..Default::default()
+//! };
+//! let invoiced = saved.send_invoice(&client, invoice).await?;
+//! let completed = invoiced.complete(&client, None).await?;
+//!
+//! // Work with fulfillment orders (modern fulfillment)
+//! let fulfillment_orders = FulfillmentOrder::all_with_parent(&client, "order_id", 123, None).await?;
+//! for fo in fulfillment_orders.iter() {
+//!     // Place on hold if needed
+//!     let held = fo.hold(&client, FulfillmentOrderHoldParams {
+//!         reason: HoldReason::AwaitingPayment,
+//!         ..Default::default()
+//!     }).await?;
+//! }
+//!
+//! // Submit a fulfillment request
+//! let fo = FulfillmentRequest::create(&client, 123, Some("Please fulfill"), None).await?;
+//!
+//! // Work with gift cards (Shopify Plus)
+//! let mut gift_card = GiftCard {
+//!     initial_value: Some("100.00".to_string()),
+//!     note: Some("Employee reward".to_string()),
+//!     ..Default::default()
+//! };
+//! let saved = gift_card.save(&client).await?;
+//! let results = GiftCard::search(&client, "employee").await?;
 //!
 //! // Find a customer
 //! let customer = Customer::find(&client, 789, None).await?;
@@ -698,9 +802,12 @@ mod currency;
 mod custom_collection;
 mod customer;
 mod discount_code;
+mod draft_order;
 mod event;
 mod fulfillment;
+mod fulfillment_order;
 mod fulfillment_service;
+mod gift_card;
 mod inventory_item;
 mod inventory_level;
 mod location;
@@ -754,6 +861,25 @@ pub use order::{
     CancelReason, DiscountCode, FinancialStatus, FulfillmentStatus, Order, OrderCountParams,
     OrderFindParams, OrderFulfillment, OrderListParams, Refund,
 };
+
+// Re-export DraftOrder resource types
+pub use draft_order::{
+    AppliedDiscount, DraftOrder, DraftOrderCompleteParams, DraftOrderCountParams,
+    DraftOrderFindParams, DraftOrderInvoice, DraftOrderLineItem, DraftOrderListParams,
+    DraftOrderStatus,
+};
+
+// Re-export FulfillmentOrder resource types
+pub use fulfillment_order::{
+    CancellationRequest, DeliveryMethod, FulfillmentHold, FulfillmentOrder,
+    FulfillmentOrderCountParams, FulfillmentOrderDestination, FulfillmentOrderFindParams,
+    FulfillmentOrderHoldParams, FulfillmentOrderLineItem, FulfillmentOrderLineItemInput,
+    FulfillmentOrderListParams, FulfillmentOrderMoveParams, FulfillmentOrderRescheduleParams,
+    FulfillmentOrderRequestStatus, FulfillmentOrderStatus, FulfillmentRequest, HoldReason,
+};
+
+// Re-export GiftCard resource types
+pub use gift_card::{GiftCard, GiftCardCountParams, GiftCardFindParams, GiftCardListParams};
 
 // Re-export Transaction resource types
 pub use transaction::{
