@@ -15,8 +15,10 @@
 //! - [`DataType`]: Content types for request bodies
 //! - [`rest::RestClient`]: Higher-level REST API client
 //! - [`rest::RestError`]: REST-specific error types
-//! - [`graphql::GraphqlClient`]: Higher-level GraphQL API client
+//! - [`graphql::GraphqlClient`]: Higher-level GraphQL API client (Admin API)
 //! - [`graphql::GraphqlError`]: GraphQL-specific error types
+//! - [`storefront::StorefrontClient`]: GraphQL client for Storefront API
+//! - [`storefront::StorefrontToken`]: Token type for Storefront API authentication
 //!
 //! # Example
 //!
@@ -61,11 +63,12 @@ mod http_client;
 mod http_request;
 mod http_response;
 pub mod rest;
+pub mod storefront;
 
 pub use errors::{
     HttpError, HttpResponseError, InvalidHttpRequestError, MaxHttpRetriesExceededError,
 };
-pub use http_client::HttpClient;
+pub use http_client::{HttpClient, SDK_VERSION};
 pub use http_request::{DataType, HttpMethod, HttpRequest, HttpRequestBuilder};
 pub use http_response::{ApiCallLimit, HttpResponse, PaginationInfo};
 
@@ -74,3 +77,6 @@ pub use rest::{RestClient, RestError};
 
 // Re-export GraphQL client types at the clients module level
 pub use graphql::{GraphqlClient, GraphqlError};
+
+// Re-export Storefront client types at the clients module level
+pub use storefront::{StorefrontClient, StorefrontToken};

@@ -17,6 +17,7 @@
 //! - Async HTTP client with retry logic and rate limit handling
 //! - REST API client with convenient methods for Admin API operations
 //! - GraphQL API client for modern Admin API operations (recommended)
+//! - Storefront API client for headless commerce applications
 //!
 //! ## Quick Start
 //!
@@ -191,6 +192,39 @@
 //! }
 //! ```
 //!
+//! ## Making Storefront API Requests
+//!
+//! The [`StorefrontClient`] provides methods for Storefront API operations:
+//!
+//! ```rust,ignore
+//! use shopify_api::{StorefrontClient, StorefrontToken, ShopDomain};
+//! use serde_json::json;
+//!
+//! let shop = ShopDomain::new("my-store").unwrap();
+//!
+//! // With public token (client-side safe)
+//! let token = StorefrontToken::Public("public-access-token".to_string());
+//! let client = StorefrontClient::new(&shop, Some(token), None);
+//!
+//! // With private token (server-side only)
+//! let token = StorefrontToken::Private("private-access-token".to_string());
+//! let client = StorefrontClient::new(&shop, Some(token), None);
+//!
+//! // Tokenless access for basic features
+//! let client = StorefrontClient::new(&shop, None, None);
+//!
+//! // Query products
+//! let response = client.query(
+//!     "query { products(first: 10) { edges { node { title } } } }",
+//!     None,
+//!     None,
+//!     None
+//! ).await?;
+//!
+//! // Access response data
+//! let products = &response.body["data"]["products"];
+//! ```
+//!
 //! ## Making REST API Requests (Deprecated)
 //!
 //! The [`RestClient`] provides convenient methods for REST API operations:
@@ -280,6 +314,9 @@ pub use clients::{RestClient, RestError};
 
 // Re-export GraphQL client types
 pub use clients::{GraphqlClient, GraphqlError};
+
+// Re-export Storefront client types
+pub use clients::{StorefrontClient, StorefrontToken};
 
 // Re-export OAuth types for convenience
 pub use auth::oauth::{
