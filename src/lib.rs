@@ -19,6 +19,7 @@
 //! - REST resource infrastructure with CRUD operations and dirty tracking
 //! - GraphQL API client for modern Admin API operations (recommended)
 //! - Storefront API client for headless commerce applications
+//! - Webhook registration system for event subscriptions
 //!
 //! ## Quick Start
 //!
@@ -226,6 +227,37 @@
 //! let products = &response.body["data"]["products"];
 //! ```
 //!
+//! ## Webhook Registration
+//!
+//! The [`WebhookRegistry`] provides webhook subscription management:
+//!
+//! ```rust
+//! use shopify_api::{WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic};
+//!
+//! // Configure webhooks at startup
+//! let mut registry = WebhookRegistry::new();
+//!
+//! registry
+//!     .add_registration(
+//!         WebhookRegistrationBuilder::new(
+//!             WebhookTopic::OrdersCreate,
+//!             "/api/webhooks/orders".to_string(),
+//!         )
+//!         .build()
+//!     )
+//!     .add_registration(
+//!         WebhookRegistrationBuilder::new(
+//!             WebhookTopic::ProductsUpdate,
+//!             "/api/webhooks/products".to_string(),
+//!         )
+//!         .filter("vendor:MyApp".to_string())
+//!         .build()
+//!     );
+//!
+//! // Later, register with Shopify when session is available:
+//! // let results = registry.register_all(&session, &config).await?;
+//! ```
+//!
 //! ## Making REST API Requests (Deprecated)
 //!
 //! The [`RestClient`] provides convenient methods for REST API operations:
@@ -296,6 +328,7 @@ pub mod clients;
 pub mod config;
 pub mod error;
 pub mod rest;
+pub mod webhooks;
 
 // Re-export public types at crate root for convenience
 pub use auth::{AssociatedUser, AuthScopes, Session};
@@ -330,4 +363,10 @@ pub use auth::oauth::{
 // Re-export REST resource types for convenience
 pub use rest::{
     ResourceError, ResourceOperation, ResourcePath, ResourceResponse, RestResource, TrackedResource,
+};
+
+// Re-export webhook types for convenience
+pub use webhooks::{
+    WebhookError, WebhookRegistration, WebhookRegistrationBuilder, WebhookRegistrationResult,
+    WebhookRegistry, WebhookTopic,
 };
