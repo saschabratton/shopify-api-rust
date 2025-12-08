@@ -16,6 +16,7 @@
 //! - Session management for authenticated API calls
 //! - Async HTTP client with retry logic and rate limit handling
 //! - REST API client with convenient methods for Admin API operations
+//! - REST resource infrastructure with CRUD operations and dirty tracking
 //! - GraphQL API client for modern Admin API operations (recommended)
 //! - Storefront API client for headless commerce applications
 //!
@@ -294,6 +295,7 @@ pub mod auth;
 pub mod clients;
 pub mod config;
 pub mod error;
+pub mod rest;
 
 // Re-export public types at crate root for convenience
 pub use auth::{AssociatedUser, AuthScopes, Session};
@@ -323,4 +325,9 @@ pub use auth::oauth::{
     begin_auth, exchange_client_credentials, exchange_offline_token, exchange_online_token,
     migrate_to_expiring_token, refresh_access_token, validate_auth_callback, AuthQuery,
     BeginAuthResult, OAuthError, StateParam,
+};
+
+// Re-export REST resource types for convenience
+pub use rest::{
+    ResourceError, ResourceOperation, ResourcePath, ResourceResponse, RestResource, TrackedResource,
 };
