@@ -1,21 +1,34 @@
-//! Webhook registration system for the Shopify API SDK.
+//! Webhook registration and verification system for the Shopify API SDK.
 //!
 //! This module provides an in-memory webhook registration system that allows apps
 //! to configure webhook subscriptions locally, then sync them with Shopify via
-//! GraphQL API mutations using a two-phase pattern.
+//! GraphQL API mutations using a two-phase pattern. It also provides HMAC-based
+//! signature verification for authenticating incoming webhook requests.
 //!
 //! # Overview
 //!
 //! The webhook system consists of:
 //!
+//! ## Registration
+//!
 //! - [`WebhookRegistry`]: Stores and manages webhook registrations
 //! - [`WebhookRegistration`]: Configuration for a single webhook subscription
 //! - [`WebhookRegistrationBuilder`]: Builder for creating registrations
 //! - [`WebhookRegistrationResult`]: Result of registration operations
+//!
+//! ## Verification
+//!
+//! - [`WebhookRequest`]: Incoming webhook request data
+//! - [`WebhookContext`]: Verified webhook metadata
+//! - [`verify_webhook`]: High-level verification with key rotation support
+//! - [`verify_hmac`]: Low-level HMAC verification
+//!
+//! ## Common Types
+//!
 //! - [`WebhookError`]: Error types for webhook operations
 //! - [`WebhookTopic`]: Re-exported webhook topic enum
 //!
-//! # Two-Phase Pattern
+//! # Two-Phase Registration Pattern
 //!
 //! The registry follows a two-phase pattern similar to the Ruby SDK:
 //!
@@ -31,7 +44,43 @@
 //! - Compares configuration to detect changes
 //! - Only creates/updates when necessary
 //!
-//! # Example
+//! # Webhook Verification Example
+//!
+//! ```rust
+//! use shopify_api::webhooks::{WebhookRequest, verify_webhook, verify_hmac};
+//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
+//! use shopify_api::auth::oauth::hmac::compute_signature_base64;
+//!
+//! // Create a config with the API secret
+//! let config = ShopifyConfig::builder()
+//!     .api_key(ApiKey::new("test-key").unwrap())
+//!     .api_secret_key(ApiSecretKey::new("my-secret").unwrap())
+//!     .build()
+//!     .unwrap();
+//!
+//! // Simulate an incoming webhook
+//! let body = b"webhook payload";
+//! let hmac = compute_signature_base64(body, "my-secret");
+//!
+//! // Create a webhook request
+//! let request = WebhookRequest::new(
+//!     body.to_vec(),
+//!     hmac.clone(),
+//!     Some("orders/create".to_string()),
+//!     Some("example.myshopify.com".to_string()),
+//!     None,
+//!     None,
+//! );
+//!
+//! // Verify the webhook (high-level)
+//! let context = verify_webhook(&config, &request).expect("verification failed");
+//! assert_eq!(context.shop_domain(), Some("example.myshopify.com"));
+//!
+//! // Or use low-level verification for custom integrations
+//! assert!(verify_hmac(body, &hmac, "my-secret"));
+//! ```
+//!
+//! # Registration Example
 //!
 //! ```rust
 //! use shopify_api::webhooks::{
@@ -85,6 +134,9 @@
 //!         WebhookError::SubscriptionNotFound { topic } => {
 //!             println!("Webhook for {:?} not found in Shopify", topic);
 //!         }
+//!         WebhookError::InvalidHmac => {
+//!             println!("Webhook signature verification failed");
+//!         }
 //!     }
 //! }
 //! ```
@@ -97,10 +149,17 @@
 mod errors;
 mod registry;
 mod types;
+mod verification;
 
 pub use errors::WebhookError;
 pub use registry::WebhookRegistry;
 pub use types::{WebhookRegistration, WebhookRegistrationBuilder, WebhookRegistrationResult};
+
+// Verification exports
+pub use verification::{
+    verify_hmac, verify_webhook, WebhookContext, WebhookRequest, HEADER_API_VERSION, HEADER_HMAC,
+    HEADER_SHOP_DOMAIN, HEADER_TOPIC, HEADER_WEBHOOK_ID,
+};
 
 // Re-export WebhookTopic for convenience
 pub use crate::rest::resources::v2025_10::common::WebhookTopic;

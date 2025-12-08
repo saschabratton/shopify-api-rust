@@ -1,6 +1,6 @@
 //! Webhook-specific error types for the Shopify API SDK.
 //!
-//! This module contains error types for webhook registration operations.
+//! This module contains error types for webhook registration and verification operations.
 //!
 //! # Error Handling
 //!
@@ -10,6 +10,7 @@
 //! - [`WebhookError::RegistrationNotFound`]: When a topic is not in the local registry
 //! - [`WebhookError::GraphqlError`]: Wrapped GraphQL errors
 //! - [`WebhookError::ShopifyError`]: For userErrors in GraphQL responses
+//! - [`WebhookError::InvalidHmac`]: When webhook signature verification fails
 //!
 //! # Example
 //!
@@ -27,11 +28,11 @@ use crate::clients::GraphqlError;
 use crate::rest::resources::v2025_10::common::WebhookTopic;
 use thiserror::Error;
 
-/// Error type for webhook registration operations.
+/// Error type for webhook registration and verification operations.
 ///
-/// This enum provides error types for webhook registration operations,
-/// including host configuration errors, registration lookup failures,
-/// and wrapped GraphQL errors.
+/// This enum provides error types for webhook operations, including
+/// host configuration errors, registration lookup failures, signature
+/// verification failures, and wrapped GraphQL errors.
 ///
 /// # Example
 ///
@@ -90,6 +91,14 @@ pub enum WebhookError {
         /// The webhook topic that was not found.
         topic: WebhookTopic,
     },
+
+    /// Webhook signature verification failed.
+    ///
+    /// This error occurs when the HMAC signature in the webhook request
+    /// does not match the expected signature computed from the request body.
+    /// The error message is intentionally generic to avoid leaking security details.
+    #[error("Webhook signature verification failed")]
+    InvalidHmac,
 }
 
 #[cfg(test)]
@@ -168,6 +177,10 @@ mod tests {
         let error: &dyn std::error::Error =
             &WebhookError::GraphqlError(GraphqlError::Http(http_error));
         let _ = error;
+
+        // InvalidHmac
+        let error: &dyn std::error::Error = &WebhookError::InvalidHmac;
+        let _ = error;
     }
 
     #[test]
@@ -178,5 +191,15 @@ mod tests {
         let message = error.to_string();
         assert!(message.contains("not found in Shopify"));
         assert!(message.contains("ProductsUpdate"));
+    }
+
+    #[test]
+    fn test_invalid_hmac_error_message() {
+        let error = WebhookError::InvalidHmac;
+        let message = error.to_string();
+        assert_eq!(message, "Webhook signature verification failed");
+        // Ensure the message is generic and doesn't leak security details
+        assert!(!message.contains("key"));
+        assert!(!message.contains("secret"));
     }
 }
