@@ -26,6 +26,7 @@
 //! ```
 
 mod address;
+mod billing;
 mod blog;
 mod collection;
 mod line_item;
@@ -36,6 +37,7 @@ mod theme;
 mod webhook;
 
 pub use address::{Address, CustomerAddress};
+pub use billing::{ChargeCurrency, ChargeStatus};
 pub use blog::BlogCommentable;
 pub use collection::{CollectionImage, SmartCollectionRule};
 pub use line_item::{

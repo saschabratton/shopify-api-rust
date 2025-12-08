@@ -3,6 +3,7 @@
 //! This module provides the foundational infrastructure for REST resources with:
 //!
 //! - **[`RestResource`] trait**: A standardized interface for CRUD operations
+//! - **[`ReadOnlyResource`] marker trait**: Indicates resources that only support read operations
 //! - **[`ResourceResponse<T>`]**: A Deref-based wrapper for ergonomic response handling
 //! - **[`TrackedResource<T>`]**: Dirty tracking for efficient partial updates
 //! - **Path building**: Multiple path support for nested resources
@@ -71,6 +72,7 @@
 //! - [`ResourceResponse`]: Response wrapper with Deref for transparent data access
 //! - [`TrackedResource`]: Dirty tracking wrapper for partial updates
 //! - [`RestResource`]: Trait defining CRUD operations for resources
+//! - [`ReadOnlyResource`]: Marker trait for read-only resources
 //! - [`resources`]: Version-specific resource implementations (e.g., Product, Order)
 
 mod errors;
@@ -84,6 +86,6 @@ pub mod resources;
 // Public exports
 pub use errors::ResourceError;
 pub use path::{build_path, get_path, ResourceOperation, ResourcePath};
-pub use resource::RestResource;
+pub use resource::{ReadOnlyResource, RestResource};
 pub use response::ResourceResponse;
 pub use tracking::TrackedResource;

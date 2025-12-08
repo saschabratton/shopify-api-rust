@@ -45,13 +45,50 @@
 //! - [`OrderFindParams`] - Parameters for finding a single order
 //! - [`OrderCountParams`] - Parameters for counting orders
 //! - [`DiscountCode`] - A discount code applied to an order
-//! - [`Refund`] - A refund associated with an order
+//! - [`Refund`] - A refund associated with an order (embedded)
 //! - [`OrderFulfillment`] - Fulfillment data embedded in order responses
 //!
 //! The Order resource also provides resource-specific operations:
 //! - `Order::cancel()` - Cancel an order
 //! - `Order::close()` - Close an order
 //! - `Order::open()` - Re-open a closed order
+//!
+//! ## Transaction Resource (Nested under Order)
+//!
+//! - [`Transaction`] - A payment transaction nested under an order
+//! - [`TransactionKind`] - The type of transaction (authorization, capture, sale, void, refund)
+//! - [`TransactionStatus`] - The status of a transaction (pending, failure, success, error)
+//! - [`TransactionListParams`] - Parameters for listing transactions
+//! - [`TransactionFindParams`] - Parameters for finding a single transaction
+//! - [`TransactionCountParams`] - Parameters for counting transactions
+//! - [`PaymentDetails`] - Payment details for a transaction
+//! - [`CurrencyExchangeAdjustment`] - Currency exchange adjustment
+//!
+//! Transactions are nested under orders: `/orders/{order_id}/transactions/{id}`
+//! Note: Transactions cannot be updated or deleted - they are immutable records.
+//!
+//! Use `Transaction::all_with_parent()` to list transactions under an order.
+//! Use `Transaction::count_with_parent()` to count transactions under an order.
+//!
+//! ## `RefundResource` (Nested under Order)
+//!
+//! - [`RefundResource`] - A refund resource for direct operations (separate from embedded Refund)
+//! - [`RefundListParams`] - Parameters for listing refunds
+//! - [`RefundFindParams`] - Parameters for finding a single refund
+//! - [`RefundCalculateParams`] - Parameters for calculating a refund
+//! - [`RefundLineItem`] - A line item in a refund
+//! - [`RefundLineItemInput`] - Input for refund line items
+//! - [`RefundShipping`] - Shipping refund information
+//! - [`RefundShippingLine`] - A refund shipping line
+//! - [`OrderAdjustment`] - An order adjustment from a refund
+//!
+//! Refunds are nested under orders: `/orders/{order_id}/refunds/{id}`
+//! Note: Refunds cannot be updated or deleted after creation.
+//!
+//! Special operation:
+//! - `RefundResource::calculate()` - Calculate refund amounts without creating a refund
+//!
+//! Use `RefundResource::all_with_parent()` to list refunds under an order.
 //!
 //! ## Fulfillment Resource
 //!
@@ -81,12 +118,46 @@
 //! The list operation requires the `ids` parameter (comma-separated).
 //! `InventoryItem` is linked to `Variant` via `Variant.inventory_item_id`.
 //!
+//! ## `InventoryLevel` Resource
+//!
+//! - [`InventoryLevel`] - Inventory quantity at a location
+//! - [`InventoryLevelListParams`] - Parameters for listing inventory levels
+//!
+//! `InventoryLevel` uses a composite key (`inventory_item_id` + `location_id`) instead of a single ID.
+//! Special operations are implemented as associated functions:
+//! - `InventoryLevel::adjust()` - Adjust inventory by a relative amount
+//! - `InventoryLevel::connect()` - Connect an inventory item to a location
+//! - `InventoryLevel::set()` - Set inventory to an absolute value
+//! - `InventoryLevel::delete_at_location()` - Delete inventory level at a location
+//!
 //! ## Shop Resource (Singleton)
 //!
 //! - [`Shop`] - The current shop's information
 //!
 //! The Shop resource is a read-only singleton. Use `Shop::current()` to retrieve it.
 //! Shop does not support standard CRUD operations (no Create, Update, Delete).
+//!
+//! ## Location Resource (Read-Only)
+//!
+//! - [`Location`] - A store location
+//! - [`LocationListParams`] - Parameters for listing locations
+//! - [`LocationFindParams`] - Parameters for finding a single location
+//! - [`LocationCountParams`] - Parameters for counting locations
+//! - [`LocationInventoryLevelsParams`] - Parameters for getting inventory levels at a location
+//!
+//! Location implements the [`ReadOnlyResource`](crate::rest::ReadOnlyResource) marker trait.
+//! Only GET operations are available (find, all, count).
+//! Use `Location::inventory_levels()` to get inventory levels at a location.
+//!
+//! ## Redirect Resource
+//!
+//! - [`Redirect`] - A URL redirect
+//! - [`RedirectListParams`] - Parameters for listing redirects
+//! - [`RedirectFindParams`] - Parameters for finding a single redirect
+//! - [`RedirectCountParams`] - Parameters for counting redirects
+//!
+//! Redirects allow merchants to set up automatic URL redirections.
+//! Full CRUD operations are available.
 //!
 //! ## Metafield Resource (Polymorphic Nested)
 //!
@@ -211,6 +282,53 @@
 //! - `Asset::save_to_theme()` - Create or update an asset
 //! - `Asset::delete_from_theme()` - Delete an asset
 //!
+//! ## Billing Resources
+//!
+//! ### `ApplicationCharge` Resource
+//!
+//! - [`ApplicationCharge`] - A one-time application charge
+//! - [`ApplicationChargeFindParams`] - Parameters for finding a single charge
+//! - [`ApplicationChargeListParams`] - Parameters for listing charges
+//!
+//! Application charges allow apps to bill merchants for one-time purchases.
+//! Note: No Update or Delete operations - charges cannot be modified after creation.
+//!
+//! Convenience methods:
+//! - `is_active()` - Check if charge is active
+//! - `is_pending()` - Check if charge is pending approval
+//! - `is_test()` - Check if charge is a test charge
+//!
+//! ### `RecurringApplicationCharge` Resource
+//!
+//! - [`RecurringApplicationCharge`] - A recurring subscription charge
+//! - [`RecurringApplicationChargeFindParams`] - Parameters for finding a single charge
+//! - [`RecurringApplicationChargeListParams`] - Parameters for listing charges
+//!
+//! Recurring charges allow apps to bill merchants on a subscription basis.
+//!
+//! Special operations:
+//! - `customize()` - Update the capped_amount for usage-based billing
+//! - `current()` - Get the currently active recurring charge
+//!
+//! Convenience methods:
+//! - `is_active()` - Check if charge is active
+//! - `is_pending()` - Check if charge is pending approval
+//! - `is_cancelled()` - Check if charge has been cancelled
+//! - `is_test()` - Check if charge is a test charge
+//! - `is_in_trial()` - Check if subscription is in trial period
+//!
+//! ### `UsageCharge` Resource (Nested under `RecurringApplicationCharge`)
+//!
+//! - [`UsageCharge`] - A usage-based charge under a recurring charge
+//! - [`UsageChargeFindParams`] - Parameters for finding a single charge
+//! - [`UsageChargeListParams`] - Parameters for listing charges
+//!
+//! Usage charges are nested under `RecurringApplicationCharge`:
+//! - List: `/recurring_application_charges/{charge_id}/usage_charges`
+//! - Find: `/recurring_application_charges/{charge_id}/usage_charges/{id}`
+//!
+//! Use `UsageCharge::all_with_parent()` to list usage charges.
+//!
 //! ## Common Types (Embedded Structs)
 //!
 //! The `common` module provides shared types used across multiple resources:
@@ -229,6 +347,8 @@
 //! - [`common::SmartCollectionRule`] - Rules for smart collections
 //! - [`common::ThemeRole`] - Theme role types
 //! - [`common::BlogCommentable`] - Blog comment settings
+//! - [`common::ChargeStatus`] - Billing charge status
+//! - [`common::ChargeCurrency`] - Billing charge currency
 //!
 //! # Example
 //!
@@ -240,6 +360,9 @@
 //! use shopify_api::rest::resources::v2025_10::{Order, OrderListParams, FinancialStatus};
 //! use shopify_api::rest::resources::v2025_10::{Fulfillment, FulfillmentListParams, TrackingInfo};
 //! use shopify_api::rest::resources::v2025_10::{InventoryItem, InventoryItemListParams};
+//! use shopify_api::rest::resources::v2025_10::{InventoryLevel, InventoryLevelListParams};
+//! use shopify_api::rest::resources::v2025_10::{Location, LocationListParams};
+//! use shopify_api::rest::resources::v2025_10::{Redirect, RedirectListParams};
 //! use shopify_api::rest::resources::v2025_10::{Metafield, MetafieldListParams};
 //! use shopify_api::rest::resources::v2025_10::{CustomCollection, SmartCollection, Collection};
 //! use shopify_api::rest::resources::v2025_10::{Webhook, WebhookListParams};
@@ -247,7 +370,19 @@
 //! use shopify_api::rest::resources::v2025_10::{Blog, BlogListParams};
 //! use shopify_api::rest::resources::v2025_10::{Article, ArticleListParams};
 //! use shopify_api::rest::resources::v2025_10::{Theme, ThemeListParams, Asset};
-//! use shopify_api::rest::resources::v2025_10::common::{MetafieldOwner, WebhookTopic, WebhookFormat, BlogCommentable, ThemeRole};
+//! use shopify_api::rest::resources::v2025_10::{
+//!     ApplicationCharge, RecurringApplicationCharge, UsageCharge
+//! };
+//! use shopify_api::rest::resources::v2025_10::{
+//!     Transaction, TransactionKind, TransactionListParams
+//! };
+//! use shopify_api::rest::resources::v2025_10::{
+//!     RefundResource, RefundListParams, RefundCalculateParams
+//! };
+//! use shopify_api::rest::resources::v2025_10::common::{
+//!     MetafieldOwner, WebhookTopic, WebhookFormat, BlogCommentable, ThemeRole,
+//!     ChargeStatus, ChargeCurrency
+//! };
 //! use shopify_api::rest::resources::v2025_10::Shop;
 //!
 //! // Find a single product
@@ -290,6 +425,22 @@
 //! // Cancel an order
 //! let cancelled = order.cancel(&client).await?;
 //!
+//! // List transactions for an order
+//! let transactions = Transaction::all_with_parent(&client, "order_id", 450789469, None).await?;
+//! for txn in transactions.iter() {
+//!     println!("Transaction: {:?} - {}", txn.kind, txn.amount.as_deref().unwrap_or("0"));
+//! }
+//!
+//! // Calculate a refund without creating it
+//! let calc_params = RefundCalculateParams {
+//!     shipping: Some(RefundShipping { full_refund: Some(true), ..Default::default() }),
+//!     refund_line_items: Some(vec![
+//!         RefundLineItemInput { line_item_id: 669751112, quantity: 1, restock_type: None },
+//!     ]),
+//!     ..Default::default()
+//! };
+//! let calculation = RefundResource::calculate(&client, 450789469, calc_params).await?;
+//!
 //! // List fulfillments for an order
 //! let fulfillments = Fulfillment::all_with_parent(&client, "order_id", 123, None).await?;
 //!
@@ -312,6 +463,41 @@
 //!     ..Default::default()
 //! };
 //! let inventory_items = InventoryItem::all(&client, Some(params)).await?;
+//!
+//! // Work with inventory levels
+//! let params = InventoryLevelListParams {
+//!     inventory_item_ids: Some("808950810".to_string()),
+//!     location_ids: Some("655441491".to_string()),
+//!     ..Default::default()
+//! };
+//! let levels = InventoryLevel::all(&client, Some(params)).await?;
+//!
+//! // Adjust inventory
+//! let level = InventoryLevel::adjust(&client, 808950810, 655441491, -5).await?;
+//!
+//! // Set inventory to absolute value
+//! let level = InventoryLevel::set(&client, 808950810, 655441491, 100, None).await?;
+//!
+//! // Work with locations (read-only)
+//! let locations = Location::all(&client, None).await?;
+//! for location in locations.iter() {
+//!     println!("Location: {} in {}",
+//!         location.name.as_deref().unwrap_or(""),
+//!         location.city.as_deref().unwrap_or("")
+//!     );
+//! }
+//!
+//! // Get inventory levels at a location
+//! let location = Location::find(&client, 655441491, None).await?.into_inner();
+//! let levels = location.inventory_levels(&client, None).await?;
+//!
+//! // Work with redirects
+//! let redirect = Redirect {
+//!     path: Some("/old-page".to_string()),
+//!     target: Some("/new-page".to_string()),
+//!     ..Default::default()
+//! };
+//! let saved = redirect.save(&client).await?;
 //!
 //! // Get current shop information (singleton resource)
 //! let shop = Shop::current(&client).await?;
@@ -443,33 +629,109 @@
 //!     ..Default::default()
 //! };
 //! let saved = product.save(&client).await?;
+//!
+//! // Work with billing - Create a one-time charge
+//! let charge = ApplicationCharge {
+//!     name: Some("Pro Widget".to_string()),
+//!     price: Some("9.99".to_string()),
+//!     return_url: Some("https://myapp.com/callback".to_string()),
+//!     test: Some(true),
+//!     ..Default::default()
+//! };
+//! let saved = charge.save(&client).await?;
+//! if saved.is_pending() {
+//!     println!("Redirect to: {:?}", saved.confirmation_url);
+//! }
+//!
+//! // Create a recurring subscription charge
+//! let subscription = RecurringApplicationCharge {
+//!     name: Some("Pro Plan".to_string()),
+//!     price: Some("29.99".to_string()),
+//!     return_url: Some("https://myapp.com/callback".to_string()),
+//!     trial_days: Some(14),
+//!     capped_amount: Some("100.00".to_string()),
+//!     terms: Some("$29.99/month plus usage".to_string()),
+//!     ..Default::default()
+//! };
+//! let saved = subscription.save(&client).await?;
+//!
+//! // Get the currently active recurring charge
+//! if let Some(current) = RecurringApplicationCharge::current(&client).await? {
+//!     println!("Active plan: {} at ${}/month",
+//!         current.name.as_deref().unwrap_or(""),
+//!         current.price.as_deref().unwrap_or("0")
+//!     );
+//!
+//!     // Update capped amount for usage billing
+//!     let updated = current.customize(&client, "200.00").await?;
+//! }
+//!
+//! // Create usage charges under a recurring charge
+//! let usage = UsageCharge {
+//!     recurring_application_charge_id: Some(455696195),
+//!     description: Some("100 emails sent".to_string()),
+//!     price: Some("1.00".to_string()),
+//!     ..Default::default()
+//! };
+//! // Note: save() requires the parent ID to be set
+//!
+//! // List usage charges for a recurring charge
+//! let usages = UsageCharge::all_with_parent(
+//!     &client,
+//!     "recurring_application_charge_id",
+//!     455696195,
+//!     None
+//! ).await?;
 //! ```
 
+mod access_scope;
+mod application_charge;
 mod article;
 mod asset;
 mod blog;
+mod collect;
 mod collection_trait;
+mod comment;
 pub mod common;
+mod country;
+mod currency;
 mod custom_collection;
 mod customer;
+mod discount_code;
+mod event;
 mod fulfillment;
+mod fulfillment_service;
 mod inventory_item;
+mod inventory_level;
+mod location;
 mod metafield;
 mod order;
 mod page;
+mod policy;
+mod price_rule;
 mod product;
+mod product_image;
+mod province;
+mod recurring_application_charge;
+mod redirect;
+mod refund;
+mod script_tag;
 mod shop;
 mod smart_collection;
+mod storefront_access_token;
 mod theme;
+mod transaction;
+mod usage_charge;
+mod user;
 mod variant;
 mod webhook;
 
 // Re-export common types for convenience
 pub use common::{
-    Address, BlogCommentable, CollectionImage, CustomerAddress, DiscountAllocation,
-    DiscountApplication, LineItem, LineItemProperty, MetafieldOwner, Money, MoneySet,
-    NoteAttribute, ProductImage, ProductOption, ShippingLine, SmartCollectionRule, TaxLine,
-    ThemeRole, WebhookFormat, WebhookTopic,
+    Address, BlogCommentable, ChargeCurrency, ChargeStatus, CollectionImage, CustomerAddress,
+    DiscountAllocation, DiscountApplication, LineItem, LineItemProperty, MetafieldOwner, Money,
+    MoneySet, NoteAttribute, ProductImage, ProductOption, ShippingLine, SmartCollectionRule,
+    TaxLine, ThemeRole, WebhookFormat, WebhookTopic,
 };
 
 // Re-export Product resource types
@@ -493,6 +755,19 @@ pub use order::{
     OrderFindParams, OrderFulfillment, OrderListParams, Refund,
 };
 
+// Re-export Transaction resource types
+pub use transaction::{
+    CurrencyExchangeAdjustment, PaymentDetails, Transaction, TransactionCountParams,
+    TransactionFindParams, TransactionKind, TransactionListParams, TransactionStatus,
+};
+
+// Re-export RefundResource types
+pub use refund::{
+    OrderAdjustment, RefundCalculateParams, RefundCountParams, RefundFindParams,
+    RefundLineItem, RefundLineItemInput, RefundListParams, RefundResource, RefundShipping,
+    RefundShippingLine,
+};
+
 // Re-export Fulfillment resource types
 pub use fulfillment::{
     Fulfillment, FulfillmentCountParams, FulfillmentFindParams, FulfillmentLineItem,
@@ -504,6 +779,18 @@ pub use fulfillment::{
 pub use inventory_item::{
     CountryHarmonizedSystemCode, InventoryItem, InventoryItemFindParams, InventoryItemListParams,
 };
+
+// Re-export InventoryLevel resource types
+pub use inventory_level::{InventoryLevel, InventoryLevelListParams};
+
+// Re-export Location resource types
+pub use location::{
+    Location, LocationCountParams, LocationFindParams, LocationInventoryLevelsParams,
+    LocationListParams,
+};
+
+// Re-export Redirect resource types
+pub use redirect::{Redirect, RedirectCountParams, RedirectFindParams, RedirectListParams};
 
 // Re-export Shop resource types
 pub use shop::Shop;
@@ -541,3 +828,75 @@ pub use theme::{Theme, ThemeFindParams, ThemeListParams};
 
 // Re-export Asset resource types
 pub use asset::{Asset, AssetListParams};
+
+// Re-export Billing resource types
+pub use application_charge::{
+    ApplicationCharge, ApplicationChargeFindParams, ApplicationChargeListParams,
+};
+pub use recurring_application_charge::{
+    RecurringApplicationCharge, RecurringApplicationChargeFindParams,
+    RecurringApplicationChargeListParams,
+};
+pub use usage_charge::{UsageCharge, UsageChargeFindParams, UsageChargeListParams};
+
+// Re-export PriceRule resource types (deprecated - use GraphQL Discount APIs)
+pub use price_rule::{
+    BxgyRatio, PrerequisiteRange, PrerequisiteToEntitlement, PriceRule, PriceRuleAllocationMethod,
+    PriceRuleCountParams, PriceRuleCustomerSelection, PriceRuleFindParams, PriceRuleListParams,
+    PriceRuleTargetSelection, PriceRuleTargetType, PriceRuleValueType,
+};
+
+// Re-export DiscountCode resource types (nested under PriceRule)
+pub use discount_code::{
+    DiscountCode as DiscountCodeResource, DiscountCodeBatchResult, DiscountCodeCountParams,
+    DiscountCodeError, DiscountCodeFindParams, DiscountCodeListParams,
+};
+
+// Re-export Event resource types (read-only)
+pub use event::{Event, EventCountParams, EventFindParams, EventListParams};
+
+// Re-export Comment resource types
+pub use comment::{Comment, CommentCountParams, CommentFindParams, CommentListParams};
+
+// Re-export ScriptTag resource types (deprecated - use App Blocks)
+pub use script_tag::{
+    ScriptTag, ScriptTagCountParams, ScriptTagDisplayScope, ScriptTagEvent, ScriptTagFindParams,
+    ScriptTagListParams,
+};
+
+// Re-export Policy resource types (read-only, list only)
+pub use policy::Policy;
+
+// Re-export FulfillmentService resource types
+pub use fulfillment_service::{
+    FulfillmentService, FulfillmentServiceFindParams, FulfillmentServiceListParams,
+};
+
+// Re-export Country resource types
+pub use country::{Country, CountryCountParams, CountryFindParams, CountryListParams};
+
+// Re-export Province resource types (nested under Country)
+pub use province::{
+    Province, ProvinceCountParams, ProvinceFindParams, ProvinceListParams,
+};
+
+// Re-export ProductImageResource types (nested under Product)
+// Note: This is distinct from common::ProductImage which is an embedded struct
+pub use product_image::{
+    ProductImageCountParams, ProductImageFindParams, ProductImageListParams, ProductImageResource,
+};
+
+// Re-export User resource types (read-only)
+pub use user::{User, UserFindParams, UserListParams};
+
+// Re-export Currency resource types (read-only, list only)
+pub use currency::Currency;
+
+// Re-export AccessScope resource types (read-only, special OAuth path)
+pub use access_scope::AccessScope;
+
+// Re-export StorefrontAccessToken resource types (limited CRUD)
+pub use storefront_access_token::StorefrontAccessToken;
+
+// Re-export Collect resource types (no Update operation)
+pub use collect::{Collect, CollectCountParams, CollectFindParams, CollectListParams};

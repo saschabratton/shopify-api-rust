@@ -5,6 +5,9 @@
 //! implement this trait gain `find()`, `all()`, `save()`, `delete()`, and
 //! `count()` methods.
 //!
+//! It also defines the [`ReadOnlyResource`] marker trait for resources that
+//! only support read operations (GET requests).
+//!
 //! # Implementing a Resource
 //!
 //! To implement a REST resource:
@@ -54,6 +57,18 @@
 //! let product = Product::find(&client, 123, None).await?;
 //! let products = Product::all(&client, None).await?;
 //! ```
+//!
+//! # Read-Only Resources
+//!
+//! For resources that only support read operations (like Event, Policy, Location),
+//! implement the [`ReadOnlyResource`] marker trait in addition to `RestResource`.
+//! This provides compile-time documentation of the resource's capabilities.
+//!
+//! ```rust,ignore
+//! // Read-only resources implement both traits
+//! impl RestResource for Location { /* ... only GET paths ... */ }
+//! impl ReadOnlyResource for Location {}
+//! ```
 
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -65,6 +80,44 @@ use crate::clients::RestClient;
 use crate::rest::{
     build_path, get_path, ResourceError, ResourceOperation, ResourcePath, ResourceResponse,
 };
+
+/// A marker trait for REST resources that only support read operations.
+///
+/// Resources implementing this trait only support GET requests (find, all, count)
+/// and do not have Create, Update, or Delete operations. This serves as compile-time
+/// documentation of the resource's capabilities and can be used for blanket
+/// implementations that restrict certain behaviors.
+///
+/// # Resources with this trait
+///
+/// The following Shopify resources are read-only:
+/// - `Event` - Store events (read-only audit log)
+/// - `Policy` - Store legal policies
+/// - `Location` - Store locations
+/// - `Currency` - Enabled currencies
+/// - `User` - Store staff users
+/// - `AccessScope` - App access scopes
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use shopify_api::rest::{RestResource, ReadOnlyResource};
+///
+/// // Location only supports GET operations
+/// impl RestResource for Location {
+///     const PATHS: &'static [ResourcePath] = &[
+///         ResourcePath::new(HttpMethod::Get, ResourceOperation::Find, &["id"], "locations/{id}"),
+///         ResourcePath::new(HttpMethod::Get, ResourceOperation::All, &[], "locations"),
+///         ResourcePath::new(HttpMethod::Get, ResourceOperation::Count, &[], "locations/count"),
+///         // No Create, Update, or Delete paths
+///     ];
+///     // ...
+/// }
+///
+/// // Mark as read-only
+/// impl ReadOnlyResource for Location {}
+/// ```
+pub trait ReadOnlyResource: RestResource {}
 
 /// A REST resource that can be fetched, created, updated, and deleted.
 ///
@@ -810,6 +863,48 @@ mod tests {
         }
     }
 
+    // Mock read-only resource for testing ReadOnlyResource trait
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    struct MockLocation {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        id: Option<u64>,
+        name: String,
+        active: bool,
+    }
+
+    impl RestResource for MockLocation {
+        type Id = u64;
+        type FindParams = ();
+        type AllParams = ();
+        type CountParams = ();
+
+        const NAME: &'static str = "Location";
+        const PLURAL: &'static str = "locations";
+        const PATHS: &'static [ResourcePath] = &[
+            ResourcePath::new(
+                HttpMethod::Get,
+                ResourceOperation::Find,
+                &["id"],
+                "locations/{id}",
+            ),
+            ResourcePath::new(HttpMethod::Get, ResourceOperation::All, &[], "locations"),
+            ResourcePath::new(
+                HttpMethod::Get,
+                ResourceOperation::Count,
+                &[],
+                "locations/count",
+            ),
+            // No Create, Update, or Delete paths - read-only resource
+        ];
+
+        fn get_id(&self) -> Option<Self::Id> {
+            self.id
+        }
+    }
+
+    // Implement ReadOnlyResource for MockLocation
+    impl ReadOnlyResource for MockLocation {}
+
     #[test]
     fn test_resource_defines_name_and_paths() {
         assert_eq!(MockProduct::NAME, "Product");
@@ -933,5 +1028,50 @@ mod tests {
     fn test_resource_key_lowercase() {
         assert_eq!(MockProduct::resource_key(), "product");
         assert_eq!(MockVariant::resource_key(), "variant");
+    }
+
+    #[test]
+    fn test_read_only_resource_marker_trait_compiles() {
+        // Test that ReadOnlyResource trait compiles correctly as a marker trait
+        fn assert_read_only<T: ReadOnlyResource>() {}
+        assert_read_only::<MockLocation>();
+    }
+
+    #[test]
+    fn test_read_only_resource_trait_bounds_with_rest_resource() {
+        // Test that ReadOnlyResource requires RestResource as a supertrait
+        fn assert_both_traits<T: ReadOnlyResource + RestResource>() {}
+        assert_both_traits::<MockLocation>();
+    }
+
+    #[test]
+    fn test_read_only_resource_has_only_get_paths() {
+        // Verify that read-only resources only have GET operations defined
+        let paths = MockLocation::PATHS;
+
+        // Should have Find, All, Count paths
+        assert!(get_path(paths, ResourceOperation::Find, &["id"]).is_some());
+        assert!(get_path(paths, ResourceOperation::All, &[]).is_some());
+        assert!(get_path(paths, ResourceOperation::Count, &[]).is_some());
+
+        // Should NOT have Create, Update, Delete paths
+        assert!(get_path(paths, ResourceOperation::Create, &[]).is_none());
+        assert!(get_path(paths, ResourceOperation::Update, &["id"]).is_none());
+        assert!(get_path(paths, ResourceOperation::Delete, &["id"]).is_none());
+    }
+
+    #[test]
+    fn test_read_only_resource_implements_rest_resource() {
+        // Verify that implementing ReadOnlyResource still allows RestResource methods
+        let location = MockLocation {
+            id: Some(123),
+            name: "Main Warehouse".to_string(),
+            active: true,
+        };
+
+        assert_eq!(location.get_id(), Some(123));
+        assert_eq!(MockLocation::NAME, "Location");
+        assert_eq!(MockLocation::PLURAL, "locations");
+        assert_eq!(MockLocation::resource_key(), "location");
     }
 }
