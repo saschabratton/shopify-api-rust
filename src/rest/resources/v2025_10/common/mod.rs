@@ -26,14 +26,24 @@
 //! ```
 
 mod address;
+mod blog;
+mod collection;
 mod line_item;
+mod metafield;
 mod money;
 mod product;
+mod theme;
+mod webhook;
 
 pub use address::{Address, CustomerAddress};
+pub use blog::BlogCommentable;
+pub use collection::{CollectionImage, SmartCollectionRule};
 pub use line_item::{
     DiscountAllocation, DiscountApplication, LineItem, LineItemProperty, NoteAttribute,
     ShippingLine, TaxLine,
 };
+pub use metafield::MetafieldOwner;
 pub use money::{Money, MoneySet};
 pub use product::{ProductImage, ProductOption};
+pub use theme::ThemeRole;
+pub use webhook::{WebhookFormat, WebhookTopic};
