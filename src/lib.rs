@@ -229,26 +229,46 @@
 //!
 //! ## Webhook Registration
 //!
-//! The [`WebhookRegistry`] provides webhook subscription management:
+//! The [`WebhookRegistry`] provides webhook subscription management with support
+//! for HTTP, Amazon EventBridge, and Google Cloud Pub/Sub delivery methods:
 //!
 //! ```rust
-//! use shopify_api::{WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic};
+//! use shopify_api::{
+//!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
+//! };
 //!
 //! // Configure webhooks at startup
 //! let mut registry = WebhookRegistry::new();
 //!
+//! // HTTP delivery
 //! registry
 //!     .add_registration(
 //!         WebhookRegistrationBuilder::new(
 //!             WebhookTopic::OrdersCreate,
-//!             "/api/webhooks/orders".to_string(),
+//!             WebhookDeliveryMethod::Http {
+//!                 callback_url: "https://example.com/api/webhooks/orders".to_string(),
+//!             },
 //!         )
 //!         .build()
 //!     )
+//!     // Amazon EventBridge delivery
 //!     .add_registration(
 //!         WebhookRegistrationBuilder::new(
 //!             WebhookTopic::ProductsUpdate,
-//!             "/api/webhooks/products".to_string(),
+//!             WebhookDeliveryMethod::EventBridge {
+//!                 arn: "arn:aws:events:us-east-1::event-source/aws.partner/shopify.com/123/source".to_string(),
+//!             },
+//!         )
+//!         .build()
+//!     )
+//!     // Google Cloud Pub/Sub delivery
+//!     .add_registration(
+//!         WebhookRegistrationBuilder::new(
+//!             WebhookTopic::CustomersCreate,
+//!             WebhookDeliveryMethod::PubSub {
+//!                 project_id: "my-gcp-project".to_string(),
+//!                 topic_id: "shopify-webhooks".to_string(),
+//!             },
 //!         )
 //!         .filter("vendor:MyApp".to_string())
 //!         .build()
@@ -367,6 +387,6 @@ pub use rest::{
 
 // Re-export webhook types for convenience
 pub use webhooks::{
-    WebhookError, WebhookRegistration, WebhookRegistrationBuilder, WebhookRegistrationResult,
-    WebhookRegistry, WebhookTopic,
+    WebhookDeliveryMethod, WebhookError, WebhookRegistration, WebhookRegistrationBuilder,
+    WebhookRegistrationResult, WebhookRegistry, WebhookTopic,
 };

@@ -6,13 +6,15 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::webhooks::{WebhookRegistration, WebhookRegistrationBuilder};
+//! use shopify_api::webhooks::{WebhookRegistration, WebhookRegistrationBuilder, WebhookDeliveryMethod};
 //! use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
 //!
-//! // Create a registration using the builder
+//! // Create a registration using the builder with HTTP delivery
 //! let registration = WebhookRegistrationBuilder::new(
 //!     WebhookTopic::OrdersCreate,
-//!     "/webhooks/orders/create".to_string(),
+//!     WebhookDeliveryMethod::Http {
+//!         callback_url: "https://example.com/webhooks/orders/create".to_string(),
+//!     },
 //! )
 //! .include_fields(vec!["id".to_string(), "email".to_string()])
 //! .filter("status:active".to_string())
@@ -93,16 +95,78 @@ pub trait WebhookHandler: Send + Sync {
     ) -> BoxFuture<'a, Result<(), WebhookError>>;
 }
 
+/// Represents the delivery method for a webhook subscription.
+///
+/// Webhooks can be delivered via HTTP callback, Amazon EventBridge, or Google Cloud Pub/Sub.
+///
+/// # Variants
+///
+/// - [`Http`](Self::Http): Delivers webhooks to an HTTP/HTTPS endpoint
+/// - [`EventBridge`](Self::EventBridge): Delivers webhooks to Amazon EventBridge
+/// - [`PubSub`](Self::PubSub): Delivers webhooks to Google Cloud Pub/Sub
+///
+/// # Example
+///
+/// ```rust
+/// use shopify_api::webhooks::WebhookDeliveryMethod;
+///
+/// // HTTP delivery
+/// let http = WebhookDeliveryMethod::Http {
+///     callback_url: "https://example.com/webhooks".to_string(),
+/// };
+///
+/// // Amazon EventBridge delivery
+/// let eventbridge = WebhookDeliveryMethod::EventBridge {
+///     arn: "arn:aws:events:us-east-1::event-source/aws.partner/shopify.com/12345/my-source".to_string(),
+/// };
+///
+/// // Google Cloud Pub/Sub delivery
+/// let pubsub = WebhookDeliveryMethod::PubSub {
+///     project_id: "my-project".to_string(),
+///     topic_id: "shopify-webhooks".to_string(),
+/// };
+/// ```
+#[derive(Debug, Clone, PartialEq)]
+pub enum WebhookDeliveryMethod {
+    /// HTTP/HTTPS webhook delivery.
+    ///
+    /// Webhooks are delivered via HTTP POST to the specified callback URL.
+    Http {
+        /// The full callback URL for webhook delivery.
+        callback_url: String,
+    },
+
+    /// Amazon EventBridge webhook delivery.
+    ///
+    /// Webhooks are delivered to an Amazon EventBridge event source.
+    /// The ARN format is typically:
+    /// `arn:aws:events:{region}::event-source/aws.partner/shopify.com/{org}/{event_source}`
+    EventBridge {
+        /// The Amazon Resource Name (ARN) for the EventBridge event source.
+        arn: String,
+    },
+
+    /// Google Cloud Pub/Sub webhook delivery.
+    ///
+    /// Webhooks are delivered to a Google Cloud Pub/Sub topic.
+    PubSub {
+        /// The Google Cloud project ID.
+        project_id: String,
+        /// The Pub/Sub topic ID.
+        topic_id: String,
+    },
+}
+
 /// Represents a webhook registration configuration.
 ///
 /// This struct holds the configuration for a webhook subscription,
-/// including the topic, callback path, optional filtering options,
+/// including the topic, delivery method, optional filtering options,
 /// and an optional handler for processing incoming webhooks.
 ///
 /// # Fields
 ///
 /// - `topic`: The webhook topic to subscribe to
-/// - `path`: The path portion of the callback URL (combined with `config.host()`)
+/// - `delivery_method`: How the webhook should be delivered (HTTP, EventBridge, or Pub/Sub)
 /// - `include_fields`: Optional list of fields to include in the webhook payload
 /// - `metafield_namespaces`: Optional list of metafield namespaces to include
 /// - `filter`: Optional filter string (e.g., "status:active")
@@ -111,26 +175,31 @@ pub trait WebhookHandler: Send + Sync {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::{WebhookRegistration, WebhookRegistrationBuilder};
+/// use shopify_api::webhooks::{WebhookRegistration, WebhookRegistrationBuilder, WebhookDeliveryMethod};
 /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
 ///
 /// let registration = WebhookRegistrationBuilder::new(
 ///     WebhookTopic::OrdersCreate,
-///     "/webhooks/orders".to_string(),
+///     WebhookDeliveryMethod::Http {
+///         callback_url: "https://example.com/webhooks/orders".to_string(),
+///     },
 /// )
 /// .build();
 ///
-/// assert_eq!(registration.path, "/webhooks/orders");
+/// assert!(matches!(
+///     registration.delivery_method,
+///     WebhookDeliveryMethod::Http { .. }
+/// ));
 /// ```
 pub struct WebhookRegistration {
     /// The webhook topic to subscribe to.
     pub topic: WebhookTopic,
 
-    /// The path portion of the callback URL.
+    /// The delivery method for the webhook.
     ///
-    /// This is combined with `config.host()` to form the full callback URL.
-    /// Example: "/webhooks/orders/create"
-    pub path: String,
+    /// Determines how webhooks are delivered: via HTTP callback,
+    /// Amazon EventBridge, or Google Cloud Pub/Sub.
+    pub delivery_method: WebhookDeliveryMethod,
 
     /// Optional list of fields to include in the webhook payload.
     ///
@@ -157,7 +226,7 @@ impl fmt::Debug for WebhookRegistration {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WebhookRegistration")
             .field("topic", &self.topic)
-            .field("path", &self.path)
+            .field("delivery_method", &self.delivery_method)
             .field("include_fields", &self.include_fields)
             .field("metafield_namespaces", &self.metafield_namespaces)
             .field("filter", &self.filter)
@@ -176,18 +245,20 @@ impl fmt::Debug for WebhookRegistration {
 /// Builder for constructing [`WebhookRegistration`] instances.
 ///
 /// This builder provides a fluent API for configuring webhook registrations.
-/// Required fields (`topic` and `path`) are set via the constructor, while
+/// Required fields (`topic` and `delivery_method`) are set via the constructor, while
 /// optional fields can be set using method chaining.
 ///
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::WebhookRegistrationBuilder;
+/// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
 /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
 ///
 /// let registration = WebhookRegistrationBuilder::new(
 ///     WebhookTopic::ProductsUpdate,
-///     "/api/webhooks/products".to_string(),
+///     WebhookDeliveryMethod::Http {
+///         callback_url: "https://example.com/api/webhooks/products".to_string(),
+///     },
 /// )
 /// .include_fields(vec!["id".to_string(), "title".to_string()])
 /// .metafield_namespaces(vec!["custom".to_string()])
@@ -199,7 +270,7 @@ impl fmt::Debug for WebhookRegistration {
 /// ```
 pub struct WebhookRegistrationBuilder {
     topic: WebhookTopic,
-    path: String,
+    delivery_method: WebhookDeliveryMethod,
     include_fields: Option<Vec<String>>,
     metafield_namespaces: Option<Vec<String>>,
     filter: Option<String>,
@@ -211,7 +282,7 @@ impl fmt::Debug for WebhookRegistrationBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WebhookRegistrationBuilder")
             .field("topic", &self.topic)
-            .field("path", &self.path)
+            .field("delivery_method", &self.delivery_method)
             .field("include_fields", &self.include_fields)
             .field("metafield_namespaces", &self.metafield_namespaces)
             .field("filter", &self.filter)
@@ -233,24 +304,26 @@ impl WebhookRegistrationBuilder {
     /// # Arguments
     ///
     /// * `topic` - The webhook topic to subscribe to
-    /// * `path` - The path portion of the callback URL
+    /// * `delivery_method` - The delivery method for the webhook
     ///
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::WebhookRegistrationBuilder;
+    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let builder = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
-    ///     "/webhooks/orders".to_string(),
+    ///     WebhookDeliveryMethod::Http {
+    ///         callback_url: "https://example.com/webhooks/orders".to_string(),
+    ///     },
     /// );
     /// ```
     #[must_use]
-    pub fn new(topic: WebhookTopic, path: String) -> Self {
+    pub fn new(topic: WebhookTopic, delivery_method: WebhookDeliveryMethod) -> Self {
         Self {
             topic,
-            path,
+            delivery_method,
             include_fields: None,
             metafield_namespaces: None,
             filter: None,
@@ -265,12 +338,14 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::WebhookRegistrationBuilder;
+    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
-    ///     "/webhooks".to_string(),
+    ///     WebhookDeliveryMethod::Http {
+    ///         callback_url: "https://example.com/webhooks".to_string(),
+    ///     },
     /// )
     /// .include_fields(vec!["id".to_string(), "email".to_string()])
     /// .build();
@@ -291,12 +366,14 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::WebhookRegistrationBuilder;
+    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::ProductsUpdate,
-    ///     "/webhooks".to_string(),
+    ///     WebhookDeliveryMethod::Http {
+    ///         callback_url: "https://example.com/webhooks".to_string(),
+    ///     },
     /// )
     /// .metafield_namespaces(vec!["custom".to_string(), "app".to_string()])
     /// .build();
@@ -314,12 +391,14 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::WebhookRegistrationBuilder;
+    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
-    ///     "/webhooks".to_string(),
+    ///     WebhookDeliveryMethod::Http {
+    ///         callback_url: "https://example.com/webhooks".to_string(),
+    ///     },
     /// )
     /// .filter("status:active".to_string())
     /// .build();
@@ -341,7 +420,8 @@ impl WebhookRegistrationBuilder {
     ///
     /// ```rust
     /// use shopify_api::webhooks::{
-    ///     WebhookRegistrationBuilder, WebhookHandler, WebhookContext, WebhookError, BoxFuture
+    ///     WebhookRegistrationBuilder, WebhookHandler, WebhookContext, WebhookError, BoxFuture,
+    ///     WebhookDeliveryMethod
     /// };
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     /// use serde_json::Value;
@@ -363,7 +443,9 @@ impl WebhookRegistrationBuilder {
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
-    ///     "/webhooks/orders".to_string(),
+    ///     WebhookDeliveryMethod::Http {
+    ///         callback_url: "https://example.com/webhooks/orders".to_string(),
+    ///     },
     /// )
     /// .handler(MyHandler)
     /// .build();
@@ -381,12 +463,14 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::WebhookRegistrationBuilder;
+    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::CustomersCreate,
-    ///     "/webhooks/customers".to_string(),
+    ///     WebhookDeliveryMethod::Http {
+    ///         callback_url: "https://example.com/webhooks/customers".to_string(),
+    ///     },
     /// )
     /// .build();
     ///
@@ -396,7 +480,7 @@ impl WebhookRegistrationBuilder {
     pub fn build(self) -> WebhookRegistration {
         WebhookRegistration {
             topic: self.topic,
-            path: self.path,
+            delivery_method: self.delivery_method,
             include_fields: self.include_fields,
             metafield_namespaces: self.metafield_namespaces,
             filter: self.filter,
@@ -455,27 +539,222 @@ pub enum WebhookRegistrationResult {
 mod tests {
     use super::*;
 
+    // ========================================================================
+    // Task Group 1 Tests: WebhookDeliveryMethod Enum
+    // ========================================================================
+
     #[test]
-    fn test_webhook_registration_builder_required_fields() {
+    fn test_delivery_method_http_variant_construction() {
+        let method = WebhookDeliveryMethod::Http {
+            callback_url: "https://example.com/webhooks".to_string(),
+        };
+
+        match method {
+            WebhookDeliveryMethod::Http { callback_url } => {
+                assert_eq!(callback_url, "https://example.com/webhooks");
+            }
+            _ => panic!("Expected Http variant"),
+        }
+    }
+
+    #[test]
+    fn test_delivery_method_eventbridge_variant_construction() {
+        let method = WebhookDeliveryMethod::EventBridge {
+            arn: "arn:aws:events:us-east-1::event-source/aws.partner/shopify.com/12345/source"
+                .to_string(),
+        };
+
+        match method {
+            WebhookDeliveryMethod::EventBridge { arn } => {
+                assert!(arn.starts_with("arn:aws:events"));
+            }
+            _ => panic!("Expected EventBridge variant"),
+        }
+    }
+
+    #[test]
+    fn test_delivery_method_pubsub_variant_construction() {
+        let method = WebhookDeliveryMethod::PubSub {
+            project_id: "my-project".to_string(),
+            topic_id: "shopify-webhooks".to_string(),
+        };
+
+        match method {
+            WebhookDeliveryMethod::PubSub {
+                project_id,
+                topic_id,
+            } => {
+                assert_eq!(project_id, "my-project");
+                assert_eq!(topic_id, "shopify-webhooks");
+            }
+            _ => panic!("Expected PubSub variant"),
+        }
+    }
+
+    #[test]
+    fn test_delivery_method_derives_debug() {
+        let http = WebhookDeliveryMethod::Http {
+            callback_url: "https://example.com".to_string(),
+        };
+        let debug_str = format!("{:?}", http);
+        assert!(debug_str.contains("Http"));
+        assert!(debug_str.contains("callback_url"));
+
+        let eventbridge = WebhookDeliveryMethod::EventBridge {
+            arn: "arn:test".to_string(),
+        };
+        let debug_str = format!("{:?}", eventbridge);
+        assert!(debug_str.contains("EventBridge"));
+        assert!(debug_str.contains("arn"));
+
+        let pubsub = WebhookDeliveryMethod::PubSub {
+            project_id: "proj".to_string(),
+            topic_id: "topic".to_string(),
+        };
+        let debug_str = format!("{:?}", pubsub);
+        assert!(debug_str.contains("PubSub"));
+        assert!(debug_str.contains("project_id"));
+        assert!(debug_str.contains("topic_id"));
+    }
+
+    #[test]
+    fn test_delivery_method_derives_clone() {
+        let original = WebhookDeliveryMethod::Http {
+            callback_url: "https://example.com".to_string(),
+        };
+        let cloned = original.clone();
+
+        assert_eq!(original, cloned);
+    }
+
+    #[test]
+    fn test_delivery_method_derives_partial_eq() {
+        let http1 = WebhookDeliveryMethod::Http {
+            callback_url: "https://example.com".to_string(),
+        };
+        let http2 = WebhookDeliveryMethod::Http {
+            callback_url: "https://example.com".to_string(),
+        };
+        let http3 = WebhookDeliveryMethod::Http {
+            callback_url: "https://different.com".to_string(),
+        };
+
+        assert_eq!(http1, http2);
+        assert_ne!(http1, http3);
+
+        let eventbridge = WebhookDeliveryMethod::EventBridge {
+            arn: "arn:test".to_string(),
+        };
+        assert_ne!(http1, eventbridge);
+    }
+
+    #[test]
+    fn test_delivery_method_equality_across_variants() {
+        let http = WebhookDeliveryMethod::Http {
+            callback_url: "https://example.com".to_string(),
+        };
+        let eventbridge = WebhookDeliveryMethod::EventBridge {
+            arn: "arn:test".to_string(),
+        };
+        let pubsub = WebhookDeliveryMethod::PubSub {
+            project_id: "proj".to_string(),
+            topic_id: "topic".to_string(),
+        };
+
+        // Different variants should never be equal
+        assert_ne!(http, eventbridge);
+        assert_ne!(http, pubsub);
+        assert_ne!(eventbridge, pubsub);
+    }
+
+    // ========================================================================
+    // Task Group 2 Tests: WebhookRegistration Modification
+    // ========================================================================
+
+    #[test]
+    fn test_webhook_registration_with_http_delivery_method() {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
-            "/webhooks/orders".to_string(),
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks/orders".to_string(),
+            },
         )
         .build();
 
         assert_eq!(registration.topic, WebhookTopic::OrdersCreate);
-        assert_eq!(registration.path, "/webhooks/orders");
-        assert!(registration.include_fields.is_none());
-        assert!(registration.metafield_namespaces.is_none());
-        assert!(registration.filter.is_none());
-        assert!(registration.handler.is_none());
+        match registration.delivery_method {
+            WebhookDeliveryMethod::Http { callback_url } => {
+                assert_eq!(callback_url, "https://example.com/webhooks/orders");
+            }
+            _ => panic!("Expected Http delivery method"),
+        }
     }
 
     #[test]
-    fn test_webhook_registration_builder_optional_fields() {
+    fn test_webhook_registration_with_eventbridge_delivery_method() {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::ProductsUpdate,
-            "/webhooks/products".to_string(),
+            WebhookDeliveryMethod::EventBridge {
+                arn: "arn:aws:events:us-east-1::event-source/aws.partner/shopify.com/123/src"
+                    .to_string(),
+            },
+        )
+        .build();
+
+        assert_eq!(registration.topic, WebhookTopic::ProductsUpdate);
+        assert!(matches!(
+            registration.delivery_method,
+            WebhookDeliveryMethod::EventBridge { .. }
+        ));
+    }
+
+    #[test]
+    fn test_webhook_registration_with_pubsub_delivery_method() {
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::CustomersCreate,
+            WebhookDeliveryMethod::PubSub {
+                project_id: "my-gcp-project".to_string(),
+                topic_id: "shopify-events".to_string(),
+            },
+        )
+        .build();
+
+        assert_eq!(registration.topic, WebhookTopic::CustomersCreate);
+        match registration.delivery_method {
+            WebhookDeliveryMethod::PubSub {
+                project_id,
+                topic_id,
+            } => {
+                assert_eq!(project_id, "my-gcp-project");
+                assert_eq!(topic_id, "shopify-events");
+            }
+            _ => panic!("Expected PubSub delivery method"),
+        }
+    }
+
+    #[test]
+    fn test_webhook_registration_debug_includes_delivery_method() {
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+        )
+        .build();
+
+        let debug_str = format!("{:?}", registration);
+        assert!(debug_str.contains("WebhookRegistration"));
+        assert!(debug_str.contains("delivery_method"));
+        assert!(debug_str.contains("Http"));
+    }
+
+    #[test]
+    fn test_webhook_registration_optional_fields_still_work() {
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::ProductsUpdate,
+            WebhookDeliveryMethod::EventBridge {
+                arn: "arn:test".to_string(),
+            },
         )
         .include_fields(vec!["id".to_string(), "title".to_string()])
         .metafield_namespaces(vec!["custom".to_string()])
@@ -492,6 +771,129 @@ mod tests {
         );
         assert_eq!(registration.filter, Some("vendor:Test".to_string()));
     }
+
+    // ========================================================================
+    // Task Group 3 Tests: WebhookRegistrationBuilder Modification
+    // ========================================================================
+
+    #[test]
+    fn test_builder_new_with_http_delivery_method() {
+        let builder = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+        );
+        let registration = builder.build();
+
+        assert_eq!(registration.topic, WebhookTopic::OrdersCreate);
+        assert!(matches!(
+            registration.delivery_method,
+            WebhookDeliveryMethod::Http { .. }
+        ));
+    }
+
+    #[test]
+    fn test_builder_new_with_eventbridge_delivery_method() {
+        let builder = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::EventBridge {
+                arn: "arn:aws:events:test".to_string(),
+            },
+        );
+        let registration = builder.build();
+
+        assert!(matches!(
+            registration.delivery_method,
+            WebhookDeliveryMethod::EventBridge { .. }
+        ));
+    }
+
+    #[test]
+    fn test_builder_new_with_pubsub_delivery_method() {
+        let builder = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::PubSub {
+                project_id: "project".to_string(),
+                topic_id: "topic".to_string(),
+            },
+        );
+        let registration = builder.build();
+
+        assert!(matches!(
+            registration.delivery_method,
+            WebhookDeliveryMethod::PubSub { .. }
+        ));
+    }
+
+    #[test]
+    fn test_builder_method_chaining_still_works() {
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com".to_string(),
+            },
+        )
+        .include_fields(vec!["id".to_string()])
+        .metafield_namespaces(vec!["ns".to_string()])
+        .filter("active".to_string())
+        .build();
+
+        assert!(registration.include_fields.is_some());
+        assert!(registration.metafield_namespaces.is_some());
+        assert!(registration.filter.is_some());
+    }
+
+    #[test]
+    fn test_builder_build_produces_correct_registration() {
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::ProductsCreate,
+            WebhookDeliveryMethod::PubSub {
+                project_id: "my-project".to_string(),
+                topic_id: "my-topic".to_string(),
+            },
+        )
+        .include_fields(vec!["id".to_string(), "title".to_string()])
+        .build();
+
+        assert_eq!(registration.topic, WebhookTopic::ProductsCreate);
+        match registration.delivery_method {
+            WebhookDeliveryMethod::PubSub {
+                project_id,
+                topic_id,
+            } => {
+                assert_eq!(project_id, "my-project");
+                assert_eq!(topic_id, "my-topic");
+            }
+            _ => panic!("Expected PubSub delivery method"),
+        }
+        assert_eq!(
+            registration.include_fields,
+            Some(vec!["id".to_string(), "title".to_string()])
+        );
+        assert!(registration.metafield_namespaces.is_none());
+        assert!(registration.filter.is_none());
+        assert!(registration.handler.is_none());
+    }
+
+    #[test]
+    fn test_builder_debug_includes_delivery_method() {
+        let builder = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::EventBridge {
+                arn: "arn:test".to_string(),
+            },
+        );
+
+        let debug_str = format!("{:?}", builder);
+        assert!(debug_str.contains("WebhookRegistrationBuilder"));
+        assert!(debug_str.contains("delivery_method"));
+        assert!(debug_str.contains("EventBridge"));
+    }
+
+    // ========================================================================
+    // Legacy Tests Updated: WebhookRegistrationResult and Handler Tests
+    // ========================================================================
 
     #[test]
     fn test_webhook_registration_result_created_variant() {
@@ -547,21 +949,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_webhook_registration_derives_debug() {
-        let registration = WebhookRegistrationBuilder::new(
-            WebhookTopic::OrdersCreate,
-            "/webhooks".to_string(),
-        )
-        .build();
-
-        let debug_str = format!("{:?}", registration);
-        assert!(debug_str.contains("WebhookRegistration"));
-        assert!(debug_str.contains("OrdersCreate"));
-    }
-
     // ========================================================================
-    // Task Group 1 Tests: WebhookHandler Trait
+    // Handler Tests
     // ========================================================================
 
     // Test handler implementation for testing purposes
@@ -585,34 +974,25 @@ mod tests {
 
     #[test]
     fn test_webhook_handler_trait_can_be_implemented_on_struct() {
-        // This test verifies that WebhookHandler trait can be implemented
         let handler = TestHandler {
             name: "test".to_string(),
         };
 
-        // Verify the handler exists and is the right type
         let _: &dyn WebhookHandler = &handler;
     }
 
     #[test]
     fn test_handler_with_send_sync_bounds_compiles() {
-        // This test verifies that handlers with Send + Sync bounds compile correctly
         fn assert_send_sync<T: Send + Sync>() {}
 
-        // TestHandler should satisfy Send + Sync bounds
         assert_send_sync::<TestHandler>();
 
-        // Box<dyn WebhookHandler> should also be Send + Sync
         let handler = TestHandler {
             name: "test".to_string(),
         };
         let boxed: Box<dyn WebhookHandler> = Box::new(handler);
         let _ = boxed;
     }
-
-    // ========================================================================
-    // Task Group 2 Tests: Builder Handler Functionality
-    // ========================================================================
 
     #[test]
     fn test_builder_handler_method_accepts_webhook_handler() {
@@ -622,7 +1002,9 @@ mod tests {
 
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
-            "/webhooks/orders".to_string(),
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks/orders".to_string(),
+            },
         )
         .handler(handler)
         .build();
@@ -634,7 +1016,9 @@ mod tests {
     fn test_builder_without_handler_produces_none() {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
-            "/webhooks/orders".to_string(),
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks/orders".to_string(),
+            },
         )
         .build();
 
@@ -649,7 +1033,9 @@ mod tests {
 
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::ProductsUpdate,
-            "/webhooks/products".to_string(),
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks/products".to_string(),
+            },
         )
         .handler(handler)
         .build();
@@ -665,12 +1051,13 @@ mod tests {
 
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::CustomersCreate,
-            "/webhooks/customers".to_string(),
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks/customers".to_string(),
+            },
         )
         .handler(handler)
         .build();
 
-        // Verify handler is boxed as trait object
         let boxed_handler: &Box<dyn WebhookHandler> = registration.handler.as_ref().unwrap();
         let _ = boxed_handler;
     }

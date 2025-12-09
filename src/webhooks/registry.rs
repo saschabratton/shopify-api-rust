@@ -6,16 +6,29 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder};
+//! use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookDeliveryMethod};
 //! use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
 //!
 //! let mut registry = WebhookRegistry::new();
 //!
-//! // Add registrations
+//! // Add registrations with HTTP delivery
 //! registry.add_registration(
 //!     WebhookRegistrationBuilder::new(
 //!         WebhookTopic::OrdersCreate,
-//!         "/webhooks/orders/create".to_string(),
+//!         WebhookDeliveryMethod::Http {
+//!             callback_url: "https://example.com/webhooks/orders/create".to_string(),
+//!         },
+//!     )
+//!     .build()
+//! );
+//!
+//! // Add registrations with EventBridge delivery
+//! registry.add_registration(
+//!     WebhookRegistrationBuilder::new(
+//!         WebhookTopic::ProductsUpdate,
+//!         WebhookDeliveryMethod::EventBridge {
+//!             arn: "arn:aws:events:us-east-1::event-source/aws.partner/shopify.com/123/source".to_string(),
+//!         },
 //!     )
 //!     .build()
 //! );
@@ -32,7 +45,11 @@ use crate::clients::GraphqlClient;
 use crate::config::ShopifyConfig;
 
 use super::errors::WebhookError;
-use super::types::{WebhookHandler, WebhookRegistration, WebhookRegistrationResult, WebhookTopic};
+use super::types::{
+    WebhookRegistrationBuilder,
+    WebhookDeliveryMethod, WebhookHandler, WebhookRegistration, WebhookRegistrationResult,
+    WebhookTopic,
+};
 use super::verification::{verify_webhook, WebhookRequest};
 
 /// Registry for managing webhook subscriptions.
@@ -64,10 +81,17 @@ use super::verification::{verify_webhook, WebhookRequest};
 /// - Only creates/updates when necessary
 /// - Avoids unnecessary API calls
 ///
+/// # Delivery Methods
+///
+/// The registry supports three delivery methods:
+/// - **HTTP**: Webhooks delivered via HTTP POST to a callback URL
+/// - **EventBridge**: Webhooks delivered to Amazon EventBridge
+/// - **Pub/Sub**: Webhooks delivered to Google Cloud Pub/Sub
+///
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder};
+/// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookDeliveryMethod};
 /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
 ///
 /// // Create a registry and add registrations
@@ -76,7 +100,9 @@ use super::verification::{verify_webhook, WebhookRequest};
 /// registry.add_registration(
 ///     WebhookRegistrationBuilder::new(
 ///         WebhookTopic::OrdersCreate,
-///         "/api/webhooks/orders".to_string(),
+///         WebhookDeliveryMethod::Http {
+///             callback_url: "https://example.com/api/webhooks/orders".to_string(),
+///         },
 ///     )
 ///     .build()
 /// );
@@ -141,24 +167,28 @@ impl WebhookRegistry {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder};
+    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let mut registry = WebhookRegistry::new();
     ///
-    /// // Method chaining
+    /// // Method chaining with different delivery methods
     /// registry
     ///     .add_registration(
     ///         WebhookRegistrationBuilder::new(
     ///             WebhookTopic::OrdersCreate,
-    ///             "/webhooks/orders/create".to_string(),
+    ///             WebhookDeliveryMethod::Http {
+    ///                 callback_url: "https://example.com/webhooks/orders/create".to_string(),
+    ///             },
     ///         )
     ///         .build()
     ///     )
     ///     .add_registration(
     ///         WebhookRegistrationBuilder::new(
     ///             WebhookTopic::ProductsUpdate,
-    ///             "/webhooks/products/update".to_string(),
+    ///             WebhookDeliveryMethod::EventBridge {
+    ///                 arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+    ///             },
     ///         )
     ///         .build()
     ///     );
@@ -188,14 +218,16 @@ impl WebhookRegistry {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder};
+    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let mut registry = WebhookRegistry::new();
     /// registry.add_registration(
     ///     WebhookRegistrationBuilder::new(
     ///         WebhookTopic::OrdersCreate,
-    ///         "/webhooks".to_string(),
+    ///         WebhookDeliveryMethod::Http {
+    ///             callback_url: "https://example.com/webhooks".to_string(),
+    ///         },
     ///     )
     ///     .build()
     /// );
@@ -218,7 +250,7 @@ impl WebhookRegistry {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder};
+    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let mut registry = WebhookRegistry::new();
@@ -226,14 +258,19 @@ impl WebhookRegistry {
     ///     .add_registration(
     ///         WebhookRegistrationBuilder::new(
     ///             WebhookTopic::OrdersCreate,
-    ///             "/webhooks/orders".to_string(),
+    ///             WebhookDeliveryMethod::Http {
+    ///                 callback_url: "https://example.com/webhooks/orders".to_string(),
+    ///             },
     ///         )
     ///         .build()
     ///     )
     ///     .add_registration(
     ///         WebhookRegistrationBuilder::new(
     ///             WebhookTopic::ProductsCreate,
-    ///             "/webhooks/products".to_string(),
+    ///             WebhookDeliveryMethod::PubSub {
+    ///                 project_id: "my-project".to_string(),
+    ///                 topic_id: "webhooks".to_string(),
+    ///             },
     ///         )
     ///         .build()
     ///     );
@@ -321,12 +358,11 @@ impl WebhookRegistry {
     /// # Arguments
     ///
     /// * `session` - The authenticated session for API calls
-    /// * `config` - The SDK configuration (must have `host` set)
+    /// * `config` - The SDK configuration
     /// * `topic` - The webhook topic to register
     ///
     /// # Errors
     ///
-    /// Returns `WebhookError::HostNotConfigured` if `config.host()` is `None`.
     /// Returns `WebhookError::RegistrationNotFound` if the topic is not in the registry.
     /// Returns `WebhookError::GraphqlError` for underlying API errors.
     /// Returns `WebhookError::ShopifyError` for userErrors in the response.
@@ -334,14 +370,16 @@ impl WebhookRegistry {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder};
+    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let mut registry = WebhookRegistry::new();
     /// registry.add_registration(
     ///     WebhookRegistrationBuilder::new(
     ///         WebhookTopic::OrdersCreate,
-    ///         "/webhooks/orders".to_string(),
+    ///         WebhookDeliveryMethod::Http {
+    ///             callback_url: "https://example.com/webhooks/orders".to_string(),
+    ///         },
     ///     )
     ///     .build()
     /// );
@@ -354,18 +392,12 @@ impl WebhookRegistry {
         config: &ShopifyConfig,
         topic: &WebhookTopic,
     ) -> Result<WebhookRegistrationResult, WebhookError> {
-        // Check that host is configured
-        let host = config.host().ok_or(WebhookError::HostNotConfigured)?;
-
         // Check that registration exists
         let registration = self
             .get_registration(topic)
             .ok_or_else(|| WebhookError::RegistrationNotFound {
                 topic: topic.clone(),
             })?;
-
-        // Construct callback URL
-        let callback_url = format!("{}{}", host.as_ref(), registration.path);
 
         // Convert topic to GraphQL format
         let graphql_topic = topic_to_graphql_format(topic);
@@ -375,23 +407,22 @@ impl WebhookRegistry {
 
         // Query existing webhook subscription
         let existing = self
-            .query_existing_subscription(&client, &graphql_topic)
+            .query_existing_subscription(&client, &graphql_topic, &registration.delivery_method)
             .await?;
 
         match existing {
             Some((id, existing_config)) => {
                 // Compare configurations
-                if self.config_matches(&existing_config, &callback_url, registration) {
+                if self.config_matches(&existing_config, registration) {
                     Ok(WebhookRegistrationResult::AlreadyRegistered { id })
                 } else {
                     // Update existing subscription
-                    self.update_subscription(&client, &id, &callback_url, registration)
-                        .await
+                    self.update_subscription(&client, &id, registration).await
                 }
             }
             None => {
                 // Create new subscription
-                self.create_subscription(&client, &graphql_topic, &callback_url, registration)
+                self.create_subscription(&client, &graphql_topic, registration)
                     .await
             }
         }
@@ -405,23 +436,23 @@ impl WebhookRegistry {
     /// # Arguments
     ///
     /// * `session` - The authenticated session for API calls
-    /// * `config` - The SDK configuration (must have `host` set)
+    /// * `config` - The SDK configuration
     ///
-    /// # Errors
+    /// # Returns
     ///
-    /// Returns `WebhookError::HostNotConfigured` if `config.host()` is `None`.
+    /// A vector of results for each registration.
     /// Individual registration failures are captured in `WebhookRegistrationResult::Failed`.
     ///
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookRegistrationResult};
+    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRegistrationBuilder, WebhookRegistrationResult, WebhookDeliveryMethod};
     /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let mut registry = WebhookRegistry::new();
     /// registry.add_registration(/* ... */);
     ///
-    /// let results = registry.register_all(&session, &config).await?;
+    /// let results = registry.register_all(&session, &config).await;
     /// for result in results {
     ///     match result {
     ///         WebhookRegistrationResult::Created { id } => println!("Created: {}", id),
@@ -434,12 +465,7 @@ impl WebhookRegistry {
         &self,
         session: &Session,
         config: &ShopifyConfig,
-    ) -> Result<Vec<WebhookRegistrationResult>, WebhookError> {
-        // Check that host is configured first (fail fast)
-        if config.host().is_none() {
-            return Err(WebhookError::HostNotConfigured);
-        }
-
+    ) -> Vec<WebhookRegistrationResult> {
         let mut results = Vec::new();
 
         for registration in self.registrations.values() {
@@ -450,7 +476,7 @@ impl WebhookRegistry {
             results.push(result);
         }
 
-        Ok(results)
+        results
     }
 
     /// Unregisters a webhook from Shopify.
@@ -484,6 +510,13 @@ impl WebhookRegistry {
         config: &ShopifyConfig,
         topic: &WebhookTopic,
     ) -> Result<(), WebhookError> {
+        // Get the registration to know the delivery method
+        let registration = self
+            .get_registration(topic)
+            .ok_or_else(|| WebhookError::RegistrationNotFound {
+                topic: topic.clone(),
+            })?;
+
         // Convert topic to GraphQL format
         let graphql_topic = topic_to_graphql_format(topic);
 
@@ -492,7 +525,7 @@ impl WebhookRegistry {
 
         // Query existing webhook subscription
         let existing = self
-            .query_existing_subscription(&client, &graphql_topic)
+            .query_existing_subscription(&client, &graphql_topic, &registration.delivery_method)
             .await?;
 
         match existing {
@@ -551,22 +584,30 @@ impl WebhookRegistry {
         }
     }
 
-    /// Queries Shopify for an existing webhook subscription by topic.
+    /// Queries Shopify for an existing webhook subscription by topic and delivery method.
     async fn query_existing_subscription(
         &self,
         client: &GraphqlClient,
         graphql_topic: &str,
+        delivery_method: &WebhookDeliveryMethod,
     ) -> Result<Option<(String, ExistingWebhookConfig)>, WebhookError> {
         let query = format!(
             r#"
             query {{
-                webhookSubscriptions(first: 1, topics: [{topic}]) {{
+                webhookSubscriptions(first: 25, topics: [{topic}]) {{
                     edges {{
                         node {{
                             id
                             endpoint {{
                                 ... on WebhookHttpEndpoint {{
                                     callbackUrl
+                                }}
+                                ... on WebhookEventBridgeEndpoint {{
+                                    arn
+                                }}
+                                ... on WebhookPubSubEndpoint {{
+                                    pubSubProject
+                                    pubSubTopic
                                 }}
                             }}
                             includeFields
@@ -593,52 +634,95 @@ impl WebhookRegistry {
             return Ok(None);
         }
 
-        let node = &edges[0]["node"];
-        let id = node["id"]
-            .as_str()
-            .ok_or_else(|| WebhookError::ShopifyError {
-                message: "Missing webhook ID".to_string(),
-            })?
-            .to_string();
+        // Find a matching subscription by delivery method
+        for edge in edges {
+            let node = &edge["node"];
+            let endpoint = &node["endpoint"];
 
-        let callback_url = node["endpoint"]["callbackUrl"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+            // Parse endpoint and check if it matches the desired delivery method
+            let parsed_delivery_method = if let Some(callback_url) = endpoint["callbackUrl"].as_str()
+            {
+                Some(WebhookDeliveryMethod::Http {
+                    callback_url: callback_url.to_string(),
+                })
+            } else if let Some(arn) = endpoint["arn"].as_str() {
+                Some(WebhookDeliveryMethod::EventBridge {
+                    arn: arn.to_string(),
+                })
+            } else if let (Some(project), Some(topic)) = (
+                endpoint["pubSubProject"].as_str(),
+                endpoint["pubSubTopic"].as_str(),
+            ) {
+                Some(WebhookDeliveryMethod::PubSub {
+                    project_id: project.to_string(),
+                    topic_id: topic.to_string(),
+                })
+            } else {
+                None
+            };
 
-        let include_fields = node["includeFields"].as_array().map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect()
-        });
+            // Check if the delivery method type matches (we compare full method for exact match later)
+            if let Some(ref parsed_method) = parsed_delivery_method {
+                let type_matches = match (parsed_method, delivery_method) {
+                    (WebhookDeliveryMethod::Http { .. }, WebhookDeliveryMethod::Http { .. }) => {
+                        true
+                    }
+                    (
+                        WebhookDeliveryMethod::EventBridge { .. },
+                        WebhookDeliveryMethod::EventBridge { .. },
+                    ) => true,
+                    (
+                        WebhookDeliveryMethod::PubSub { .. },
+                        WebhookDeliveryMethod::PubSub { .. },
+                    ) => true,
+                    _ => false,
+                };
 
-        let metafield_namespaces = node["metafieldNamespaces"].as_array().map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect()
-        });
+                if type_matches {
+                    let id = node["id"]
+                        .as_str()
+                        .ok_or_else(|| WebhookError::ShopifyError {
+                            message: "Missing webhook ID".to_string(),
+                        })?
+                        .to_string();
 
-        let filter = node["filter"].as_str().map(String::from);
+                    let include_fields = node["includeFields"].as_array().map(|arr| {
+                        arr.iter()
+                            .filter_map(|v| v.as_str().map(String::from))
+                            .collect()
+                    });
 
-        Ok(Some((
-            id,
-            ExistingWebhookConfig {
-                callback_url,
-                include_fields,
-                metafield_namespaces,
-                filter,
-            },
-        )))
+                    let metafield_namespaces = node["metafieldNamespaces"].as_array().map(|arr| {
+                        arr.iter()
+                            .filter_map(|v| v.as_str().map(String::from))
+                            .collect()
+                    });
+
+                    let filter = node["filter"].as_str().map(String::from);
+
+                    return Ok(Some((
+                        id,
+                        ExistingWebhookConfig {
+                            delivery_method: parsed_method.clone(),
+                            include_fields,
+                            metafield_namespaces,
+                            filter,
+                        },
+                    )));
+                }
+            }
+        }
+
+        Ok(None)
     }
 
     /// Compares existing webhook configuration with desired configuration.
     fn config_matches(
         &self,
         existing: &ExistingWebhookConfig,
-        callback_url: &str,
         registration: &WebhookRegistration,
     ) -> bool {
-        existing.callback_url == callback_url
+        existing.delivery_method == registration.delivery_method
             && existing.include_fields == registration.include_fields
             && existing.metafield_namespaces == registration.metafield_namespaces
             && existing.filter == registration.filter
@@ -649,9 +733,10 @@ impl WebhookRegistry {
         &self,
         client: &GraphqlClient,
         graphql_topic: &str,
-        callback_url: &str,
         registration: &WebhookRegistration,
     ) -> Result<WebhookRegistrationResult, WebhookError> {
+        let delivery_input = build_delivery_input(&registration.delivery_method);
+
         let include_fields_input = registration
             .include_fields
             .as_ref()
@@ -682,7 +767,7 @@ impl WebhookRegistry {
                 webhookSubscriptionCreate(
                     topic: {topic},
                     webhookSubscription: {{
-                        callbackUrl: "{callback_url}"{include_fields}{metafield_namespaces}{filter}
+                        {delivery}{include_fields}{metafield_namespaces}{filter}
                     }}
                 ) {{
                     webhookSubscription {{
@@ -696,7 +781,7 @@ impl WebhookRegistry {
             }}
             "#,
             topic = graphql_topic,
-            callback_url = callback_url,
+            delivery = delivery_input,
             include_fields = include_fields_input,
             metafield_namespaces = metafield_namespaces_input,
             filter = filter_input
@@ -734,9 +819,10 @@ impl WebhookRegistry {
         &self,
         client: &GraphqlClient,
         id: &str,
-        callback_url: &str,
         registration: &WebhookRegistration,
     ) -> Result<WebhookRegistrationResult, WebhookError> {
+        let delivery_input = build_delivery_input(&registration.delivery_method);
+
         let include_fields_input = registration
             .include_fields
             .as_ref()
@@ -767,7 +853,7 @@ impl WebhookRegistry {
                 webhookSubscriptionUpdate(
                     id: "{id}",
                     webhookSubscription: {{
-                        callbackUrl: "{callback_url}"{include_fields}{metafield_namespaces}{filter}
+                        {delivery}{include_fields}{metafield_namespaces}{filter}
                     }}
                 ) {{
                     webhookSubscription {{
@@ -781,7 +867,7 @@ impl WebhookRegistry {
             }}
             "#,
             id = id,
-            callback_url = callback_url,
+            delivery = delivery_input,
             include_fields = include_fields_input,
             metafield_namespaces = metafield_namespaces_input,
             filter = filter_input
@@ -848,11 +934,33 @@ impl WebhookRegistry {
 }
 
 /// Internal struct for holding existing webhook configuration from Shopify.
+#[derive(Debug, Clone)]
 struct ExistingWebhookConfig {
-    callback_url: String,
+    delivery_method: WebhookDeliveryMethod,
     include_fields: Option<Vec<String>>,
     metafield_namespaces: Option<Vec<String>>,
     filter: Option<String>,
+}
+
+/// Builds the GraphQL input for the delivery method.
+fn build_delivery_input(delivery_method: &WebhookDeliveryMethod) -> String {
+    match delivery_method {
+        WebhookDeliveryMethod::Http { callback_url } => {
+            format!("callbackUrl: \"{}\"", callback_url)
+        }
+        WebhookDeliveryMethod::EventBridge { arn } => {
+            format!("arn: \"{}\"", arn)
+        }
+        WebhookDeliveryMethod::PubSub {
+            project_id,
+            topic_id,
+        } => {
+            format!(
+                "pubSubProject: \"{}\", pubSubTopic: \"{}\"",
+                project_id, topic_id
+            )
+        }
+    }
 }
 
 /// Converts a `WebhookTopic` to GraphQL enum format.
@@ -919,11 +1027,409 @@ mod tests {
             _payload: serde_json::Value,
         ) -> BoxFuture<'a, Result<(), WebhookError>> {
             let message = self.error_message.clone();
-            Box::pin(async move {
-                Err(WebhookError::ShopifyError { message })
-            })
+            Box::pin(async move { Err(WebhookError::ShopifyError { message }) })
         }
     }
+
+    // ========================================================================
+    // Task Group 4 Tests: ExistingWebhookConfig
+    // ========================================================================
+
+    #[test]
+    fn test_existing_config_with_http_delivery() {
+        let config = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+            include_fields: Some(vec!["id".to_string()]),
+            metafield_namespaces: None,
+            filter: None,
+        };
+
+        assert!(matches!(
+            config.delivery_method,
+            WebhookDeliveryMethod::Http { .. }
+        ));
+    }
+
+    #[test]
+    fn test_existing_config_with_eventbridge_delivery() {
+        let config = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::EventBridge {
+                arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+            },
+            include_fields: None,
+            metafield_namespaces: None,
+            filter: Some("status:active".to_string()),
+        };
+
+        assert!(matches!(
+            config.delivery_method,
+            WebhookDeliveryMethod::EventBridge { .. }
+        ));
+        assert!(config.filter.is_some());
+    }
+
+    #[test]
+    fn test_existing_config_with_pubsub_delivery() {
+        let config = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::PubSub {
+                project_id: "my-project".to_string(),
+                topic_id: "my-topic".to_string(),
+            },
+            include_fields: None,
+            metafield_namespaces: Some(vec!["custom".to_string()]),
+            filter: None,
+        };
+
+        match config.delivery_method {
+            WebhookDeliveryMethod::PubSub {
+                project_id,
+                topic_id,
+            } => {
+                assert_eq!(project_id, "my-project");
+                assert_eq!(topic_id, "my-topic");
+            }
+            _ => panic!("Expected PubSub delivery method"),
+        }
+    }
+
+    // ========================================================================
+    // Task Group 5 Tests: GraphQL Query Parsing
+    // ========================================================================
+
+    #[test]
+    fn test_build_delivery_input_http() {
+        let method = WebhookDeliveryMethod::Http {
+            callback_url: "https://example.com/webhooks".to_string(),
+        };
+        let input = build_delivery_input(&method);
+        assert_eq!(input, "callbackUrl: \"https://example.com/webhooks\"");
+    }
+
+    #[test]
+    fn test_build_delivery_input_eventbridge() {
+        let method = WebhookDeliveryMethod::EventBridge {
+            arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+        };
+        let input = build_delivery_input(&method);
+        assert_eq!(
+            input,
+            "arn: \"arn:aws:events:us-east-1::event-source/test\""
+        );
+    }
+
+    #[test]
+    fn test_build_delivery_input_pubsub() {
+        let method = WebhookDeliveryMethod::PubSub {
+            project_id: "my-project".to_string(),
+            topic_id: "my-topic".to_string(),
+        };
+        let input = build_delivery_input(&method);
+        assert_eq!(
+            input,
+            "pubSubProject: \"my-project\", pubSubTopic: \"my-topic\""
+        );
+    }
+
+    // ========================================================================
+    // Task Group 6 Tests: config_matches()
+    // ========================================================================
+
+    #[test]
+    fn test_config_matches_http_same_url() {
+        let registry = WebhookRegistry::new();
+
+        let existing = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+            include_fields: None,
+            metafield_namespaces: None,
+            filter: None,
+        };
+
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+        )
+        .build();
+
+        assert!(registry.config_matches(&existing, &registration));
+    }
+
+    #[test]
+    fn test_config_matches_http_different_url() {
+        let registry = WebhookRegistry::new();
+
+        let existing = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+            include_fields: None,
+            metafield_namespaces: None,
+            filter: None,
+        };
+
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://different.com/webhooks".to_string(),
+            },
+        )
+        .build();
+
+        assert!(!registry.config_matches(&existing, &registration));
+    }
+
+    #[test]
+    fn test_config_matches_eventbridge_same_arn() {
+        let registry = WebhookRegistry::new();
+
+        let existing = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::EventBridge {
+                arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+            },
+            include_fields: None,
+            metafield_namespaces: None,
+            filter: None,
+        };
+
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::EventBridge {
+                arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+            },
+        )
+        .build();
+
+        assert!(registry.config_matches(&existing, &registration));
+    }
+
+    #[test]
+    fn test_config_matches_pubsub_same_project_and_topic() {
+        let registry = WebhookRegistry::new();
+
+        let existing = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::PubSub {
+                project_id: "my-project".to_string(),
+                topic_id: "my-topic".to_string(),
+            },
+            include_fields: None,
+            metafield_namespaces: None,
+            filter: None,
+        };
+
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::PubSub {
+                project_id: "my-project".to_string(),
+                topic_id: "my-topic".to_string(),
+            },
+        )
+        .build();
+
+        assert!(registry.config_matches(&existing, &registration));
+    }
+
+    #[test]
+    fn test_config_matches_different_delivery_methods_never_match() {
+        let registry = WebhookRegistry::new();
+
+        let existing = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+            include_fields: None,
+            metafield_namespaces: None,
+            filter: None,
+        };
+
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::EventBridge {
+                arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+            },
+        )
+        .build();
+
+        assert!(!registry.config_matches(&existing, &registration));
+    }
+
+    #[test]
+    fn test_config_matches_includes_other_fields() {
+        let registry = WebhookRegistry::new();
+
+        let existing = ExistingWebhookConfig {
+            delivery_method: WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+            include_fields: Some(vec!["id".to_string()]),
+            metafield_namespaces: Some(vec!["custom".to_string()]),
+            filter: Some("status:active".to_string()),
+        };
+
+        let registration = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+        )
+        .include_fields(vec!["id".to_string()])
+        .metafield_namespaces(vec!["custom".to_string()])
+        .filter("status:active".to_string())
+        .build();
+
+        assert!(registry.config_matches(&existing, &registration));
+
+        // Different filter should not match
+        let registration_different = WebhookRegistrationBuilder::new(
+            WebhookTopic::OrdersCreate,
+            WebhookDeliveryMethod::Http {
+                callback_url: "https://example.com/webhooks".to_string(),
+            },
+        )
+        .include_fields(vec!["id".to_string()])
+        .metafield_namespaces(vec!["custom".to_string()])
+        .filter("status:inactive".to_string())
+        .build();
+
+        assert!(!registry.config_matches(&existing, &registration_different));
+    }
+
+    // ========================================================================
+    // Task Group 8 Tests: register() and register_all() behavior
+    // ========================================================================
+
+    #[test]
+    fn test_registry_accepts_http_delivery() {
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks".to_string(),
+                },
+            )
+            .build(),
+        );
+
+        let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
+        assert!(matches!(
+            registration.delivery_method,
+            WebhookDeliveryMethod::Http { .. }
+        ));
+    }
+
+    #[test]
+    fn test_registry_accepts_eventbridge_delivery() {
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                WebhookDeliveryMethod::EventBridge {
+                    arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+                },
+            )
+            .build(),
+        );
+
+        let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
+        assert!(matches!(
+            registration.delivery_method,
+            WebhookDeliveryMethod::EventBridge { .. }
+        ));
+    }
+
+    #[test]
+    fn test_registry_accepts_pubsub_delivery() {
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                WebhookDeliveryMethod::PubSub {
+                    project_id: "my-project".to_string(),
+                    topic_id: "my-topic".to_string(),
+                },
+            )
+            .build(),
+        );
+
+        let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
+        assert!(matches!(
+            registration.delivery_method,
+            WebhookDeliveryMethod::PubSub { .. }
+        ));
+    }
+
+    #[test]
+    fn test_registry_allows_mixed_delivery_methods() {
+        let mut registry = WebhookRegistry::new();
+
+        registry
+            .add_registration(
+                WebhookRegistrationBuilder::new(
+                    WebhookTopic::OrdersCreate,
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks".to_string(),
+                    },
+                )
+                .build(),
+            )
+            .add_registration(
+                WebhookRegistrationBuilder::new(
+                    WebhookTopic::ProductsUpdate,
+                    WebhookDeliveryMethod::EventBridge {
+                        arn: "arn:aws:events:us-east-1::event-source/test".to_string(),
+                    },
+                )
+                .build(),
+            )
+            .add_registration(
+                WebhookRegistrationBuilder::new(
+                    WebhookTopic::CustomersCreate,
+                    WebhookDeliveryMethod::PubSub {
+                        project_id: "my-project".to_string(),
+                        topic_id: "my-topic".to_string(),
+                    },
+                )
+                .build(),
+            );
+
+        assert_eq!(registry.list_registrations().len(), 3);
+
+        // Verify each registration has the correct delivery method type
+        assert!(matches!(
+            registry
+                .get_registration(&WebhookTopic::OrdersCreate)
+                .unwrap()
+                .delivery_method,
+            WebhookDeliveryMethod::Http { .. }
+        ));
+        assert!(matches!(
+            registry
+                .get_registration(&WebhookTopic::ProductsUpdate)
+                .unwrap()
+                .delivery_method,
+            WebhookDeliveryMethod::EventBridge { .. }
+        ));
+        assert!(matches!(
+            registry
+                .get_registration(&WebhookTopic::CustomersCreate)
+                .unwrap()
+                .delivery_method,
+            WebhookDeliveryMethod::PubSub { .. }
+        ));
+    }
+
+    // ========================================================================
+    // Legacy Tests (updated for new API)
+    // ========================================================================
 
     #[test]
     fn test_webhook_registry_new_creates_empty_registry() {
@@ -936,9 +1442,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .build(),
         );
@@ -953,18 +1461,22 @@ mod tests {
 
         // Add first registration
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/v1/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/v1/orders".to_string(),
+                },
             )
             .build(),
         );
 
-        // Add second registration with same topic
+        // Add second registration with same topic but different URL
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/v2/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/v2/orders".to_string(),
+                },
             )
             .build(),
         );
@@ -972,7 +1484,12 @@ mod tests {
         assert_eq!(registry.list_registrations().len(), 1);
 
         let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
-        assert_eq!(registration.path, "/webhooks/v2/orders");
+        match &registration.delivery_method {
+            WebhookDeliveryMethod::Http { callback_url } => {
+                assert_eq!(callback_url, "https://example.com/webhooks/v2/orders");
+            }
+            _ => panic!("Expected Http delivery method"),
+        }
     }
 
     #[test]
@@ -987,23 +1504,29 @@ mod tests {
 
         registry
             .add_registration(
-                super::super::types::WebhookRegistrationBuilder::new(
+                WebhookRegistrationBuilder::new(
                     WebhookTopic::OrdersCreate,
-                    "/webhooks/orders".to_string(),
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks/orders".to_string(),
+                    },
                 )
                 .build(),
             )
             .add_registration(
-                super::super::types::WebhookRegistrationBuilder::new(
+                WebhookRegistrationBuilder::new(
                     WebhookTopic::ProductsCreate,
-                    "/webhooks/products".to_string(),
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks/products".to_string(),
+                    },
                 )
                 .build(),
             )
             .add_registration(
-                super::super::types::WebhookRegistrationBuilder::new(
+                WebhookRegistrationBuilder::new(
                     WebhookTopic::CustomersCreate,
-                    "/webhooks/customers".to_string(),
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks/customers".to_string(),
+                    },
                 )
                 .build(),
             );
@@ -1053,16 +1576,20 @@ mod tests {
         // Test method chaining
         let chain_result = registry
             .add_registration(
-                super::super::types::WebhookRegistrationBuilder::new(
+                WebhookRegistrationBuilder::new(
                     WebhookTopic::OrdersCreate,
-                    "/webhooks/orders".to_string(),
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks/orders".to_string(),
+                    },
                 )
                 .build(),
             )
             .add_registration(
-                super::super::types::WebhookRegistrationBuilder::new(
+                WebhookRegistrationBuilder::new(
                     WebhookTopic::ProductsCreate,
-                    "/webhooks/products".to_string(),
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks/products".to_string(),
+                    },
                 )
                 .build(),
             );
@@ -1072,7 +1599,7 @@ mod tests {
     }
 
     // ========================================================================
-    // Task Group 3 Tests: Registry Handler Functionality
+    // Handler Tests (updated for new API)
     // ========================================================================
 
     #[test]
@@ -1085,9 +1612,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(handler)
             .build(),
@@ -1110,9 +1639,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(handler)
             .build(),
@@ -1129,9 +1660,11 @@ mod tests {
 
         // Add registration without handler
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .build(),
         );
@@ -1147,9 +1680,11 @@ mod tests {
 
         // Add registration without handler
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .build(),
         );
@@ -1192,9 +1727,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(handler)
             .build(),
@@ -1242,9 +1779,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(handler)
             .build(),
@@ -1274,10 +1813,6 @@ mod tests {
         assert!(invoked.load(Ordering::SeqCst));
     }
 
-    // ========================================================================
-    // Task Group 4 Tests: Additional Strategic Tests
-    // ========================================================================
-
     #[tokio::test]
     async fn test_handler_error_propagation_through_process() {
         let handler = ErrorHandler {
@@ -1287,9 +1822,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(handler)
             .build(),
@@ -1339,17 +1876,21 @@ mod tests {
 
         registry
             .add_registration(
-                super::super::types::WebhookRegistrationBuilder::new(
+                WebhookRegistrationBuilder::new(
                     WebhookTopic::OrdersCreate,
-                    "/webhooks/orders".to_string(),
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks/orders".to_string(),
+                    },
                 )
                 .handler(orders_handler)
                 .build(),
             )
             .add_registration(
-                super::super::types::WebhookRegistrationBuilder::new(
+                WebhookRegistrationBuilder::new(
                     WebhookTopic::ProductsCreate,
-                    "/webhooks/products".to_string(),
+                    WebhookDeliveryMethod::Http {
+                        callback_url: "https://example.com/webhooks/products".to_string(),
+                    },
                 )
                 .handler(products_handler)
                 .build(),
@@ -1411,9 +1952,11 @@ mod tests {
 
         // Register first handler
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(first_handler)
             .build(),
@@ -1421,9 +1964,11 @@ mod tests {
 
         // Replace with second handler
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders/v2".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders/v2".to_string(),
+                },
             )
             .handler(second_handler)
             .build(),
@@ -1464,9 +2009,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(handler)
             .build(),
@@ -1508,9 +2055,11 @@ mod tests {
         let mut registry = WebhookRegistry::new();
 
         registry.add_registration(
-            super::super::types::WebhookRegistrationBuilder::new(
+            WebhookRegistrationBuilder::new(
                 WebhookTopic::OrdersCreate,
-                "/webhooks/orders".to_string(),
+                WebhookDeliveryMethod::Http {
+                    callback_url: "https://example.com/webhooks/orders".to_string(),
+                },
             )
             .handler(handler)
             .build(),

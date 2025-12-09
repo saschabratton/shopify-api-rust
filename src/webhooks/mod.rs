@@ -15,6 +15,7 @@
 //! - [`WebhookRegistration`]: Configuration for a single webhook subscription
 //! - [`WebhookRegistrationBuilder`]: Builder for creating registrations
 //! - [`WebhookRegistrationResult`]: Result of registration operations
+//! - [`WebhookDeliveryMethod`]: Delivery method for webhooks (HTTP, EventBridge, Pub/Sub)
 //!
 //! ## Handler
 //!
@@ -49,12 +50,20 @@
 //! - Compares configuration to detect changes
 //! - Only creates/updates when necessary
 //!
+//! # Delivery Methods
+//!
+//! Webhooks can be delivered via three different methods:
+//!
+//! - **HTTP**: Delivered via HTTP POST to a callback URL
+//! - **Amazon EventBridge**: Delivered to an AWS EventBridge event source
+//! - **Google Cloud Pub/Sub**: Delivered to a GCP Pub/Sub topic
+//!
 //! # Webhook Handler Example
 //!
 //! ```rust
 //! use shopify_api::webhooks::{
 //!     WebhookHandler, WebhookContext, WebhookError, WebhookRegistry,
-//!     WebhookRegistrationBuilder, WebhookTopic, BoxFuture
+//!     WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod, BoxFuture
 //! };
 //! use serde_json::Value;
 //!
@@ -74,12 +83,14 @@
 //!     }
 //! }
 //!
-//! // Register with a handler
+//! // Register with a handler using HTTP delivery
 //! let mut registry = WebhookRegistry::new();
 //! registry.add_registration(
 //!     WebhookRegistrationBuilder::new(
 //!         WebhookTopic::OrdersCreate,
-//!         "/api/webhooks/orders".to_string(),
+//!         WebhookDeliveryMethod::Http {
+//!             callback_url: "https://example.com/api/webhooks/orders".to_string(),
+//!         },
 //!     )
 //!     .handler(OrderHandler)
 //!     .build()
@@ -122,35 +133,71 @@
 //! assert!(verify_hmac(body, &hmac, "my-secret"));
 //! ```
 //!
-//! # Registration Example
+//! # Registration Examples
+//!
+//! ## HTTP Delivery
 //!
 //! ```rust
 //! use shopify_api::webhooks::{
-//!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic
+//!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
 //! };
 //!
-//! // Phase 1: Configure webhooks at startup
 //! let mut registry = WebhookRegistry::new();
 //!
-//! registry
-//!     .add_registration(
-//!         WebhookRegistrationBuilder::new(
-//!             WebhookTopic::OrdersCreate,
-//!             "/api/webhooks/orders/create".to_string(),
-//!         )
-//!         .include_fields(vec!["id".to_string(), "email".to_string()])
-//!         .build()
+//! registry.add_registration(
+//!     WebhookRegistrationBuilder::new(
+//!         WebhookTopic::OrdersCreate,
+//!         WebhookDeliveryMethod::Http {
+//!             callback_url: "https://example.com/api/webhooks/orders/create".to_string(),
+//!         },
 //!     )
-//!     .add_registration(
-//!         WebhookRegistrationBuilder::new(
-//!             WebhookTopic::ProductsUpdate,
-//!             "/api/webhooks/products/update".to_string(),
-//!         )
-//!         .filter("vendor:MyApp".to_string())
-//!         .build()
-//!     );
+//!     .include_fields(vec!["id".to_string(), "email".to_string()])
+//!     .build()
+//! );
+//! ```
 //!
-//! // Phase 2: Register with Shopify when session is available
+//! ## Amazon EventBridge Delivery
+//!
+//! ```rust
+//! use shopify_api::webhooks::{
+//!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
+//! };
+//!
+//! let mut registry = WebhookRegistry::new();
+//!
+//! registry.add_registration(
+//!     WebhookRegistrationBuilder::new(
+//!         WebhookTopic::OrdersCreate,
+//!         WebhookDeliveryMethod::EventBridge {
+//!             arn: "arn:aws:events:us-east-1::event-source/aws.partner/shopify.com/12345/my-source".to_string(),
+//!         },
+//!     )
+//!     .build()
+//! );
+//! ```
+//!
+//! ## Google Cloud Pub/Sub Delivery
+//!
+//! ```rust
+//! use shopify_api::webhooks::{
+//!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
+//! };
+//!
+//! let mut registry = WebhookRegistry::new();
+//!
+//! registry.add_registration(
+//!     WebhookRegistrationBuilder::new(
+//!         WebhookTopic::ProductsUpdate,
+//!         WebhookDeliveryMethod::PubSub {
+//!             project_id: "my-gcp-project".to_string(),
+//!             topic_id: "shopify-webhooks".to_string(),
+//!         },
+//!     )
+//!     .filter("vendor:MyApp".to_string())
+//!     .build()
+//! );
+//!
+//! // Later, when you have a session:
 //! // let results = registry.register_all(&session, &config).await?;
 //! ```
 //!
@@ -202,8 +249,8 @@ mod verification;
 pub use errors::WebhookError;
 pub use registry::WebhookRegistry;
 pub use types::{
-    BoxFuture, WebhookHandler, WebhookRegistration, WebhookRegistrationBuilder,
-    WebhookRegistrationResult,
+    BoxFuture, WebhookDeliveryMethod, WebhookHandler, WebhookRegistration,
+    WebhookRegistrationBuilder, WebhookRegistrationResult,
 };
 
 // Verification exports
