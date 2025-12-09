@@ -246,7 +246,7 @@
 //!         WebhookRegistrationBuilder::new(
 //!             WebhookTopic::OrdersCreate,
 //!             WebhookDeliveryMethod::Http {
-//!                 callback_url: "https://example.com/api/webhooks/orders".to_string(),
+//!                 uri: "https://example.com/api/webhooks/orders".to_string(),
 //!             },
 //!         )
 //!         .build()

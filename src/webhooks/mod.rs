@@ -89,7 +89,7 @@
 //!     WebhookRegistrationBuilder::new(
 //!         WebhookTopic::OrdersCreate,
 //!         WebhookDeliveryMethod::Http {
-//!             callback_url: "https://example.com/api/webhooks/orders".to_string(),
+//!             uri: "https://example.com/api/webhooks/orders".to_string(),
 //!         },
 //!     )
 //!     .handler(OrderHandler)
@@ -148,7 +148,7 @@
 //!     WebhookRegistrationBuilder::new(
 //!         WebhookTopic::OrdersCreate,
 //!         WebhookDeliveryMethod::Http {
-//!             callback_url: "https://example.com/api/webhooks/orders/create".to_string(),
+//!             uri: "https://example.com/api/webhooks/orders/create".to_string(),
 //!         },
 //!     )
 //!     .include_fields(vec!["id".to_string(), "email".to_string()])

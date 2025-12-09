@@ -13,7 +13,7 @@
 //! let registration = WebhookRegistrationBuilder::new(
 //!     WebhookTopic::OrdersCreate,
 //!     WebhookDeliveryMethod::Http {
-//!         callback_url: "https://example.com/webhooks/orders/create".to_string(),
+//!         uri: "https://example.com/webhooks/orders/create".to_string(),
 //!     },
 //! )
 //! .include_fields(vec!["id".to_string(), "email".to_string()])
@@ -112,7 +112,7 @@ pub trait WebhookHandler: Send + Sync {
 ///
 /// // HTTP delivery
 /// let http = WebhookDeliveryMethod::Http {
-///     callback_url: "https://example.com/webhooks".to_string(),
+///     uri: "https://example.com/webhooks".to_string(),
 /// };
 ///
 /// // Amazon EventBridge delivery
@@ -130,10 +130,10 @@ pub trait WebhookHandler: Send + Sync {
 pub enum WebhookDeliveryMethod {
     /// HTTP/HTTPS webhook delivery.
     ///
-    /// Webhooks are delivered via HTTP POST to the specified callback URL.
+    /// Webhooks are delivered via HTTP POST to the specified URI.
     Http {
-        /// The full callback URL for webhook delivery.
-        callback_url: String,
+        /// The full HTTPS URI for webhook delivery.
+        uri: String,
     },
 
     /// Amazon EventBridge webhook delivery.
@@ -181,7 +181,7 @@ pub enum WebhookDeliveryMethod {
 /// let registration = WebhookRegistrationBuilder::new(
 ///     WebhookTopic::OrdersCreate,
 ///     WebhookDeliveryMethod::Http {
-///         callback_url: "https://example.com/webhooks/orders".to_string(),
+///         uri: "https://example.com/webhooks/orders".to_string(),
 ///     },
 /// )
 /// .build();
@@ -257,7 +257,7 @@ impl fmt::Debug for WebhookRegistration {
 /// let registration = WebhookRegistrationBuilder::new(
 ///     WebhookTopic::ProductsUpdate,
 ///     WebhookDeliveryMethod::Http {
-///         callback_url: "https://example.com/api/webhooks/products".to_string(),
+///         uri: "https://example.com/api/webhooks/products".to_string(),
 ///     },
 /// )
 /// .include_fields(vec!["id".to_string(), "title".to_string()])
@@ -315,7 +315,7 @@ impl WebhookRegistrationBuilder {
     /// let builder = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
     ///     WebhookDeliveryMethod::Http {
-    ///         callback_url: "https://example.com/webhooks/orders".to_string(),
+    ///         uri: "https://example.com/webhooks/orders".to_string(),
     ///     },
     /// );
     /// ```
@@ -344,7 +344,7 @@ impl WebhookRegistrationBuilder {
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
     ///     WebhookDeliveryMethod::Http {
-    ///         callback_url: "https://example.com/webhooks".to_string(),
+    ///         uri: "https://example.com/webhooks".to_string(),
     ///     },
     /// )
     /// .include_fields(vec!["id".to_string(), "email".to_string()])
@@ -372,7 +372,7 @@ impl WebhookRegistrationBuilder {
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::ProductsUpdate,
     ///     WebhookDeliveryMethod::Http {
-    ///         callback_url: "https://example.com/webhooks".to_string(),
+    ///         uri: "https://example.com/webhooks".to_string(),
     ///     },
     /// )
     /// .metafield_namespaces(vec!["custom".to_string(), "app".to_string()])
@@ -397,7 +397,7 @@ impl WebhookRegistrationBuilder {
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
     ///     WebhookDeliveryMethod::Http {
-    ///         callback_url: "https://example.com/webhooks".to_string(),
+    ///         uri: "https://example.com/webhooks".to_string(),
     ///     },
     /// )
     /// .filter("status:active".to_string())
@@ -444,7 +444,7 @@ impl WebhookRegistrationBuilder {
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
     ///     WebhookDeliveryMethod::Http {
-    ///         callback_url: "https://example.com/webhooks/orders".to_string(),
+    ///         uri: "https://example.com/webhooks/orders".to_string(),
     ///     },
     /// )
     /// .handler(MyHandler)
@@ -469,7 +469,7 @@ impl WebhookRegistrationBuilder {
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::CustomersCreate,
     ///     WebhookDeliveryMethod::Http {
-    ///         callback_url: "https://example.com/webhooks/customers".to_string(),
+    ///         uri: "https://example.com/webhooks/customers".to_string(),
     ///     },
     /// )
     /// .build();
@@ -546,12 +546,12 @@ mod tests {
     #[test]
     fn test_delivery_method_http_variant_construction() {
         let method = WebhookDeliveryMethod::Http {
-            callback_url: "https://example.com/webhooks".to_string(),
+            uri: "https://example.com/webhooks".to_string(),
         };
 
         match method {
-            WebhookDeliveryMethod::Http { callback_url } => {
-                assert_eq!(callback_url, "https://example.com/webhooks");
+            WebhookDeliveryMethod::Http { uri } => {
+                assert_eq!(uri, "https://example.com/webhooks");
             }
             _ => panic!("Expected Http variant"),
         }
@@ -594,11 +594,11 @@ mod tests {
     #[test]
     fn test_delivery_method_derives_debug() {
         let http = WebhookDeliveryMethod::Http {
-            callback_url: "https://example.com".to_string(),
+            uri: "https://example.com".to_string(),
         };
         let debug_str = format!("{:?}", http);
         assert!(debug_str.contains("Http"));
-        assert!(debug_str.contains("callback_url"));
+        assert!(debug_str.contains("uri"));
 
         let eventbridge = WebhookDeliveryMethod::EventBridge {
             arn: "arn:test".to_string(),
@@ -620,7 +620,7 @@ mod tests {
     #[test]
     fn test_delivery_method_derives_clone() {
         let original = WebhookDeliveryMethod::Http {
-            callback_url: "https://example.com".to_string(),
+            uri: "https://example.com".to_string(),
         };
         let cloned = original.clone();
 
@@ -630,13 +630,13 @@ mod tests {
     #[test]
     fn test_delivery_method_derives_partial_eq() {
         let http1 = WebhookDeliveryMethod::Http {
-            callback_url: "https://example.com".to_string(),
+            uri: "https://example.com".to_string(),
         };
         let http2 = WebhookDeliveryMethod::Http {
-            callback_url: "https://example.com".to_string(),
+            uri: "https://example.com".to_string(),
         };
         let http3 = WebhookDeliveryMethod::Http {
-            callback_url: "https://different.com".to_string(),
+            uri: "https://different.com".to_string(),
         };
 
         assert_eq!(http1, http2);
@@ -651,7 +651,7 @@ mod tests {
     #[test]
     fn test_delivery_method_equality_across_variants() {
         let http = WebhookDeliveryMethod::Http {
-            callback_url: "https://example.com".to_string(),
+            uri: "https://example.com".to_string(),
         };
         let eventbridge = WebhookDeliveryMethod::EventBridge {
             arn: "arn:test".to_string(),
@@ -676,15 +676,15 @@ mod tests {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com/webhooks/orders".to_string(),
+                uri: "https://example.com/webhooks/orders".to_string(),
             },
         )
         .build();
 
         assert_eq!(registration.topic, WebhookTopic::OrdersCreate);
         match registration.delivery_method {
-            WebhookDeliveryMethod::Http { callback_url } => {
-                assert_eq!(callback_url, "https://example.com/webhooks/orders");
+            WebhookDeliveryMethod::Http { uri } => {
+                assert_eq!(uri, "https://example.com/webhooks/orders");
             }
             _ => panic!("Expected Http delivery method"),
         }
@@ -737,7 +737,7 @@ mod tests {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com/webhooks".to_string(),
+                uri: "https://example.com/webhooks".to_string(),
             },
         )
         .build();
@@ -781,7 +781,7 @@ mod tests {
         let builder = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com/webhooks".to_string(),
+                uri: "https://example.com/webhooks".to_string(),
             },
         );
         let registration = builder.build();
@@ -831,7 +831,7 @@ mod tests {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com".to_string(),
+                uri: "https://example.com".to_string(),
             },
         )
         .include_fields(vec!["id".to_string()])
@@ -1003,7 +1003,7 @@ mod tests {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com/webhooks/orders".to_string(),
+                uri: "https://example.com/webhooks/orders".to_string(),
             },
         )
         .handler(handler)
@@ -1017,7 +1017,7 @@ mod tests {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::OrdersCreate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com/webhooks/orders".to_string(),
+                uri: "https://example.com/webhooks/orders".to_string(),
             },
         )
         .build();
@@ -1034,7 +1034,7 @@ mod tests {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::ProductsUpdate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com/webhooks/products".to_string(),
+                uri: "https://example.com/webhooks/products".to_string(),
             },
         )
         .handler(handler)
@@ -1052,7 +1052,7 @@ mod tests {
         let registration = WebhookRegistrationBuilder::new(
             WebhookTopic::CustomersCreate,
             WebhookDeliveryMethod::Http {
-                callback_url: "https://example.com/webhooks/customers".to_string(),
+                uri: "https://example.com/webhooks/customers".to_string(),
             },
         )
         .handler(handler)
