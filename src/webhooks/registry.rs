@@ -32,7 +32,8 @@ use crate::clients::GraphqlClient;
 use crate::config::ShopifyConfig;
 
 use super::errors::WebhookError;
-use super::types::{WebhookRegistration, WebhookRegistrationResult, WebhookTopic};
+use super::types::{WebhookHandler, WebhookRegistration, WebhookRegistrationResult, WebhookTopic};
+use super::verification::{verify_webhook, WebhookRequest};
 
 /// Registry for managing webhook subscriptions.
 ///
@@ -83,10 +84,22 @@ use super::types::{WebhookRegistration, WebhookRegistrationResult, WebhookTopic}
 /// // Later, when you have a session:
 /// // let results = registry.register_all(&session, &config).await?;
 /// ```
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct WebhookRegistry {
     /// Internal storage for webhook registrations, keyed by topic.
     registrations: HashMap<WebhookTopic, WebhookRegistration>,
+    /// Internal storage for webhook handlers, keyed by topic.
+    handlers: HashMap<WebhookTopic, Box<dyn WebhookHandler>>,
+}
+
+// Implement Debug manually since trait objects don't implement Debug
+impl std::fmt::Debug for WebhookRegistry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WebhookRegistry")
+            .field("registrations", &self.registrations)
+            .field("handlers", &format!("<{} handlers>", self.handlers.len()))
+            .finish()
+    }
 }
 
 // Verify WebhookRegistry is Send + Sync at compile time
@@ -110,12 +123,15 @@ impl WebhookRegistry {
     pub fn new() -> Self {
         Self {
             registrations: HashMap::new(),
+            handlers: HashMap::new(),
         }
     }
 
     /// Adds a webhook registration to the registry.
     ///
     /// If a registration for the same topic already exists, it will be replaced.
+    /// If the registration contains a handler, the handler is extracted and stored
+    /// separately in the handlers map.
     /// Returns `&mut Self` to allow method chaining.
     ///
     /// # Arguments
@@ -149,9 +165,15 @@ impl WebhookRegistry {
     ///
     /// assert_eq!(registry.list_registrations().len(), 2);
     /// ```
-    pub fn add_registration(&mut self, registration: WebhookRegistration) -> &mut Self {
-        self.registrations
-            .insert(registration.topic, registration);
+    pub fn add_registration(&mut self, mut registration: WebhookRegistration) -> &mut Self {
+        let topic = registration.topic;
+
+        // Extract handler if present and store separately
+        if let Some(handler) = registration.handler.take() {
+            self.handlers.insert(topic, handler);
+        }
+
+        self.registrations.insert(topic, registration);
         self
     }
 
@@ -222,6 +244,69 @@ impl WebhookRegistry {
     #[must_use]
     pub fn list_registrations(&self) -> Vec<&WebhookRegistration> {
         self.registrations.values().collect()
+    }
+
+    /// Processes an incoming webhook request.
+    ///
+    /// This method verifies the webhook signature, looks up the appropriate handler,
+    /// parses the payload, and invokes the handler.
+    ///
+    /// # Flow
+    ///
+    /// 1. Verify the webhook signature using [`verify_webhook`]
+    /// 2. Look up the handler by topic
+    /// 3. Parse the request body as JSON
+    /// 4. Invoke the handler with the context and payload
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The Shopify configuration containing the API secret key
+    /// * `request` - The incoming webhook request
+    ///
+    /// # Errors
+    ///
+    /// Returns `WebhookError::InvalidHmac` if signature verification fails.
+    /// Returns `WebhookError::NoHandlerForTopic` if no handler is registered for the topic.
+    /// Returns `WebhookError::PayloadParseError` if the body cannot be parsed as JSON.
+    /// Returns any error returned by the handler.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use shopify_api::webhooks::{WebhookRegistry, WebhookRequest};
+    ///
+    /// let registry = WebhookRegistry::new();
+    /// // ... add registrations with handlers ...
+    ///
+    /// // Process incoming webhook
+    /// registry.process(&config, &request).await?;
+    /// ```
+    pub async fn process(
+        &self,
+        config: &ShopifyConfig,
+        request: &WebhookRequest,
+    ) -> Result<(), WebhookError> {
+        // Step 1: Verify webhook signature and get context
+        let context = verify_webhook(config, request)?;
+
+        // Step 2: Look up handler by topic
+        let handler = match context.topic() {
+            Some(topic) => self.handlers.get(&topic),
+            None => None,
+        };
+
+        let handler = handler.ok_or_else(|| WebhookError::NoHandlerForTopic {
+            topic: context.topic_raw().to_string(),
+        })?;
+
+        // Step 3: Parse request body as JSON
+        let payload: serde_json::Value =
+            serde_json::from_slice(request.body()).map_err(|e| WebhookError::PayloadParseError {
+                message: e.to_string(),
+            })?;
+
+        // Step 4: Invoke handler
+        handler.handle(context, payload).await
     }
 
     /// Registers a single webhook with Shopify.
@@ -521,21 +606,17 @@ impl WebhookRegistry {
             .unwrap_or("")
             .to_string();
 
-        let include_fields = node["includeFields"]
-            .as_array()
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(String::from))
-                    .collect()
-            });
+        let include_fields = node["includeFields"].as_array().map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        });
 
-        let metafield_namespaces = node["metafieldNamespaces"]
-            .as_array()
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(String::from))
-                    .collect()
-            });
+        let metafield_namespaces = node["metafieldNamespaces"].as_array().map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        });
 
         let filter = node["filter"].as_str().map(String::from);
 
@@ -801,6 +882,48 @@ fn topic_to_graphql_format(topic: &WebhookTopic) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::auth::oauth::hmac::compute_signature_base64;
+    use crate::config::{ApiKey, ApiSecretKey};
+    use crate::webhooks::types::BoxFuture;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+
+    // Test handler implementation
+    struct TestHandler {
+        invoked: Arc<AtomicBool>,
+    }
+
+    impl WebhookHandler for TestHandler {
+        fn handle<'a>(
+            &'a self,
+            _context: super::super::verification::WebhookContext,
+            _payload: serde_json::Value,
+        ) -> BoxFuture<'a, Result<(), WebhookError>> {
+            let invoked = self.invoked.clone();
+            Box::pin(async move {
+                invoked.store(true, Ordering::SeqCst);
+                Ok(())
+            })
+        }
+    }
+
+    // Error handler implementation for testing error propagation
+    struct ErrorHandler {
+        error_message: String,
+    }
+
+    impl WebhookHandler for ErrorHandler {
+        fn handle<'a>(
+            &'a self,
+            _context: super::super::verification::WebhookContext,
+            _payload: serde_json::Value,
+        ) -> BoxFuture<'a, Result<(), WebhookError>> {
+            let message = self.error_message.clone();
+            Box::pin(async move {
+                Err(WebhookError::ShopifyError { message })
+            })
+        }
+    }
 
     #[test]
     fn test_webhook_registry_new_creates_empty_registry() {
@@ -946,5 +1069,481 @@ mod tests {
 
         // Verify chaining worked
         assert_eq!(chain_result.list_registrations().len(), 2);
+    }
+
+    // ========================================================================
+    // Task Group 3 Tests: Registry Handler Functionality
+    // ========================================================================
+
+    #[test]
+    fn test_add_registration_extracts_and_stores_handler_separately() {
+        let invoked = Arc::new(AtomicBool::new(false));
+        let handler = TestHandler {
+            invoked: invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(handler)
+            .build(),
+        );
+
+        // Verify registration exists
+        assert!(registry.get_registration(&WebhookTopic::OrdersCreate).is_some());
+
+        // Verify handler was stored separately in the handlers map
+        assert!(registry.handlers.contains_key(&WebhookTopic::OrdersCreate));
+    }
+
+    #[test]
+    fn test_handler_lookup_by_topic_succeeds_for_registered_handler() {
+        let invoked = Arc::new(AtomicBool::new(false));
+        let handler = TestHandler {
+            invoked: invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(handler)
+            .build(),
+        );
+
+        // Lookup handler by topic
+        let found_handler = registry.handlers.get(&WebhookTopic::OrdersCreate);
+        assert!(found_handler.is_some());
+    }
+
+    #[test]
+    fn test_handler_lookup_returns_none_for_topic_without_handler() {
+        let mut registry = WebhookRegistry::new();
+
+        // Add registration without handler
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .build(),
+        );
+
+        // Lookup handler by topic
+        let found_handler = registry.handlers.get(&WebhookTopic::OrdersCreate);
+        assert!(found_handler.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_process_returns_no_handler_for_topic_error() {
+        let mut registry = WebhookRegistry::new();
+
+        // Add registration without handler
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .build(),
+        );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        let body = b"{}";
+        let hmac = compute_signature_base64(body, "secret");
+        let request = WebhookRequest::new(
+            body.to_vec(),
+            hmac,
+            Some("orders/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &request).await;
+        assert!(result.is_err());
+
+        match result.unwrap_err() {
+            WebhookError::NoHandlerForTopic { topic } => {
+                assert_eq!(topic, "orders/create");
+            }
+            other => panic!("Expected NoHandlerForTopic, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_process_returns_payload_parse_error_for_invalid_json() {
+        let invoked = Arc::new(AtomicBool::new(false));
+        let handler = TestHandler {
+            invoked: invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(handler)
+            .build(),
+        );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        // Invalid JSON body
+        let body = b"not valid json {{{";
+        let hmac = compute_signature_base64(body, "secret");
+        let request = WebhookRequest::new(
+            body.to_vec(),
+            hmac,
+            Some("orders/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &request).await;
+        assert!(result.is_err());
+
+        match result.unwrap_err() {
+            WebhookError::PayloadParseError { message } => {
+                assert!(!message.is_empty());
+            }
+            other => panic!("Expected PayloadParseError, got: {:?}", other),
+        }
+
+        // Ensure handler was not invoked
+        assert!(!invoked.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn test_process_invokes_handler_with_correct_context_and_payload() {
+        let invoked = Arc::new(AtomicBool::new(false));
+        let handler = TestHandler {
+            invoked: invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(handler)
+            .build(),
+        );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        let body = br#"{"order_id": 123}"#;
+        let hmac = compute_signature_base64(body, "secret");
+        let request = WebhookRequest::new(
+            body.to_vec(),
+            hmac,
+            Some("orders/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &request).await;
+        assert!(result.is_ok());
+
+        // Verify handler was invoked
+        assert!(invoked.load(Ordering::SeqCst));
+    }
+
+    // ========================================================================
+    // Task Group 4 Tests: Additional Strategic Tests
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_handler_error_propagation_through_process() {
+        let handler = ErrorHandler {
+            error_message: "Handler failed intentionally".to_string(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(handler)
+            .build(),
+        );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        let body = br#"{"order_id": 123}"#;
+        let hmac = compute_signature_base64(body, "secret");
+        let request = WebhookRequest::new(
+            body.to_vec(),
+            hmac,
+            Some("orders/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &request).await;
+        assert!(result.is_err());
+
+        match result.unwrap_err() {
+            WebhookError::ShopifyError { message } => {
+                assert_eq!(message, "Handler failed intentionally");
+            }
+            other => panic!("Expected ShopifyError, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_multiple_handlers_for_different_topics() {
+        let orders_invoked = Arc::new(AtomicBool::new(false));
+        let products_invoked = Arc::new(AtomicBool::new(false));
+
+        let orders_handler = TestHandler {
+            invoked: orders_invoked.clone(),
+        };
+        let products_handler = TestHandler {
+            invoked: products_invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry
+            .add_registration(
+                super::super::types::WebhookRegistrationBuilder::new(
+                    WebhookTopic::OrdersCreate,
+                    "/webhooks/orders".to_string(),
+                )
+                .handler(orders_handler)
+                .build(),
+            )
+            .add_registration(
+                super::super::types::WebhookRegistrationBuilder::new(
+                    WebhookTopic::ProductsCreate,
+                    "/webhooks/products".to_string(),
+                )
+                .handler(products_handler)
+                .build(),
+            );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        // Process orders webhook
+        let orders_body = br#"{"order_id": 123}"#;
+        let orders_hmac = compute_signature_base64(orders_body, "secret");
+        let orders_request = WebhookRequest::new(
+            orders_body.to_vec(),
+            orders_hmac,
+            Some("orders/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &orders_request).await;
+        assert!(result.is_ok());
+        assert!(orders_invoked.load(Ordering::SeqCst));
+        assert!(!products_invoked.load(Ordering::SeqCst));
+
+        // Process products webhook
+        let products_body = br#"{"product_id": 456}"#;
+        let products_hmac = compute_signature_base64(products_body, "secret");
+        let products_request = WebhookRequest::new(
+            products_body.to_vec(),
+            products_hmac,
+            Some("products/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &products_request).await;
+        assert!(result.is_ok());
+        assert!(products_invoked.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn test_handler_replacement_when_re_registering_same_topic() {
+        let first_invoked = Arc::new(AtomicBool::new(false));
+        let second_invoked = Arc::new(AtomicBool::new(false));
+
+        let first_handler = TestHandler {
+            invoked: first_invoked.clone(),
+        };
+        let second_handler = TestHandler {
+            invoked: second_invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        // Register first handler
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(first_handler)
+            .build(),
+        );
+
+        // Replace with second handler
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders/v2".to_string(),
+            )
+            .handler(second_handler)
+            .build(),
+        );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        let body = br#"{"order_id": 123}"#;
+        let hmac = compute_signature_base64(body, "secret");
+        let request = WebhookRequest::new(
+            body.to_vec(),
+            hmac,
+            Some("orders/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &request).await;
+        assert!(result.is_ok());
+
+        // Only second handler should be invoked
+        assert!(!first_invoked.load(Ordering::SeqCst));
+        assert!(second_invoked.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn test_process_returns_invalid_hmac_for_bad_signature() {
+        let invoked = Arc::new(AtomicBool::new(false));
+        let handler = TestHandler {
+            invoked: invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(handler)
+            .build(),
+        );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        let body = br#"{"order_id": 123}"#;
+        // Use wrong secret for HMAC
+        let hmac = compute_signature_base64(body, "wrong-secret");
+        let request = WebhookRequest::new(
+            body.to_vec(),
+            hmac,
+            Some("orders/create".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &request).await;
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), WebhookError::InvalidHmac));
+
+        // Handler should not be invoked
+        assert!(!invoked.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn test_process_handles_unknown_topic() {
+        let invoked = Arc::new(AtomicBool::new(false));
+        let handler = TestHandler {
+            invoked: invoked.clone(),
+        };
+
+        let mut registry = WebhookRegistry::new();
+
+        registry.add_registration(
+            super::super::types::WebhookRegistrationBuilder::new(
+                WebhookTopic::OrdersCreate,
+                "/webhooks/orders".to_string(),
+            )
+            .handler(handler)
+            .build(),
+        );
+
+        let config = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .build()
+            .unwrap();
+
+        let body = br#"{"data": "test"}"#;
+        let hmac = compute_signature_base64(body, "secret");
+        let request = WebhookRequest::new(
+            body.to_vec(),
+            hmac,
+            Some("custom/unknown_topic".to_string()),
+            Some("shop.myshopify.com".to_string()),
+            None,
+            None,
+        );
+
+        let result = registry.process(&config, &request).await;
+        assert!(result.is_err());
+
+        match result.unwrap_err() {
+            WebhookError::NoHandlerForTopic { topic } => {
+                assert_eq!(topic, "custom/unknown_topic");
+            }
+            other => panic!("Expected NoHandlerForTopic, got: {:?}", other),
+        }
+
+        // Handler should not be invoked
+        assert!(!invoked.load(Ordering::SeqCst));
     }
 }

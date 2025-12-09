@@ -16,6 +16,11 @@
 //! - [`WebhookRegistrationBuilder`]: Builder for creating registrations
 //! - [`WebhookRegistrationResult`]: Result of registration operations
 //!
+//! ## Handler
+//!
+//! - [`WebhookHandler`]: Trait for implementing webhook handlers
+//! - [`BoxFuture`]: Type alias for boxed futures used in handler returns
+//!
 //! ## Verification
 //!
 //! - [`WebhookRequest`]: Incoming webhook request data
@@ -43,6 +48,43 @@
 //! - Queries existing subscriptions from Shopify
 //! - Compares configuration to detect changes
 //! - Only creates/updates when necessary
+//!
+//! # Webhook Handler Example
+//!
+//! ```rust
+//! use shopify_api::webhooks::{
+//!     WebhookHandler, WebhookContext, WebhookError, WebhookRegistry,
+//!     WebhookRegistrationBuilder, WebhookTopic, BoxFuture
+//! };
+//! use serde_json::Value;
+//!
+//! // Define a handler
+//! struct OrderHandler;
+//!
+//! impl WebhookHandler for OrderHandler {
+//!     fn handle<'a>(
+//!         &'a self,
+//!         context: WebhookContext,
+//!         payload: Value,
+//!     ) -> BoxFuture<'a, Result<(), WebhookError>> {
+//!         Box::pin(async move {
+//!             println!("Order webhook from: {:?}", context.shop_domain());
+//!             Ok(())
+//!         })
+//!     }
+//! }
+//!
+//! // Register with a handler
+//! let mut registry = WebhookRegistry::new();
+//! registry.add_registration(
+//!     WebhookRegistrationBuilder::new(
+//!         WebhookTopic::OrdersCreate,
+//!         "/api/webhooks/orders".to_string(),
+//!     )
+//!     .handler(OrderHandler)
+//!     .build()
+//! );
+//! ```
 //!
 //! # Webhook Verification Example
 //!
@@ -137,6 +179,12 @@
 //!         WebhookError::InvalidHmac => {
 //!             println!("Webhook signature verification failed");
 //!         }
+//!         WebhookError::NoHandlerForTopic { topic } => {
+//!             println!("No handler registered for topic: {}", topic);
+//!         }
+//!         WebhookError::PayloadParseError { message } => {
+//!             println!("Failed to parse webhook payload: {}", message);
+//!         }
 //!     }
 //! }
 //! ```
@@ -153,7 +201,10 @@ mod verification;
 
 pub use errors::WebhookError;
 pub use registry::WebhookRegistry;
-pub use types::{WebhookRegistration, WebhookRegistrationBuilder, WebhookRegistrationResult};
+pub use types::{
+    BoxFuture, WebhookHandler, WebhookRegistration, WebhookRegistrationBuilder,
+    WebhookRegistrationResult,
+};
 
 // Verification exports
 pub use verification::{

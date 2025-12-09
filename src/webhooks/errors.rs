@@ -11,6 +11,8 @@
 //! - [`WebhookError::GraphqlError`]: Wrapped GraphQL errors
 //! - [`WebhookError::ShopifyError`]: For userErrors in GraphQL responses
 //! - [`WebhookError::InvalidHmac`]: When webhook signature verification fails
+//! - [`WebhookError::NoHandlerForTopic`]: When no handler is registered for a topic
+//! - [`WebhookError::PayloadParseError`]: When webhook payload JSON parsing fails
 //!
 //! # Example
 //!
@@ -99,6 +101,26 @@ pub enum WebhookError {
     /// The error message is intentionally generic to avoid leaking security details.
     #[error("Webhook signature verification failed")]
     InvalidHmac,
+
+    /// No handler registered for the webhook topic.
+    ///
+    /// This error occurs when attempting to process a webhook for a topic
+    /// that has no registered handler in the registry.
+    #[error("No handler registered for webhook topic: {topic}")]
+    NoHandlerForTopic {
+        /// The raw topic string that had no handler.
+        topic: String,
+    },
+
+    /// Webhook payload parsing failed.
+    ///
+    /// This error occurs when the webhook request body cannot be parsed
+    /// as valid JSON.
+    #[error("Failed to parse webhook payload: {message}")]
+    PayloadParseError {
+        /// The error message from the JSON parser.
+        message: String,
+    },
 }
 
 #[cfg(test)]
@@ -181,6 +203,18 @@ mod tests {
         // InvalidHmac
         let error: &dyn std::error::Error = &WebhookError::InvalidHmac;
         let _ = error;
+
+        // NoHandlerForTopic
+        let error: &dyn std::error::Error = &WebhookError::NoHandlerForTopic {
+            topic: "orders/create".to_string(),
+        };
+        let _ = error;
+
+        // PayloadParseError
+        let error: &dyn std::error::Error = &WebhookError::PayloadParseError {
+            message: "invalid json".to_string(),
+        };
+        let _ = error;
     }
 
     #[test]
@@ -201,5 +235,29 @@ mod tests {
         // Ensure the message is generic and doesn't leak security details
         assert!(!message.contains("key"));
         assert!(!message.contains("secret"));
+    }
+
+    // ========================================================================
+    // Task Group 1 Tests: WebhookHandler and Error Types
+    // ========================================================================
+
+    #[test]
+    fn test_no_handler_for_topic_error_message_formatting() {
+        let error = WebhookError::NoHandlerForTopic {
+            topic: "orders/create".to_string(),
+        };
+        let message = error.to_string();
+        assert!(message.contains("No handler registered"));
+        assert!(message.contains("orders/create"));
+    }
+
+    #[test]
+    fn test_payload_parse_error_message_formatting() {
+        let error = WebhookError::PayloadParseError {
+            message: "expected value at line 1 column 1".to_string(),
+        };
+        let message = error.to_string();
+        assert!(message.contains("Failed to parse webhook payload"));
+        assert!(message.contains("expected value at line 1 column 1"));
     }
 }
