@@ -5,6 +5,32 @@
 
 use std::collections::HashMap;
 
+/// Information about a deprecated API endpoint or feature.
+///
+/// When Shopify deprecates an API endpoint, they include the
+/// `X-Shopify-API-Deprecated-Reason` header in responses. This struct
+/// provides structured access to that deprecation information.
+///
+/// # Example
+///
+/// ```rust
+/// use shopify_api::ApiDeprecationInfo;
+///
+/// let info = ApiDeprecationInfo {
+///     reason: "This endpoint will be removed in 2025-07".to_string(),
+///     path: Some("/admin/api/2024-01/products.json".to_string()),
+/// };
+///
+/// println!("Deprecation: {} at {:?}", info.reason, info.path);
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApiDeprecationInfo {
+    /// The reason for deprecation from the `X-Shopify-API-Deprecated-Reason` header.
+    pub reason: String,
+    /// The request path that triggered the deprecation notice, if available.
+    pub path: Option<String>,
+}
+
 /// Rate limit information parsed from the `X-Shopify-Shop-Api-Call-Limit` header.
 ///
 /// The header format is "X/Y" where X is the current request count and Y is
@@ -225,6 +251,63 @@ impl HttpResponse {
             .and_then(|values| values.first())
             .map(String::as_str)
     }
+
+    /// Returns structured deprecation information if the response indicates deprecation.
+    ///
+    /// This method parses the `X-Shopify-API-Deprecated-Reason` header and returns
+    /// an [`ApiDeprecationInfo`] struct with the deprecation details.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::HttpResponse;
+    /// use std::collections::HashMap;
+    /// use serde_json::json;
+    ///
+    /// let mut headers = HashMap::new();
+    /// headers.insert(
+    ///     "x-shopify-api-deprecated-reason".to_string(),
+    ///     vec!["This endpoint is deprecated".to_string()],
+    /// );
+    ///
+    /// let response = HttpResponse::new(200, headers, json!({}));
+    ///
+    /// if let Some(info) = response.deprecation_info() {
+    ///     println!("Warning: {}", info.reason);
+    /// }
+    /// ```
+    #[must_use]
+    pub fn deprecation_info(&self) -> Option<ApiDeprecationInfo> {
+        self.deprecation_reason().map(|reason| ApiDeprecationInfo {
+            reason: reason.to_string(),
+            path: None, // Path is set by the caller who knows the request path
+        })
+    }
+
+    /// Returns `true` if the response indicates a deprecated API endpoint.
+    ///
+    /// This checks for the presence of the `X-Shopify-API-Deprecated-Reason` header.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::HttpResponse;
+    /// use std::collections::HashMap;
+    /// use serde_json::json;
+    ///
+    /// let mut headers = HashMap::new();
+    /// headers.insert(
+    ///     "x-shopify-api-deprecated-reason".to_string(),
+    ///     vec!["This endpoint is deprecated".to_string()],
+    /// );
+    ///
+    /// let response = HttpResponse::new(200, headers, json!({}));
+    /// assert!(response.is_deprecated());
+    /// ```
+    #[must_use]
+    pub fn is_deprecated(&self) -> bool {
+        self.deprecation_reason().is_some()
+    }
 }
 
 #[cfg(test)]
@@ -334,5 +417,44 @@ mod tests {
             response.deprecation_reason(),
             Some("This endpoint is deprecated")
         );
+    }
+
+    #[test]
+    fn test_deprecation_info_parses_header() {
+        let mut headers = HashMap::new();
+        headers.insert(
+            "x-shopify-api-deprecated-reason".to_string(),
+            vec!["This endpoint will be removed in 2025-07".to_string()],
+        );
+
+        let response = HttpResponse::new(200, headers, json!({}));
+        let info = response.deprecation_info().unwrap();
+
+        assert_eq!(info.reason, "This endpoint will be removed in 2025-07");
+        assert!(info.path.is_none()); // Path is set by caller
+    }
+
+    #[test]
+    fn test_deprecation_info_returns_none_when_not_deprecated() {
+        let response = HttpResponse::new(200, HashMap::new(), json!({}));
+        assert!(response.deprecation_info().is_none());
+    }
+
+    #[test]
+    fn test_is_deprecated_true_when_header_present() {
+        let mut headers = HashMap::new();
+        headers.insert(
+            "x-shopify-api-deprecated-reason".to_string(),
+            vec!["Deprecated".to_string()],
+        );
+
+        let response = HttpResponse::new(200, headers, json!({}));
+        assert!(response.is_deprecated());
+    }
+
+    #[test]
+    fn test_is_deprecated_false_when_no_header() {
+        let response = HttpResponse::new(200, HashMap::new(), json!({}));
+        assert!(!response.is_deprecated());
     }
 }

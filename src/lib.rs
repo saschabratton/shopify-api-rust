@@ -353,15 +353,16 @@ pub mod webhooks;
 // Re-export public types at crate root for convenience
 pub use auth::{AssociatedUser, AuthScopes, Session};
 pub use config::{
-    ApiKey, ApiSecretKey, ApiVersion, HostUrl, ShopDomain, ShopifyConfig, ShopifyConfigBuilder,
+    ApiKey, ApiSecretKey, ApiVersion, DeprecationCallback, HostUrl, ShopDomain, ShopifyConfig,
+    ShopifyConfigBuilder,
 };
 pub use error::ConfigError;
 
 // Re-export HTTP client types
 pub use clients::{
-    ApiCallLimit, DataType, HttpClient, HttpError, HttpMethod, HttpRequest, HttpRequestBuilder,
-    HttpResponse, HttpResponseError, InvalidHttpRequestError, MaxHttpRetriesExceededError,
-    PaginationInfo,
+    ApiCallLimit, ApiDeprecationInfo, DataType, HttpClient, HttpError, HttpMethod, HttpRequest,
+    HttpRequestBuilder, HttpResponse, HttpResponseError, InvalidHttpRequestError,
+    MaxHttpRetriesExceededError, PaginationInfo,
 };
 
 // Re-export REST client types

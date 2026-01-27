@@ -70,7 +70,7 @@ pub use errors::{
 };
 pub use http_client::{HttpClient, SDK_VERSION};
 pub use http_request::{DataType, HttpMethod, HttpRequest, HttpRequestBuilder};
-pub use http_response::{ApiCallLimit, HttpResponse, PaginationInfo};
+pub use http_response::{ApiCallLimit, ApiDeprecationInfo, HttpResponse, PaginationInfo};
 
 // Re-export REST client types at the clients module level
 pub use rest::{RestClient, RestError};

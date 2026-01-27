@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use crate::auth::Session;
 use crate::clients::errors::{HttpError, HttpResponseError, MaxHttpRetriesExceededError};
 use crate::clients::http_request::HttpRequest;
-use crate::clients::http_response::HttpResponse;
-use crate::config::ShopifyConfig;
+use crate::clients::http_response::{ApiDeprecationInfo, HttpResponse};
+use crate::config::{DeprecationCallback, ShopifyConfig};
 
 /// Fixed retry wait time in seconds (matching Ruby SDK).
 pub const RETRY_WAIT_TIME: u64 = 1;
@@ -51,7 +51,6 @@ pub const SDK_VERSION: &str = env!("CARGO_PKG_VERSION");
 ///
 /// let response = client.request(request).await?;
 /// ```
-#[derive(Debug)]
 pub struct HttpClient {
     /// The internal reqwest HTTP client.
     client: reqwest::Client,
@@ -61,6 +60,23 @@ pub struct HttpClient {
     base_path: String,
     /// Default headers to include in all requests.
     default_headers: HashMap<String, String>,
+    /// Optional callback for deprecation notices.
+    deprecation_callback: Option<DeprecationCallback>,
+}
+
+impl std::fmt::Debug for HttpClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HttpClient")
+            .field("client", &self.client)
+            .field("base_uri", &self.base_uri)
+            .field("base_path", &self.base_path)
+            .field("default_headers", &self.default_headers)
+            .field(
+                "deprecation_callback",
+                &self.deprecation_callback.as_ref().map(|_| "<callback>"),
+            )
+            .finish()
+    }
 }
 
 // Verify HttpClient is Send + Sync at compile time
@@ -148,11 +164,15 @@ impl HttpClient {
             .build()
             .expect("Failed to create HTTP client");
 
+        // Get deprecation callback if configured
+        let deprecation_callback = config.and_then(|c| c.deprecation_callback().cloned());
+
         Self {
             client,
             base_uri,
             base_path,
             default_headers,
+            deprecation_callback,
         }
     }
 
@@ -278,13 +298,22 @@ impl HttpClient {
 
             let response = HttpResponse::new(code, res_headers, body);
 
-            // Log deprecation warning if present
+            // Handle deprecation warning if present
             if let Some(reason) = response.deprecation_reason() {
                 tracing::warn!(
                     "Deprecated request to Shopify API at {}, received reason: {}",
                     request.path,
                     reason
                 );
+
+                // Invoke deprecation callback if configured
+                if let Some(callback) = &self.deprecation_callback {
+                    let info = ApiDeprecationInfo {
+                        reason: reason.to_string(),
+                        path: Some(request.path.clone()),
+                    };
+                    callback(&info);
+                }
             }
 
             // Check if response is OK

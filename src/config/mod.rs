@@ -14,6 +14,7 @@
 //! - [`ShopDomain`]: A validated Shopify shop domain
 //! - [`HostUrl`]: A validated application host URL
 //! - [`ApiVersion`]: The Shopify API version to use
+//! - [`DeprecationCallback`]: Callback type for API deprecation notices
 //!
 //! # Example
 //!
@@ -34,8 +35,47 @@ mod version;
 pub use newtypes::{ApiKey, ApiSecretKey, HostUrl, ShopDomain};
 pub use version::ApiVersion;
 
+// Re-export DeprecationCallback type (defined in this module)
+
 use crate::auth::AuthScopes;
+use crate::clients::ApiDeprecationInfo;
 use crate::error::ConfigError;
+use std::sync::Arc;
+
+/// Callback type for handling API deprecation notices.
+///
+/// This callback is invoked whenever the SDK receives a response with the
+/// `X-Shopify-API-Deprecated-Reason` header, indicating that the requested
+/// endpoint or API version is deprecated.
+///
+/// The callback receives an [`ApiDeprecationInfo`] struct containing the
+/// deprecation reason and the request path.
+///
+/// # Thread Safety
+///
+/// The callback must be `Send + Sync` to be safely shared across threads
+/// and async tasks.
+///
+/// # Example
+///
+/// ```rust
+/// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, DeprecationCallback};
+/// use std::sync::Arc;
+///
+/// let callback: DeprecationCallback = Arc::new(|info| {
+///     eprintln!("Deprecation warning: {} at {:?}", info.reason, info.path);
+/// });
+///
+/// let config = ShopifyConfig::builder()
+///     .api_key(ApiKey::new("key").unwrap())
+///     .api_secret_key(ApiSecretKey::new("secret").unwrap())
+///     .on_deprecation(|info| {
+///         println!("API deprecation: {}", info.reason);
+///     })
+///     .build()
+///     .unwrap();
+/// ```
+pub type DeprecationCallback = Arc<dyn Fn(&ApiDeprecationInfo) + Send + Sync>;
 
 /// Configuration for the Shopify API SDK.
 ///
@@ -68,7 +108,7 @@ use crate::error::ConfigError;
 ///
 /// assert!(config.is_embedded());
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ShopifyConfig {
     api_key: ApiKey,
     api_secret_key: ApiSecretKey,
@@ -78,6 +118,26 @@ pub struct ShopifyConfig {
     api_version: ApiVersion,
     is_embedded: bool,
     user_agent_prefix: Option<String>,
+    deprecation_callback: Option<DeprecationCallback>,
+}
+
+impl std::fmt::Debug for ShopifyConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ShopifyConfig")
+            .field("api_key", &self.api_key)
+            .field("api_secret_key", &self.api_secret_key)
+            .field("old_api_secret_key", &self.old_api_secret_key)
+            .field("scopes", &self.scopes)
+            .field("host", &self.host)
+            .field("api_version", &self.api_version)
+            .field("is_embedded", &self.is_embedded)
+            .field("user_agent_prefix", &self.user_agent_prefix)
+            .field(
+                "deprecation_callback",
+                &self.deprecation_callback.as_ref().map(|_| "<callback>"),
+            )
+            .finish()
+    }
 }
 
 impl ShopifyConfig {
@@ -149,6 +209,15 @@ impl ShopifyConfig {
     pub fn user_agent_prefix(&self) -> Option<&str> {
         self.user_agent_prefix.as_deref()
     }
+
+    /// Returns the deprecation callback, if configured.
+    ///
+    /// This callback is invoked when the SDK receives a response indicating
+    /// that an API endpoint is deprecated.
+    #[must_use]
+    pub fn deprecation_callback(&self) -> Option<&DeprecationCallback> {
+        self.deprecation_callback.as_ref()
+    }
 }
 
 // Verify ShopifyConfig is Send + Sync at compile time
@@ -170,6 +239,7 @@ const _: fn() = || {
 /// - `host`: `None`
 /// - `user_agent_prefix`: `None`
 /// - `old_api_secret_key`: `None`
+/// - `reject_deprecated_versions`: `false`
 ///
 /// # Example
 ///
@@ -186,7 +256,7 @@ const _: fn() = || {
 ///     .build()
 ///     .unwrap();
 /// ```
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct ShopifyConfigBuilder {
     api_key: Option<ApiKey>,
     api_secret_key: Option<ApiSecretKey>,
@@ -196,6 +266,28 @@ pub struct ShopifyConfigBuilder {
     api_version: Option<ApiVersion>,
     is_embedded: Option<bool>,
     user_agent_prefix: Option<String>,
+    reject_deprecated_versions: bool,
+    deprecation_callback: Option<DeprecationCallback>,
+}
+
+impl std::fmt::Debug for ShopifyConfigBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ShopifyConfigBuilder")
+            .field("api_key", &self.api_key)
+            .field("api_secret_key", &self.api_secret_key)
+            .field("old_api_secret_key", &self.old_api_secret_key)
+            .field("scopes", &self.scopes)
+            .field("host", &self.host)
+            .field("api_version", &self.api_version)
+            .field("is_embedded", &self.is_embedded)
+            .field("user_agent_prefix", &self.user_agent_prefix)
+            .field("reject_deprecated_versions", &self.reject_deprecated_versions)
+            .field(
+                "deprecation_callback",
+                &self.deprecation_callback.as_ref().map(|_| "<callback>"),
+            )
+            .finish()
+    }
 }
 
 impl ShopifyConfigBuilder {
@@ -279,12 +371,81 @@ impl ShopifyConfigBuilder {
         self
     }
 
+    /// Sets whether to reject deprecated API versions.
+    ///
+    /// When `true`, [`build()`](Self::build) will return a
+    /// [`ConfigError::DeprecatedApiVersion`] error if the configured API version
+    /// is past Shopify's support window.
+    ///
+    /// When `false` (the default), deprecated versions will log a warning via
+    /// `tracing` but the configuration will still be created.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion, ConfigError};
+    ///
+    /// // This will fail because V2024_01 is deprecated
+    /// let result = ShopifyConfig::builder()
+    ///     .api_key(ApiKey::new("key").unwrap())
+    ///     .api_secret_key(ApiSecretKey::new("secret").unwrap())
+    ///     .api_version(ApiVersion::V2024_01)
+    ///     .reject_deprecated_versions(true)
+    ///     .build();
+    ///
+    /// assert!(matches!(result, Err(ConfigError::DeprecatedApiVersion { .. })));
+    /// ```
+    #[must_use]
+    pub const fn reject_deprecated_versions(mut self, reject: bool) -> Self {
+        self.reject_deprecated_versions = reject;
+        self
+    }
+
+    /// Sets a callback to be invoked when API deprecation notices are received.
+    ///
+    /// The callback is called whenever the SDK receives a response with the
+    /// `X-Shopify-API-Deprecated-Reason` header. This allows you to track
+    /// deprecated API usage in your monitoring systems.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
+    /// use std::sync::atomic::{AtomicUsize, Ordering};
+    /// use std::sync::Arc;
+    ///
+    /// let deprecation_count = Arc::new(AtomicUsize::new(0));
+    /// let count_clone = Arc::clone(&deprecation_count);
+    ///
+    /// let config = ShopifyConfig::builder()
+    ///     .api_key(ApiKey::new("key").unwrap())
+    ///     .api_secret_key(ApiSecretKey::new("secret").unwrap())
+    ///     .on_deprecation(move |info| {
+    ///         count_clone.fetch_add(1, Ordering::SeqCst);
+    ///         eprintln!("Deprecated: {} at {:?}", info.reason, info.path);
+    ///     })
+    ///     .build()
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn on_deprecation<F>(mut self, callback: F) -> Self
+    where
+        F: Fn(&ApiDeprecationInfo) + Send + Sync + 'static,
+    {
+        self.deprecation_callback = Some(Arc::new(callback));
+        self
+    }
+
     /// Builds the [`ShopifyConfig`], validating that required fields are set.
     ///
     /// # Errors
     ///
     /// Returns [`ConfigError::MissingRequiredField`] if `api_key` or
     /// `api_secret_key` are not set.
+    ///
+    /// Returns [`ConfigError::DeprecatedApiVersion`] if
+    /// [`reject_deprecated_versions(true)`](Self::reject_deprecated_versions) is set
+    /// and the configured API version is deprecated.
     pub fn build(self) -> Result<ShopifyConfig, ConfigError> {
         let api_key = self
             .api_key
@@ -295,15 +456,35 @@ impl ShopifyConfigBuilder {
                 field: "api_secret_key",
             })?;
 
+        let api_version = self.api_version.unwrap_or_else(ApiVersion::latest);
+
+        // Check for deprecated API version
+        if api_version.is_deprecated() {
+            if self.reject_deprecated_versions {
+                return Err(ConfigError::DeprecatedApiVersion {
+                    version: api_version.to_string(),
+                    latest: ApiVersion::latest().to_string(),
+                });
+            }
+            tracing::warn!(
+                version = %api_version,
+                latest = %ApiVersion::latest(),
+                "Using deprecated API version '{}'. Please upgrade to '{}' or a newer supported version.",
+                api_version,
+                ApiVersion::latest()
+            );
+        }
+
         Ok(ShopifyConfig {
             api_key,
             api_secret_key,
             old_api_secret_key: self.old_api_secret_key,
             scopes: self.scopes.unwrap_or_default(),
             host: self.host,
-            api_version: self.api_version.unwrap_or_else(ApiVersion::latest),
+            api_version,
             is_embedded: self.is_embedded.unwrap_or(true),
             user_agent_prefix: self.user_agent_prefix,
+            deprecation_callback: self.deprecation_callback,
         })
     }
 }
@@ -420,5 +601,58 @@ mod tests {
             .unwrap();
 
         assert!(config.old_api_secret_key().is_none());
+    }
+
+    #[test]
+    fn test_build_allows_deprecated_version_by_default() {
+        // By default, deprecated versions should be allowed (with a warning)
+        let result = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .api_version(ApiVersion::V2024_01)
+            .build();
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().api_version(), &ApiVersion::V2024_01);
+    }
+
+    #[test]
+    fn test_build_fails_when_reject_deprecated() {
+        let result = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .api_version(ApiVersion::V2024_01)
+            .reject_deprecated_versions(true)
+            .build();
+
+        assert!(matches!(
+            result,
+            Err(ConfigError::DeprecatedApiVersion { version, latest })
+            if version == "2024-01" && latest == ApiVersion::latest().to_string()
+        ));
+    }
+
+    #[test]
+    fn test_build_succeeds_with_supported_version_when_reject_deprecated() {
+        let result = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .api_version(ApiVersion::V2025_10)
+            .reject_deprecated_versions(true)
+            .build();
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_build_succeeds_with_unstable_when_reject_deprecated() {
+        let result = ShopifyConfig::builder()
+            .api_key(ApiKey::new("key").unwrap())
+            .api_secret_key(ApiSecretKey::new("secret").unwrap())
+            .api_version(ApiVersion::Unstable)
+            .reject_deprecated_versions(true)
+            .build();
+
+        assert!(result.is_ok());
     }
 }

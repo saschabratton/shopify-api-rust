@@ -141,6 +141,34 @@
 //! - `v2025_10` (2025-10) - Latest stable
 //!
 //! Future versions will be added as needed without breaking existing code.
+//!
+//! ## API Version Lifecycle
+//!
+//! Shopify API versions follow a quarterly release schedule and have an
+//! approximately 12-month support window:
+//!
+//! - **Supported**: Versions within the support window receive full support
+//! - **Deprecated**: Older versions may stop working at any time
+//!
+//! Use [`ApiVersion::is_supported()`](crate::ApiVersion::is_supported) and
+//! [`ApiVersion::is_deprecated()`](crate::ApiVersion::is_deprecated) to check
+//! version status at runtime.
+//!
+//! ## Multi-Version Resources
+//!
+//! Resources are organized by API version to support version-specific differences.
+//! The latest stable version is re-exported at the module root for convenience:
+//!
+//! ```rust,ignore
+//! // Recommended: Use the default (latest) version
+//! use shopify_api::rest::resources::Product;
+//!
+//! // Explicit version selection (for version-specific behavior)
+//! use shopify_api::rest::resources::v2025_10::Product;
+//! ```
+//!
+//! When Shopify introduces breaking changes in a new API version, a new
+//! version-specific module will be added without breaking existing code.
 
 pub mod v2025_10;
 

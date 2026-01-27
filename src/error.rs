@@ -68,6 +68,15 @@ pub enum ConfigError {
         /// The invalid URL that was provided.
         url: String,
     },
+
+    /// API version is deprecated.
+    #[error("API version '{version}' is deprecated. Please upgrade to '{latest}' or a newer supported version.")]
+    DeprecatedApiVersion {
+        /// The deprecated version that was provided.
+        version: String,
+        /// The latest supported version to upgrade to.
+        latest: String,
+    },
 }
 
 #[cfg(test)]
@@ -105,5 +114,18 @@ mod tests {
         let error = ConfigError::EmptyApiKey;
         // Verify it implements std::error::Error by using it as a dyn Error
         let _: &dyn std::error::Error = &error;
+    }
+
+    #[test]
+    fn test_deprecated_api_version_error_message() {
+        let error = ConfigError::DeprecatedApiVersion {
+            version: "2024-01".to_string(),
+            latest: "2025-10".to_string(),
+        };
+        let message = error.to_string();
+        assert!(message.contains("2024-01"));
+        assert!(message.contains("deprecated"));
+        assert!(message.contains("2025-10"));
+        assert!(message.contains("upgrade"));
     }
 }
