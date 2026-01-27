@@ -23,7 +23,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{GraphqlClient, Session, ShopDomain, ShopifyConfig, ApiKey, ApiSecretKey};
+//! use shopify_sdk::{GraphqlClient, Session, ShopDomain, ShopifyConfig, ApiKey, ApiSecretKey};
 //! use serde_json::json;
 //!
 //! // Create a session

@@ -15,7 +15,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::clients::graphql::{GraphqlClient, GraphqlError};
+//! use shopify_sdk::clients::graphql::{GraphqlClient, GraphqlError};
 //!
 //! match client.query("query { shop { name } }", None, None, None).await {
 //!     Ok(response) => {
@@ -48,8 +48,8 @@ use thiserror::Error;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::clients::graphql::GraphqlError;
-/// use shopify_api::clients::{HttpError, HttpResponseError};
+/// use shopify_sdk::clients::graphql::GraphqlError;
+/// use shopify_sdk::clients::{HttpError, HttpResponseError};
 ///
 /// // HTTP error wrapping
 /// let http_error = HttpError::Response(HttpResponseError {

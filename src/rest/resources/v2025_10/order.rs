@@ -13,8 +13,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Order, OrderListParams, FinancialStatus};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Order, OrderListParams, FinancialStatus};
 //!
 //! // Find a single order
 //! let order = Order::find(&client, 123, None).await?;
@@ -261,7 +261,7 @@ pub struct OrderFulfillment {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::Order;
+/// use shopify_sdk::rest::resources::v2025_10::Order;
 ///
 /// let order = Order {
 ///     email: Some("customer@example.com".to_string()),

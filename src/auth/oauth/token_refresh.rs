@@ -32,8 +32,8 @@
 //! # Example: Refreshing an Access Token
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ShopDomain, Session};
-//! use shopify_api::auth::oauth::refresh_access_token;
+//! use shopify_sdk::{ShopifyConfig, ShopDomain, Session};
+//! use shopify_sdk::auth::oauth::refresh_access_token;
 //!
 //! // Check if the token needs refreshing
 //! if session.expired() || session.refresh_token_expired() {
@@ -48,8 +48,8 @@
 //! # Example: Migrating to Expiring Tokens
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ShopDomain};
-//! use shopify_api::auth::oauth::migrate_to_expiring_token;
+//! use shopify_sdk::{ShopifyConfig, ShopDomain};
+//! use shopify_sdk::auth::oauth::migrate_to_expiring_token;
 //!
 //! // IMPORTANT: This is a one-time, irreversible migration
 //! let new_session = migrate_to_expiring_token(&config, &shop, &old_access_token).await?;
@@ -125,7 +125,7 @@ struct MigrateTokenRequest<'a> {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::auth::oauth::refresh_access_token;
+/// use shopify_sdk::auth::oauth::refresh_access_token;
 ///
 /// // Get the refresh token from your stored session
 /// let refresh_token = session.refresh_token.as_ref().expect("No refresh token");
@@ -219,7 +219,7 @@ pub async fn refresh_access_token(
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::auth::oauth::migrate_to_expiring_token;
+/// use shopify_sdk::auth::oauth::migrate_to_expiring_token;
 ///
 /// // IMPORTANT: This is irreversible!
 /// let new_session = migrate_to_expiring_token(&config, &shop, &old_token).await?;

@@ -23,7 +23,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{HttpClient, HttpRequest, HttpMethod, DataType, Session, ShopDomain};
+//! use shopify_sdk::{HttpClient, HttpRequest, HttpMethod, DataType, Session, ShopDomain};
 //!
 //! // Create a session
 //! let session = Session::new(

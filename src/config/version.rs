@@ -16,7 +16,7 @@ use std::str::FromStr;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::ApiVersion;
+/// use shopify_sdk::ApiVersion;
 ///
 /// // Use the latest stable version
 /// let version = ApiVersion::latest();

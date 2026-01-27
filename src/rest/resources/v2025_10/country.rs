@@ -12,8 +12,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Country, CountryListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Country, CountryListParams};
 //!
 //! // List all shipping countries
 //! let countries = Country::all(&client, None).await?;

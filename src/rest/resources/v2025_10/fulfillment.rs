@@ -18,8 +18,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     Fulfillment, FulfillmentListParams, FulfillmentStatus, TrackingInfo
 //! };
 //!
@@ -189,7 +189,7 @@ pub struct FulfillmentLineItem {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::TrackingInfo;
+/// use shopify_sdk::rest::resources::v2025_10::TrackingInfo;
 ///
 /// let tracking = TrackingInfo {
 ///     tracking_number: Some("1Z999AA10123456784".to_string()),
@@ -236,7 +236,7 @@ pub struct TrackingInfo {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::Fulfillment;
+/// use shopify_sdk::rest::resources::v2025_10::Fulfillment;
 ///
 /// // List fulfillments for an order
 /// let fulfillments = Fulfillment::all_with_parent(&client, "order_id", 123, None).await?;
@@ -473,7 +473,7 @@ impl Fulfillment {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::resources::v2025_10::TrackingInfo;
+    /// use shopify_sdk::rest::resources::v2025_10::TrackingInfo;
     ///
     /// let tracking = TrackingInfo {
     ///     tracking_number: Some("1Z999AA10123456784".to_string()),

@@ -21,7 +21,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::StorefrontToken;
+//! use shopify_sdk::StorefrontToken;
 //!
 //! // Public token (client-side)
 //! let public_token = StorefrontToken::Public("public-access-token".to_string());
@@ -60,7 +60,7 @@ pub const PRIVATE_HEADER_NAME: &str = "Shopify-Storefront-Private-Token";
 /// The [`Debug`] implementation masks token values to prevent accidental exposure:
 ///
 /// ```rust
-/// use shopify_api::StorefrontToken;
+/// use shopify_sdk::StorefrontToken;
 ///
 /// let token = StorefrontToken::Public("secret-token".to_string());
 /// let debug = format!("{:?}", token);
@@ -70,7 +70,7 @@ pub const PRIVATE_HEADER_NAME: &str = "Shopify-Storefront-Private-Token";
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::StorefrontToken;
+/// use shopify_sdk::StorefrontToken;
 ///
 /// let token = StorefrontToken::Public("my-token".to_string());
 ///
@@ -104,7 +104,7 @@ impl StorefrontToken {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::StorefrontToken;
+    /// use shopify_sdk::StorefrontToken;
     ///
     /// let public = StorefrontToken::Public("token".to_string());
     /// assert_eq!(public.header_name(), "X-Shopify-Storefront-Access-Token");
@@ -127,7 +127,7 @@ impl StorefrontToken {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::StorefrontToken;
+    /// use shopify_sdk::StorefrontToken;
     ///
     /// let token = StorefrontToken::Public("my-access-token".to_string());
     /// assert_eq!(token.header_value(), "my-access-token");

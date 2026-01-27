@@ -30,8 +30,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{ProductImageResource, ProductImageListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{ProductImageResource, ProductImageListParams};
 //!
 //! // List images for a product
 //! let images = ProductImageResource::all_with_parent(&client, "product_id", 632910392, None).await?;

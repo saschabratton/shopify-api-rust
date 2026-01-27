@@ -24,8 +24,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{UsageCharge, UsageChargeListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{UsageCharge, UsageChargeListParams};
 //!
 //! // Create a usage charge under a recurring charge
 //! let usage = UsageCharge {

@@ -28,7 +28,7 @@ use std::str::FromStr;
 /// for compact JSON representation:
 ///
 /// ```rust
-/// use shopify_api::AuthScopes;
+/// use shopify_sdk::AuthScopes;
 ///
 /// let scopes: AuthScopes = "read_products,write_orders".parse().unwrap();
 /// let json = serde_json::to_string(&scopes).unwrap();
@@ -38,7 +38,7 @@ use std::str::FromStr;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::AuthScopes;
+/// use shopify_sdk::AuthScopes;
 ///
 /// let scopes: AuthScopes = "read_products, write_orders".parse().unwrap();
 /// assert!(!scopes.is_empty());

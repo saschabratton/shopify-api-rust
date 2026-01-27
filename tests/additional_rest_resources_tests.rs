@@ -16,7 +16,7 @@
 
 use std::collections::HashMap;
 
-use shopify_api::rest::resources::{
+use shopify_sdk::rest::resources::{
     // Article types
     Article,
     ArticleCountParams,
@@ -71,8 +71,8 @@ use shopify_api::rest::resources::{
     WebhookListParams,
     WebhookTopic,
 };
-use shopify_api::rest::{build_path, get_path, ResourceOperation, RestResource, TrackedResource};
-use shopify_api::HttpMethod;
+use shopify_sdk::rest::{build_path, get_path, ResourceOperation, RestResource, TrackedResource};
+use shopify_sdk::HttpMethod;
 
 // ============================================================================
 // Test 1: Shop singleton resource behavior

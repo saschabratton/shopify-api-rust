@@ -28,8 +28,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{GiftCard, GiftCardListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{GiftCard, GiftCardListParams};
 //!
 //! // Create a gift card
 //! let mut gift_card = GiftCard {
@@ -90,7 +90,7 @@ use crate::HttpMethod;
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::GiftCard;
+/// use shopify_sdk::rest::resources::v2025_10::GiftCard;
 ///
 /// let gift_card = GiftCard {
 ///     initial_value: Some("50.00".to_string()),

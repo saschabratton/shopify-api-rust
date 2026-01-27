@@ -3,8 +3,8 @@
 //! These tests verify the REST client construction, path normalization,
 //! error handling, and API method behavior.
 
-use shopify_api::clients::rest::{RestClient, RestError};
-use shopify_api::{ApiVersion, AuthScopes, Session, ShopDomain};
+use shopify_sdk::clients::rest::{RestClient, RestError};
+use shopify_sdk::{ApiVersion, AuthScopes, Session, ShopDomain};
 
 /// Creates a test session with the given shop domain.
 fn create_test_session(shop: &str, access_token: &str) -> Session {
@@ -104,7 +104,7 @@ fn test_clients_with_different_api_versions() {
 
 #[test]
 fn test_rest_error_wraps_http_errors() {
-    use shopify_api::clients::{HttpError, HttpResponseError};
+    use shopify_sdk::clients::{HttpError, HttpResponseError};
 
     let http_error = HttpError::Response(HttpResponseError {
         code: 404,
@@ -126,20 +126,20 @@ fn test_rest_error_wraps_http_errors() {
 #[test]
 fn test_types_exported_at_crate_root() {
     // Verify types are accessible from crate root
-    let _: fn(shopify_api::RestClient) = |_| {};
-    let _: fn(shopify_api::RestError) = |_| {};
+    let _: fn(shopify_sdk::RestClient) = |_| {};
+    let _: fn(shopify_sdk::RestError) = |_| {};
 }
 
 #[test]
 fn test_types_exported_from_clients_module() {
     // Verify types are accessible from clients module
-    let _: fn(shopify_api::clients::RestClient) = |_| {};
-    let _: fn(shopify_api::clients::RestError) = |_| {};
+    let _: fn(shopify_sdk::clients::RestClient) = |_| {};
+    let _: fn(shopify_sdk::clients::RestError) = |_| {};
 }
 
 #[test]
 fn test_types_exported_from_clients_rest_module() {
     // Verify types are accessible from clients::rest module
-    let _: fn(shopify_api::clients::rest::RestClient) = |_| {};
-    let _: fn(shopify_api::clients::rest::RestError) = |_| {};
+    let _: fn(shopify_sdk::clients::rest::RestClient) = |_| {};
+    let _: fn(shopify_sdk::clients::rest::RestError) = |_| {};
 }

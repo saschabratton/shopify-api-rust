@@ -10,7 +10,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::common::{Address, LineItem, TaxLine};
+//! use shopify_sdk::rest::resources::v2025_10::common::{Address, LineItem, TaxLine};
 //!
 //! // Address is embedded in orders and customers
 //! let address = Address {

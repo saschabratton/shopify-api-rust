@@ -32,7 +32,7 @@ pub const SDK_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::{HttpClient, HttpRequest, HttpMethod, Session, ShopDomain};
+/// use shopify_sdk::{HttpClient, HttpRequest, HttpMethod, Session, ShopDomain};
 ///
 /// let session = Session::new(
 ///     "session-id".to_string(),
@@ -86,8 +86,8 @@ impl HttpClient {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{Session, ShopDomain, AuthScopes};
-    /// use shopify_api::clients::HttpClient;
+    /// use shopify_sdk::{Session, ShopDomain, AuthScopes};
+    /// use shopify_sdk::clients::HttpClient;
     ///
     /// let session = Session::new(
     ///     "session-id".to_string(),

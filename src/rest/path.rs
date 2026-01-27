@@ -17,8 +17,8 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::rest::{ResourcePath, ResourceOperation, get_path, build_path};
-//! use shopify_api::HttpMethod;
+//! use shopify_sdk::rest::{ResourcePath, ResourceOperation, get_path, build_path};
+//! use shopify_sdk::HttpMethod;
 //! use std::collections::HashMap;
 //!
 //! // Define paths for a resource
@@ -113,8 +113,8 @@ impl ResourceOperation {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::{ResourcePath, ResourceOperation};
-/// use shopify_api::HttpMethod;
+/// use shopify_sdk::rest::{ResourcePath, ResourceOperation};
+/// use shopify_sdk::HttpMethod;
 ///
 /// const PRODUCT_FIND: ResourcePath = ResourcePath::new(
 ///     HttpMethod::Get,
@@ -198,8 +198,8 @@ impl ResourcePath {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::{ResourcePath, ResourceOperation, get_path};
-/// use shopify_api::HttpMethod;
+/// use shopify_sdk::rest::{ResourcePath, ResourceOperation, get_path};
+/// use shopify_sdk::HttpMethod;
 ///
 /// const PATHS: &[ResourcePath] = &[
 ///     ResourcePath::new(HttpMethod::Get, ResourceOperation::Find, &["product_id", "id"], "products/{product_id}/variants/{id}"),
@@ -247,7 +247,7 @@ pub fn get_path<'a>(
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::build_path;
+/// use shopify_sdk::rest::build_path;
 /// use std::collections::HashMap;
 ///
 /// let mut ids = HashMap::new();

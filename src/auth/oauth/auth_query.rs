@@ -17,7 +17,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::auth::oauth::AuthQuery;
+//! use shopify_sdk::auth::oauth::AuthQuery;
 //!
 //! // Parse from incoming callback (typically via a web framework)
 //! let query = AuthQuery::new(
@@ -60,7 +60,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::auth::oauth::AuthQuery;
+/// use shopify_sdk::auth::oauth::AuthQuery;
 ///
 /// let query = AuthQuery::new(
 ///     "auth-code".to_string(),
@@ -121,7 +121,7 @@ impl AuthQuery {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::AuthQuery;
+    /// use shopify_sdk::auth::oauth::AuthQuery;
     ///
     /// let query = AuthQuery::new(
     ///     "code123".to_string(),
@@ -166,7 +166,7 @@ impl AuthQuery {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::AuthQuery;
+    /// use shopify_sdk::auth::oauth::AuthQuery;
     ///
     /// let query = AuthQuery::new(
     ///     "code123".to_string(),

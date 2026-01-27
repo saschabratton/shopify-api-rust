@@ -11,7 +11,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::{ApiKey, ConfigError};
+//! use shopify_sdk::{ApiKey, ConfigError};
 //!
 //! let result = ApiKey::new("");
 //! assert!(matches!(result, Err(ConfigError::EmptyApiKey)));

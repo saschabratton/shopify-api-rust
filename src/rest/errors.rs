@@ -15,7 +15,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceError};
+//! use shopify_sdk::rest::{RestResource, ResourceError};
 //!
 //! match Product::find(&client, 123, None).await {
 //!     Ok(product) => println!("Found: {}", product.title),
@@ -45,7 +45,7 @@ use thiserror::Error;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::ResourceError;
+/// use shopify_sdk::rest::ResourceError;
 /// use std::collections::HashMap;
 ///
 /// // Not found error
@@ -136,7 +136,7 @@ impl ResourceError {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::ResourceError;
+    /// use shopify_sdk::rest::ResourceError;
     /// use serde_json::json;
     ///
     /// let error = ResourceError::from_http_response(

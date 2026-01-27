@@ -12,9 +12,9 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::{SmartCollection, SmartCollectionListParams};
-//! use shopify_api::rest::resources::v2025_10::common::SmartCollectionRule;
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::v2025_10::{SmartCollection, SmartCollectionListParams};
+//! use shopify_sdk::rest::resources::v2025_10::common::SmartCollectionRule;
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a single smart collection
 //! let collection = SmartCollection::find(&client, 123, None).await?;
@@ -90,8 +90,8 @@ use super::common::{CollectionImage, SmartCollectionRule};
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::SmartCollection;
-/// use shopify_api::rest::resources::v2025_10::common::SmartCollectionRule;
+/// use shopify_sdk::rest::resources::v2025_10::SmartCollection;
+/// use shopify_sdk::rest::resources::v2025_10::common::SmartCollectionRule;
 ///
 /// // Collection with multiple rules (AND logic)
 /// let collection = SmartCollection {
@@ -268,7 +268,7 @@ impl SmartCollection {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::resources::v2025_10::SmartCollection;
+    /// use shopify_sdk::rest::resources::v2025_10::SmartCollection;
     ///
     /// let collection = SmartCollection::find(&client, 123, None).await?.into_inner();
     ///

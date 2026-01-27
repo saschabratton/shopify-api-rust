@@ -7,8 +7,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Page, PageListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Page, PageListParams};
 //!
 //! // Find a single page
 //! let page = Page::find(&client, 123, None).await?;

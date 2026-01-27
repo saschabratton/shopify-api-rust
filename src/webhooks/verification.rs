@@ -14,9 +14,9 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::webhooks::{WebhookRequest, verify_webhook, verify_hmac};
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
-//! use shopify_api::auth::oauth::hmac::compute_signature_base64;
+//! use shopify_sdk::webhooks::{WebhookRequest, verify_webhook, verify_hmac};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
+//! use shopify_sdk::auth::oauth::hmac::compute_signature_base64;
 //!
 //! // Create a config with the API secret
 //! let config = ShopifyConfig::builder()
@@ -106,7 +106,7 @@ pub const HEADER_WEBHOOK_ID: &str = "X-Shopify-Webhook-Id";
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::WebhookRequest;
+/// use shopify_sdk::webhooks::WebhookRequest;
 ///
 /// let request = WebhookRequest::new(
 ///     b"raw body bytes".to_vec(),
@@ -216,10 +216,10 @@ impl WebhookRequest {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::{WebhookRequest, verify_webhook, WebhookContext};
-/// use shopify_api::webhooks::WebhookTopic;
-/// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
-/// use shopify_api::auth::oauth::hmac::compute_signature_base64;
+/// use shopify_sdk::webhooks::{WebhookRequest, verify_webhook, WebhookContext};
+/// use shopify_sdk::webhooks::WebhookTopic;
+/// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
+/// use shopify_sdk::auth::oauth::hmac::compute_signature_base64;
 ///
 /// let config = ShopifyConfig::builder()
 ///     .api_key(ApiKey::new("key").unwrap())
@@ -342,8 +342,8 @@ fn parse_topic(topic: &str) -> Option<WebhookTopic> {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::verify_hmac;
-/// use shopify_api::auth::oauth::hmac::compute_signature_base64;
+/// use shopify_sdk::webhooks::verify_hmac;
+/// use shopify_sdk::auth::oauth::hmac::compute_signature_base64;
 ///
 /// let body = b"webhook payload";
 /// let secret = "my-secret-key";
@@ -382,9 +382,9 @@ pub fn verify_hmac(raw_body: &[u8], hmac_header: &str, secret: &str) -> bool {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::{WebhookRequest, verify_webhook};
-/// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
-/// use shopify_api::auth::oauth::hmac::compute_signature_base64;
+/// use shopify_sdk::webhooks::{WebhookRequest, verify_webhook};
+/// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
+/// use shopify_sdk::auth::oauth::hmac::compute_signature_base64;
 ///
 /// let config = ShopifyConfig::builder()
 ///     .api_key(ApiKey::new("key").unwrap())

@@ -15,7 +15,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::rest::TrackedResource;
+//! use shopify_sdk::rest::TrackedResource;
 //! use serde::{Serialize, Deserialize};
 //! use serde_json::json;
 //!
@@ -75,7 +75,7 @@ use serde_json::Value;
 /// and modify the resource transparently:
 ///
 /// ```rust
-/// use shopify_api::rest::TrackedResource;
+/// use shopify_sdk::rest::TrackedResource;
 /// use serde::{Serialize, Deserialize};
 ///
 /// #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,7 +107,7 @@ impl<T: Serialize + DeserializeOwned + Clone> TrackedResource<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::TrackedResource;
+    /// use shopify_sdk::rest::TrackedResource;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,7 +132,7 @@ impl<T: Serialize + DeserializeOwned + Clone> TrackedResource<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::TrackedResource;
+    /// use shopify_sdk::rest::TrackedResource;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -157,7 +157,7 @@ impl<T: Serialize + DeserializeOwned + Clone> TrackedResource<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::TrackedResource;
+    /// use shopify_sdk::rest::TrackedResource;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -192,7 +192,7 @@ impl<T: Serialize + DeserializeOwned + Clone> TrackedResource<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::TrackedResource;
+    /// use shopify_sdk::rest::TrackedResource;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -226,7 +226,7 @@ impl<T: Serialize + DeserializeOwned + Clone> TrackedResource<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::TrackedResource;
+    /// use shopify_sdk::rest::TrackedResource;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Debug, Clone, Serialize, Deserialize)]

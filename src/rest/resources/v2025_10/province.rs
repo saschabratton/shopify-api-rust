@@ -18,8 +18,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Province, ProvinceListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Province, ProvinceListParams};
 //!
 //! // List provinces for a country
 //! let provinces = Province::all_with_parent(&client, "country_id", 879921427, None).await?;

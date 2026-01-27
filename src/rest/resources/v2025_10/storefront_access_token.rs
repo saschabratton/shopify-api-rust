@@ -15,8 +15,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::StorefrontAccessToken;
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::StorefrontAccessToken;
 //!
 //! // Create a new storefront access token
 //! let token = StorefrontAccessToken {

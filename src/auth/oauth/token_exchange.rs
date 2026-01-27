@@ -36,8 +36,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ShopDomain, ApiKey, ApiSecretKey};
-//! use shopify_api::auth::oauth::{exchange_online_token, exchange_offline_token};
+//! use shopify_sdk::{ShopifyConfig, ShopDomain, ApiKey, ApiSecretKey};
+//! use shopify_sdk::auth::oauth::{exchange_online_token, exchange_offline_token};
 //!
 //! // Configure the SDK (must be embedded app)
 //! let config = ShopifyConfig::builder()
@@ -61,7 +61,7 @@
 //! # Reference
 //!
 //! This implementation matches the Ruby SDK's `ShopifyAPI::Auth::TokenExchange`:
-//! - File: `lib/shopify_api/auth/token_exchange.rb`
+//! - File: `lib/shopify_sdk/auth/token_exchange.rb`
 
 use crate::auth::oauth::jwt_payload::JwtPayload;
 use crate::auth::oauth::OAuthError;
@@ -139,7 +139,7 @@ struct TokenExchangeErrorResponse {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::auth::oauth::exchange_online_token;
+/// use shopify_sdk::auth::oauth::exchange_online_token;
 ///
 /// let session = exchange_online_token(&config, &shop, session_token).await?;
 /// assert!(session.is_online);
@@ -184,7 +184,7 @@ pub async fn exchange_online_token(
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::auth::oauth::exchange_offline_token;
+/// use shopify_sdk::auth::oauth::exchange_offline_token;
 ///
 /// let session = exchange_offline_token(&config, &shop, session_token).await?;
 /// assert!(!session.is_online);

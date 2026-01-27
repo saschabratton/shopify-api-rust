@@ -29,7 +29,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::{Session, ShopDomain, AuthScopes};
+//! use shopify_sdk::{Session, ShopDomain, AuthScopes};
 //!
 //! // Create an offline session with generated ID
 //! let shop = ShopDomain::new("my-store").unwrap();
@@ -70,7 +70,7 @@ const REFRESH_TOKEN_EXPIRY_BUFFER_SECONDS: i64 = 60;
 /// Sessions can be serialized to JSON for storage and deserialized when needed:
 ///
 /// ```rust
-/// use shopify_api::{Session, ShopDomain, AuthScopes};
+/// use shopify_sdk::{Session, ShopDomain, AuthScopes};
 ///
 /// let session = Session::new(
 ///     "session-id".to_string(),
@@ -92,7 +92,7 @@ const REFRESH_TOKEN_EXPIRY_BUFFER_SECONDS: i64 = 60;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::{Session, ShopDomain, AuthScopes};
+/// use shopify_sdk::{Session, ShopDomain, AuthScopes};
 ///
 /// let session = Session::new(
 ///     "session-id".to_string(),
@@ -190,7 +190,7 @@ impl Session {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{Session, ShopDomain, AuthScopes};
+    /// use shopify_sdk::{Session, ShopDomain, AuthScopes};
     ///
     /// let session = Session::new(
     ///     "offline_my-store.myshopify.com".to_string(),
@@ -244,7 +244,7 @@ impl Session {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{Session, ShopDomain, AuthScopes, AssociatedUser};
+    /// use shopify_sdk::{Session, ShopDomain, AuthScopes, AssociatedUser};
     /// use chrono::{Utc, Duration};
     ///
     /// let shop = ShopDomain::new("my-store").unwrap();
@@ -303,7 +303,7 @@ impl Session {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{Session, ShopDomain};
+    /// use shopify_sdk::{Session, ShopDomain};
     ///
     /// let shop = ShopDomain::new("my-store").unwrap();
     /// let id = Session::generate_offline_id(&shop);
@@ -322,7 +322,7 @@ impl Session {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{Session, ShopDomain};
+    /// use shopify_sdk::{Session, ShopDomain};
     ///
     /// let shop = ShopDomain::new("my-store").unwrap();
     /// let id = Session::generate_online_id(&shop, 12345);
@@ -350,8 +350,8 @@ impl Session {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{Session, ShopDomain};
-    /// use shopify_api::auth::session::AccessTokenResponse;
+    /// use shopify_sdk::{Session, ShopDomain};
+    /// use shopify_sdk::auth::session::AccessTokenResponse;
     ///
     /// let shop = ShopDomain::new("my-store").unwrap();
     /// let response = AccessTokenResponse {
@@ -448,7 +448,7 @@ impl Session {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{Session, ShopDomain, AuthScopes};
+    /// use shopify_sdk::{Session, ShopDomain, AuthScopes};
     /// use chrono::{Utc, Duration};
     ///
     /// // Session without refresh token expiration

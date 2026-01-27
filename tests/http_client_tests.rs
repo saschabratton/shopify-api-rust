@@ -3,8 +3,8 @@
 //! These tests verify the client configuration, request building,
 //! response parsing, and error handling behavior.
 
-use shopify_api::clients::{DataType, HttpClient, HttpMethod, HttpRequest};
-use shopify_api::{AuthScopes, Session, ShopDomain};
+use shopify_sdk::clients::{DataType, HttpClient, HttpMethod, HttpRequest};
+use shopify_sdk::{AuthScopes, Session, ShopDomain};
 use std::collections::HashMap;
 
 /// Creates a test session with the given shop domain.
@@ -56,7 +56,7 @@ async fn test_invalid_request_produces_correct_error() {
 
     assert!(matches!(
         result,
-        Err(shopify_api::InvalidHttpRequestError::MissingBody { .. })
+        Err(shopify_sdk::InvalidHttpRequestError::MissingBody { .. })
     ));
 
     // Body without body_type should fail when we manually construct
@@ -73,7 +73,7 @@ async fn test_invalid_request_produces_correct_error() {
     let verify_result = request.verify();
     assert!(matches!(
         verify_result,
-        Err(shopify_api::InvalidHttpRequestError::MissingBodyType)
+        Err(shopify_sdk::InvalidHttpRequestError::MissingBodyType)
     ));
 }
 
@@ -147,7 +147,7 @@ async fn test_request_with_all_options() {
 
 #[tokio::test]
 async fn test_response_parsing_all_header_fields() {
-    use shopify_api::clients::{ApiCallLimit, HttpResponse, PaginationInfo};
+    use shopify_sdk::clients::{ApiCallLimit, HttpResponse, PaginationInfo};
 
     // Test ApiCallLimit parsing
     let limit = ApiCallLimit::parse("40/80").unwrap();
@@ -190,7 +190,7 @@ async fn test_response_parsing_all_header_fields() {
 
 #[tokio::test]
 async fn test_error_types_provide_debugging_info() {
-    use shopify_api::clients::{HttpResponseError, MaxHttpRetriesExceededError};
+    use shopify_sdk::clients::{HttpResponseError, MaxHttpRetriesExceededError};
 
     // HttpResponseError includes status code and request ID
     let error = HttpResponseError {

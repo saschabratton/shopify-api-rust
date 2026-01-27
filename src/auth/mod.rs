@@ -24,7 +24,7 @@
 //! For apps that need to authenticate with Shopify stores, use the OAuth module:
 //!
 //! ```rust,ignore
-//! use shopify_api::auth::oauth::{begin_auth, validate_auth_callback};
+//! use shopify_sdk::auth::oauth::{begin_auth, validate_auth_callback};
 //!
 //! // 1. Generate authorization URL
 //! let result = begin_auth(&config, &shop, "/callback", true, None)?;
@@ -37,7 +37,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::{Session, ShopDomain, AuthScopes, AssociatedUser};
+//! use shopify_sdk::{Session, ShopDomain, AuthScopes, AssociatedUser};
 //!
 //! // Create an offline session
 //! let offline_session = Session::new(

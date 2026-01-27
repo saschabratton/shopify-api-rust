@@ -14,8 +14,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl};
-//! use shopify_api::auth::oauth::begin_auth;
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl};
+//! use shopify_sdk::auth::oauth::begin_auth;
 //!
 //! let config = ShopifyConfig::builder()
 //!     .api_key(ApiKey::new("your-api-key").unwrap())
@@ -108,8 +108,8 @@ pub struct BeginAuthResult {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl, AuthScopes};
-/// use shopify_api::auth::oauth::begin_auth;
+/// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl, AuthScopes};
+/// use shopify_sdk::auth::oauth::begin_auth;
 ///
 /// let config = ShopifyConfig::builder()
 ///     .api_key(ApiKey::new("api-key").unwrap())

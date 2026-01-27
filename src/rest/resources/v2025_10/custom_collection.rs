@@ -11,8 +11,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::{CustomCollection, CustomCollectionListParams};
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::v2025_10::{CustomCollection, CustomCollectionListParams};
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a single custom collection
 //! let collection = CustomCollection::find(&client, 123, None).await?;
@@ -68,7 +68,7 @@ use super::common::CollectionImage;
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::CustomCollection;
+/// use shopify_sdk::rest::resources::v2025_10::CustomCollection;
 ///
 /// let collection = CustomCollection {
 ///     title: Some("Featured Products".to_string()),

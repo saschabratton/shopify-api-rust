@@ -13,7 +13,7 @@ use std::collections::HashMap;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::clients::ApiCallLimit;
+/// use shopify_sdk::clients::ApiCallLimit;
 ///
 /// let limit = ApiCallLimit::parse("40/80").unwrap();
 /// assert_eq!(limit.request_count, 40);

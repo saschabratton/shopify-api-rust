@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::ProductImage;
+/// use shopify_sdk::rest::resources::v2025_10::common::ProductImage;
 ///
 /// let image = ProductImage {
 ///     position: Some(1),
@@ -84,7 +84,7 @@ pub struct ProductImage {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::ProductOption;
+/// use shopify_sdk::rest::resources::v2025_10::common::ProductOption;
 ///
 /// let option = ProductOption {
 ///     name: Some("Size".to_string()),

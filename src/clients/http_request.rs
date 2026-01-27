@@ -64,7 +64,7 @@ impl DataType {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::clients::{HttpRequest, HttpMethod, DataType};
+/// use shopify_sdk::clients::{HttpRequest, HttpMethod, DataType};
 /// use serde_json::json;
 ///
 /// // GET request
@@ -108,7 +108,7 @@ impl HttpRequest {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::clients::{HttpRequest, HttpMethod};
+    /// use shopify_sdk::clients::{HttpRequest, HttpMethod};
     ///
     /// let request = HttpRequest::builder(HttpMethod::Get, "products.json")
     ///     .tries(3)

@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::AssociatedUser;
+//! use shopify_sdk::AssociatedUser;
 //!
 //! let user = AssociatedUser::new(
 //!     12345,
@@ -48,7 +48,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::AssociatedUser;
+/// use shopify_sdk::AssociatedUser;
 ///
 /// let user = AssociatedUser::new(
 ///     12345,
@@ -113,7 +113,7 @@ impl AssociatedUser {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::AssociatedUser;
+    /// use shopify_sdk::AssociatedUser;
     ///
     /// let user = AssociatedUser::new(
     ///     12345,

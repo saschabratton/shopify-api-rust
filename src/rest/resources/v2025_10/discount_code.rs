@@ -23,8 +23,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{DiscountCode, DiscountCodeListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{DiscountCode, DiscountCodeListParams};
 //!
 //! // Create a discount code under a price rule
 //! let code = DiscountCode {

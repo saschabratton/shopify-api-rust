@@ -27,7 +27,7 @@ pub struct Money {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::{MoneySet, Money};
+/// use shopify_sdk::rest::resources::v2025_10::common::{MoneySet, Money};
 ///
 /// let price_set = MoneySet {
 ///     shop_money: Some(Money {

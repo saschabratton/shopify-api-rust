@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+/// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
 ///
 /// let topic = WebhookTopic::OrdersCreate;
 /// let json = serde_json::to_string(&topic).unwrap();
@@ -166,7 +166,7 @@ pub enum WebhookTopic {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::WebhookFormat;
+/// use shopify_sdk::rest::resources::v2025_10::common::WebhookFormat;
 ///
 /// let format = WebhookFormat::Json;
 /// let json = serde_json::to_string(&format).unwrap();

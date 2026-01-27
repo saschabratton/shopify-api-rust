@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::Address;
+/// use shopify_sdk::rest::resources::v2025_10::common::Address;
 ///
 /// let address = Address {
 ///     first_name: Some("John".to_string()),
@@ -99,7 +99,7 @@ pub struct Address {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::CustomerAddress;
+/// use shopify_sdk::rest::resources::v2025_10::common::CustomerAddress;
 ///
 /// let address = CustomerAddress {
 ///     id: Some(123456),

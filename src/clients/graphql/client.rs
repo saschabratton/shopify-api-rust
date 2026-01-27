@@ -27,7 +27,7 @@ use crate::config::{ApiVersion, ShopifyConfig};
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::{GraphqlClient, Session, ShopDomain};
+/// use shopify_sdk::{GraphqlClient, Session, ShopDomain};
 /// use serde_json::json;
 ///
 /// let session = Session::new(
@@ -84,7 +84,7 @@ impl GraphqlClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::{GraphqlClient, Session, ShopDomain};
+    /// use shopify_sdk::{GraphqlClient, Session, ShopDomain};
     ///
     /// let session = Session::new(
     ///     "session-id".to_string(),
@@ -116,7 +116,7 @@ impl GraphqlClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::{GraphqlClient, Session, ShopDomain, ApiVersion};
+    /// use shopify_sdk::{GraphqlClient, Session, ShopDomain, ApiVersion};
     ///
     /// let session = Session::new(
     ///     "session-id".to_string(),
@@ -211,7 +211,7 @@ impl GraphqlClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::GraphqlClient;
+    /// use shopify_sdk::GraphqlClient;
     /// use serde_json::json;
     ///
     /// // Simple query
@@ -274,7 +274,7 @@ impl GraphqlClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::GraphqlClient;
+    /// use shopify_sdk::GraphqlClient;
     ///
     /// let response = client.query_with_debug(
     ///     "query { shop { name } }",

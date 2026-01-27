@@ -1,6 +1,6 @@
 [package]
-name = "shopify-api-rust"
-version = "0.1.0"
+name = "shopify-sdk"
+version = "1.0.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Sascha Bratton"]
@@ -38,7 +38,7 @@ wiremock = "0.5"
 tokio-test = "0.4"
 
 [lib]
-name = "shopify_api"
+name = "shopify_sdk"
 path = "src/lib.rs"
 
 [lints.rust]

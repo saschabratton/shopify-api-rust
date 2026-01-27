@@ -409,44 +409,44 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Product, ProductListParams, ProductStatus};
-//! use shopify_api::rest::resources::v2025_10::{Variant, VariantListParams, WeightUnit};
-//! use shopify_api::rest::resources::v2025_10::{Customer, CustomerListParams, CustomerState};
-//! use shopify_api::rest::resources::v2025_10::{Order, OrderListParams, FinancialStatus};
-//! use shopify_api::rest::resources::v2025_10::{Fulfillment, FulfillmentListParams, TrackingInfo};
-//! use shopify_api::rest::resources::v2025_10::{InventoryItem, InventoryItemListParams};
-//! use shopify_api::rest::resources::v2025_10::{InventoryLevel, InventoryLevelListParams};
-//! use shopify_api::rest::resources::v2025_10::{Location, LocationListParams};
-//! use shopify_api::rest::resources::v2025_10::{Redirect, RedirectListParams};
-//! use shopify_api::rest::resources::v2025_10::{Metafield, MetafieldListParams};
-//! use shopify_api::rest::resources::v2025_10::{CustomCollection, SmartCollection, Collection};
-//! use shopify_api::rest::resources::v2025_10::{Webhook, WebhookListParams};
-//! use shopify_api::rest::resources::v2025_10::{Page, PageListParams};
-//! use shopify_api::rest::resources::v2025_10::{Blog, BlogListParams};
-//! use shopify_api::rest::resources::v2025_10::{Article, ArticleListParams};
-//! use shopify_api::rest::resources::v2025_10::{Theme, ThemeListParams, Asset};
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Product, ProductListParams, ProductStatus};
+//! use shopify_sdk::rest::resources::v2025_10::{Variant, VariantListParams, WeightUnit};
+//! use shopify_sdk::rest::resources::v2025_10::{Customer, CustomerListParams, CustomerState};
+//! use shopify_sdk::rest::resources::v2025_10::{Order, OrderListParams, FinancialStatus};
+//! use shopify_sdk::rest::resources::v2025_10::{Fulfillment, FulfillmentListParams, TrackingInfo};
+//! use shopify_sdk::rest::resources::v2025_10::{InventoryItem, InventoryItemListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{InventoryLevel, InventoryLevelListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{Location, LocationListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{Redirect, RedirectListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{Metafield, MetafieldListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{CustomCollection, SmartCollection, Collection};
+//! use shopify_sdk::rest::resources::v2025_10::{Webhook, WebhookListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{Page, PageListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{Blog, BlogListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{Article, ArticleListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{Theme, ThemeListParams, Asset};
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     ApplicationCharge, RecurringApplicationCharge, UsageCharge
 //! };
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     Transaction, TransactionKind, TransactionListParams
 //! };
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     RefundResource, RefundListParams, RefundCalculateParams
 //! };
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     DraftOrder, DraftOrderListParams, DraftOrderStatus, DraftOrderInvoice
 //! };
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     FulfillmentOrder, FulfillmentOrderListParams, FulfillmentRequest, CancellationRequest
 //! };
-//! use shopify_api::rest::resources::v2025_10::{GiftCard, GiftCardListParams};
-//! use shopify_api::rest::resources::v2025_10::common::{
+//! use shopify_sdk::rest::resources::v2025_10::{GiftCard, GiftCardListParams};
+//! use shopify_sdk::rest::resources::v2025_10::common::{
 //!     MetafieldOwner, WebhookTopic, WebhookFormat, BlogCommentable, ThemeRole,
 //!     ChargeStatus, ChargeCurrency
 //! };
-//! use shopify_api::rest::resources::v2025_10::Shop;
+//! use shopify_sdk::rest::resources::v2025_10::Shop;
 //!
 //! // Find a single product
 //! let product = Product::find(&client, 123, None).await?;

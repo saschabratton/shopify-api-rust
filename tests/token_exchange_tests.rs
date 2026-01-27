@@ -5,9 +5,9 @@
 
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::Serialize;
-use shopify_api::auth::oauth::{exchange_offline_token, exchange_online_token, OAuthError};
-use shopify_api::auth::Session;
-use shopify_api::{ApiKey, ApiSecretKey, ShopDomain, ShopifyConfig};
+use shopify_sdk::auth::oauth::{exchange_offline_token, exchange_online_token, OAuthError};
+use shopify_sdk::auth::Session;
+use shopify_sdk::{ApiKey, ApiSecretKey, ShopDomain, ShopifyConfig};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// JWT claims structure for creating test tokens
@@ -279,7 +279,7 @@ async fn test_session_fields_correctly_populated() {
     // Test that Session::from_access_token_response correctly populates all fields
     // This is a unit-style test within the integration test file to verify session creation
 
-    use shopify_api::auth::session::AccessTokenResponse;
+    use shopify_sdk::auth::session::AccessTokenResponse;
 
     let shop = ShopDomain::new("test-shop").unwrap();
 
@@ -312,7 +312,7 @@ async fn test_session_fields_correctly_populated() {
     assert!(offline_session.scopes.iter().any(|s| s == "write_orders"));
 
     // Test online token response
-    use shopify_api::auth::session::AssociatedUserResponse;
+    use shopify_sdk::auth::session::AssociatedUserResponse;
 
     let online_response = AccessTokenResponse {
         access_token: "online-access-token".to_string(),

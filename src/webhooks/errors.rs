@@ -17,8 +17,8 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::webhooks::WebhookError;
-//! use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+//! use shopify_sdk::webhooks::WebhookError;
+//! use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
 //!
 //! let error = WebhookError::RegistrationNotFound {
 //!     topic: WebhookTopic::OrdersCreate,
@@ -39,8 +39,8 @@ use thiserror::Error;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::WebhookError;
-/// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+/// use shopify_sdk::webhooks::WebhookError;
+/// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
 ///
 /// // Create a registration not found error
 /// let error = WebhookError::RegistrationNotFound {

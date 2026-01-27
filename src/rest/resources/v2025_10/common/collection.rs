@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::CollectionImage;
+/// use shopify_sdk::rest::resources::v2025_10::common::CollectionImage;
 ///
 /// let image = CollectionImage {
 ///     src: Some("https://cdn.shopify.com/s/files/1/collection.jpg".to_string()),
@@ -55,7 +55,7 @@ pub struct CollectionImage {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::SmartCollectionRule;
+/// use shopify_sdk::rest::resources::v2025_10::common::SmartCollectionRule;
 ///
 /// // Match products with "summer" tag
 /// let rule = SmartCollectionRule {

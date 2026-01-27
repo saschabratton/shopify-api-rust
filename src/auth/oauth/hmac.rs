@@ -13,7 +13,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::auth::oauth::hmac::{compute_signature, compute_signature_base64};
+//! use shopify_sdk::auth::oauth::hmac::{compute_signature, compute_signature_base64};
 //!
 //! // Hex-encoded signature for OAuth
 //! let message = "code=abc123&shop=example.myshopify.com&state=xyz";
@@ -58,7 +58,7 @@ type HmacSha256 = Hmac<Sha256>;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::auth::oauth::hmac::compute_signature;
+/// use shopify_sdk::auth::oauth::hmac::compute_signature;
 ///
 /// let sig = compute_signature("test-message", "secret-key");
 /// assert_eq!(sig.len(), 64); // SHA256 produces 32 bytes = 64 hex chars
@@ -96,7 +96,7 @@ pub fn compute_signature(message: &str, secret: &str) -> String {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::auth::oauth::hmac::compute_signature_base64;
+/// use shopify_sdk::auth::oauth::hmac::compute_signature_base64;
 ///
 /// let body = b"webhook payload";
 /// let sig = compute_signature_base64(body, "secret-key");
@@ -157,8 +157,8 @@ pub fn constant_time_compare(a: &str, b: &str) -> bool {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::auth::oauth::{AuthQuery, validate_hmac};
-/// use shopify_api::ShopifyConfig;
+/// use shopify_sdk::auth::oauth::{AuthQuery, validate_hmac};
+/// use shopify_sdk::ShopifyConfig;
 ///
 /// let query = AuthQuery { /* ... */ };
 /// let config = ShopifyConfig::builder()

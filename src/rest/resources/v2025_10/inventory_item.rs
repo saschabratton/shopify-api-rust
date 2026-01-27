@@ -13,8 +13,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{InventoryItem, InventoryItemListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{InventoryItem, InventoryItemListParams};
 //!
 //! // Find a single inventory item
 //! let inventory_item = InventoryItem::find(&client, 123, None).await?;

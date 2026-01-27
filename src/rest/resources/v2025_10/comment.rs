@@ -16,8 +16,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Comment, CommentListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Comment, CommentListParams};
 //!
 //! // List all comments
 //! let comments = Comment::all(&client, None).await?;

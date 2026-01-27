@@ -16,7 +16,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::auth::oauth::{validate_auth_callback, AuthQuery};
+//! use shopify_sdk::auth::oauth::{validate_auth_callback, AuthQuery};
 //!
 //! // Parse callback query parameters from the request
 //! let auth_query = AuthQuery::new(/* ... from request ... */);
@@ -86,7 +86,7 @@ struct TokenExchangeRequest<'a> {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::auth::oauth::{validate_auth_callback, AuthQuery};
+/// use shopify_sdk::auth::oauth::{validate_auth_callback, AuthQuery};
 ///
 /// async fn handle_callback(
 ///     config: &ShopifyConfig,

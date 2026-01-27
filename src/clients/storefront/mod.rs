@@ -40,7 +40,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{StorefrontClient, StorefrontToken, ShopDomain};
+//! use shopify_sdk::{StorefrontClient, StorefrontToken, ShopDomain};
 //! use serde_json::json;
 //!
 //! // Create a shop domain

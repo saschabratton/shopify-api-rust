@@ -16,7 +16,7 @@
 use serde_json::json;
 use std::collections::HashMap;
 
-use shopify_api::rest::resources::{
+use shopify_sdk::rest::resources::{
     // Common types
     Address,
     // Order types
@@ -74,8 +74,8 @@ use shopify_api::rest::resources::{
     VariantListParams,
     WeightUnit,
 };
-use shopify_api::rest::{build_path, get_path, ResourceOperation, RestResource, TrackedResource};
-use shopify_api::HttpMethod;
+use shopify_sdk::rest::{build_path, get_path, ResourceOperation, RestResource, TrackedResource};
+use shopify_sdk::HttpMethod;
 
 // ============================================================================
 // Test 1: Product with nested variants deserialization
@@ -688,24 +688,24 @@ fn test_resource_specific_operations_signatures() {
     // Verify Order operations signatures
     fn _assert_order_cancel<F, Fut>(f: F)
     where
-        F: Fn(&Order, &shopify_api::clients::RestClient) -> Fut,
-        Fut: std::future::Future<Output = Result<Order, shopify_api::rest::ResourceError>>,
+        F: Fn(&Order, &shopify_sdk::clients::RestClient) -> Fut,
+        Fut: std::future::Future<Output = Result<Order, shopify_sdk::rest::ResourceError>>,
     {
         let _ = f;
     }
 
     fn _assert_order_close<F, Fut>(f: F)
     where
-        F: Fn(&Order, &shopify_api::clients::RestClient) -> Fut,
-        Fut: std::future::Future<Output = Result<Order, shopify_api::rest::ResourceError>>,
+        F: Fn(&Order, &shopify_sdk::clients::RestClient) -> Fut,
+        Fut: std::future::Future<Output = Result<Order, shopify_sdk::rest::ResourceError>>,
     {
         let _ = f;
     }
 
     fn _assert_order_open<F, Fut>(f: F)
     where
-        F: Fn(&Order, &shopify_api::clients::RestClient) -> Fut,
-        Fut: std::future::Future<Output = Result<Order, shopify_api::rest::ResourceError>>,
+        F: Fn(&Order, &shopify_sdk::clients::RestClient) -> Fut,
+        Fut: std::future::Future<Output = Result<Order, shopify_sdk::rest::ResourceError>>,
     {
         let _ = f;
     }
@@ -713,16 +713,16 @@ fn test_resource_specific_operations_signatures() {
     // Verify Fulfillment operations signatures
     fn _assert_fulfillment_cancel<F, Fut>(f: F)
     where
-        F: Fn(&Fulfillment, &shopify_api::clients::RestClient) -> Fut,
-        Fut: std::future::Future<Output = Result<Fulfillment, shopify_api::rest::ResourceError>>,
+        F: Fn(&Fulfillment, &shopify_sdk::clients::RestClient) -> Fut,
+        Fut: std::future::Future<Output = Result<Fulfillment, shopify_sdk::rest::ResourceError>>,
     {
         let _ = f;
     }
 
     fn _assert_fulfillment_update_tracking<F, Fut>(f: F)
     where
-        F: Fn(&Fulfillment, &shopify_api::clients::RestClient, TrackingInfo) -> Fut,
-        Fut: std::future::Future<Output = Result<Fulfillment, shopify_api::rest::ResourceError>>,
+        F: Fn(&Fulfillment, &shopify_sdk::clients::RestClient, TrackingInfo) -> Fut,
+        Fut: std::future::Future<Output = Result<Fulfillment, shopify_sdk::rest::ResourceError>>,
     {
         let _ = f;
     }

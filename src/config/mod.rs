@@ -18,7 +18,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion};
 //!
 //! let config = ShopifyConfig::builder()
 //!     .api_key(ApiKey::new("my-api-key").unwrap())
@@ -57,7 +57,7 @@ use crate::error::ConfigError;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
+/// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
 ///
 /// let config = ShopifyConfig::builder()
 ///     .api_key(ApiKey::new("your-api-key").unwrap())
@@ -86,7 +86,7 @@ impl ShopifyConfig {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
+    /// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
     ///
     /// let config = ShopifyConfig::builder()
     ///     .api_key(ApiKey::new("key").unwrap())
@@ -174,7 +174,7 @@ const _: fn() = || {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion, HostUrl};
+/// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion, HostUrl};
 ///
 /// let config = ShopifyConfig::builder()
 ///     .api_key(ApiKey::new("key").unwrap())
@@ -228,7 +228,7 @@ impl ShopifyConfigBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
+    /// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
     ///
     /// // During key rotation, configure both keys
     /// let config = ShopifyConfig::builder()

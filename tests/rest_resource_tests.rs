@@ -5,12 +5,12 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use shopify_api::clients::{ApiCallLimit, HttpResponse, PaginationInfo};
-use shopify_api::rest::{
+use shopify_sdk::clients::{ApiCallLimit, HttpResponse, PaginationInfo};
+use shopify_sdk::rest::{
     build_path, get_path, ResourceError, ResourceOperation, ResourcePath, ResourceResponse,
     RestResource, TrackedResource,
 };
-use shopify_api::HttpMethod;
+use shopify_sdk::HttpMethod;
 use std::collections::HashMap;
 
 // ============================================================================
@@ -629,19 +629,19 @@ fn test_types_are_thread_safe() {
 #[test]
 fn test_types_exported_at_crate_root() {
     // Verify key types are accessible from crate root
-    let _: fn(shopify_api::ResourceError) = |_| {};
-    let _: fn(shopify_api::ResourceResponse<TestProduct>) = |_| {};
-    let _: fn(shopify_api::TrackedResource<TestProduct>) = |_| {};
+    let _: fn(shopify_sdk::ResourceError) = |_| {};
+    let _: fn(shopify_sdk::ResourceResponse<TestProduct>) = |_| {};
+    let _: fn(shopify_sdk::TrackedResource<TestProduct>) = |_| {};
 }
 
 #[test]
 fn test_types_exported_from_rest_module() {
     // Verify types accessible from rest module
-    let _: fn(shopify_api::rest::ResourceError) = |_| {};
-    let _: fn(shopify_api::rest::ResourceResponse<TestProduct>) = |_| {};
-    let _: fn(shopify_api::rest::TrackedResource<TestProduct>) = |_| {};
-    let _: fn(shopify_api::rest::ResourcePath) = |_| {};
-    let _: fn(shopify_api::rest::ResourceOperation) = |_| {};
+    let _: fn(shopify_sdk::rest::ResourceError) = |_| {};
+    let _: fn(shopify_sdk::rest::ResourceResponse<TestProduct>) = |_| {};
+    let _: fn(shopify_sdk::rest::TrackedResource<TestProduct>) = |_| {};
+    let _: fn(shopify_sdk::rest::ResourcePath) = |_| {};
+    let _: fn(shopify_sdk::rest::ResourceOperation) = |_| {};
 }
 
 // ============================================================================

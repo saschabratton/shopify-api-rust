@@ -61,7 +61,7 @@
 //! # Webhook Handler Example
 //!
 //! ```rust
-//! use shopify_api::webhooks::{
+//! use shopify_sdk::webhooks::{
 //!     WebhookHandler, WebhookContext, WebhookError, WebhookRegistry,
 //!     WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod, BoxFuture
 //! };
@@ -100,9 +100,9 @@
 //! # Webhook Verification Example
 //!
 //! ```rust
-//! use shopify_api::webhooks::{WebhookRequest, verify_webhook, verify_hmac};
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
-//! use shopify_api::auth::oauth::hmac::compute_signature_base64;
+//! use shopify_sdk::webhooks::{WebhookRequest, verify_webhook, verify_hmac};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
+//! use shopify_sdk::auth::oauth::hmac::compute_signature_base64;
 //!
 //! // Create a config with the API secret
 //! let config = ShopifyConfig::builder()
@@ -138,7 +138,7 @@
 //! ## HTTP Delivery
 //!
 //! ```rust
-//! use shopify_api::webhooks::{
+//! use shopify_sdk::webhooks::{
 //!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
 //! };
 //!
@@ -159,7 +159,7 @@
 //! ## Amazon EventBridge Delivery
 //!
 //! ```rust
-//! use shopify_api::webhooks::{
+//! use shopify_sdk::webhooks::{
 //!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
 //! };
 //!
@@ -179,7 +179,7 @@
 //! ## Google Cloud Pub/Sub Delivery
 //!
 //! ```rust
-//! use shopify_api::webhooks::{
+//! use shopify_sdk::webhooks::{
 //!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
 //! };
 //!
@@ -204,7 +204,7 @@
 //! # Error Handling
 //!
 //! ```rust
-//! use shopify_api::webhooks::{WebhookError, WebhookTopic};
+//! use shopify_sdk::webhooks::{WebhookError, WebhookTopic};
 //!
 //! fn handle_error(error: WebhookError) {
 //!     match error {

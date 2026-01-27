@@ -14,7 +14,7 @@ use std::fmt;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::MetafieldOwner;
+/// use shopify_sdk::rest::resources::v2025_10::common::MetafieldOwner;
 ///
 /// let owner = MetafieldOwner::Product;
 /// assert_eq!(owner.to_path_segment(), "products");
@@ -50,7 +50,7 @@ impl MetafieldOwner {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::resources::v2025_10::common::MetafieldOwner;
+    /// use shopify_sdk::rest::resources::v2025_10::common::MetafieldOwner;
     ///
     /// assert_eq!(MetafieldOwner::Product.to_path_segment(), "products");
     /// assert_eq!(MetafieldOwner::Customer.to_path_segment(), "customers");

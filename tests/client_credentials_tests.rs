@@ -3,10 +3,10 @@
 //! These tests verify the complete client credentials flow for private/organization apps,
 //! including configuration validation, HTTP interactions, and session creation.
 
-use shopify_api::auth::oauth::{exchange_client_credentials, OAuthError};
-use shopify_api::auth::session::AccessTokenResponse;
-use shopify_api::auth::Session;
-use shopify_api::{ApiKey, ApiSecretKey, ShopDomain, ShopifyConfig};
+use shopify_sdk::auth::oauth::{exchange_client_credentials, OAuthError};
+use shopify_sdk::auth::session::AccessTokenResponse;
+use shopify_sdk::auth::Session;
+use shopify_sdk::{ApiKey, ApiSecretKey, ShopDomain, ShopifyConfig};
 
 /// Creates a private (non-embedded) app configuration
 fn create_private_config(api_key: &str, secret: &str) -> ShopifyConfig {
@@ -146,7 +146,7 @@ async fn test_session_fields_correctly_populated() {
     assert!(offline_session.scopes.iter().any(|s| s == "write_orders"));
 }
 
-/// Test 5: Function is accessible from shopify_api::auth::oauth module
+/// Test 5: Function is accessible from shopify_sdk::auth::oauth module
 #[test]
 fn test_function_accessible_from_auth_oauth_module() {
     // This test verifies that exchange_client_credentials is properly exported
@@ -160,7 +160,7 @@ fn test_function_accessible_from_auth_oauth_module() {
 #[test]
 fn test_function_accessible_from_crate_root() {
     // Verify the function can be imported from crate root
-    use shopify_api::exchange_client_credentials;
+    use shopify_sdk::exchange_client_credentials;
 
     // The function exists and is accessible - compilation proves this
     let _ = exchange_client_credentials as fn(_, _) -> _;

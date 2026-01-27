@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::TaxLine;
+/// use shopify_sdk::rest::resources::v2025_10::common::TaxLine;
 ///
 /// let tax = TaxLine {
 ///     title: Some("State Tax".to_string()),
@@ -124,7 +124,7 @@ pub struct LineItemProperty {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::LineItem;
+/// use shopify_sdk::rest::resources::v2025_10::common::LineItem;
 ///
 /// let line_item = LineItem {
 ///     id: Some(123456),

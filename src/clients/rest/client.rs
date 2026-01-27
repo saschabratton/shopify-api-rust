@@ -27,7 +27,7 @@ use crate::config::{ApiVersion, ShopifyConfig};
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::{RestClient, Session, ShopDomain};
+/// use shopify_sdk::{RestClient, Session, ShopDomain};
 ///
 /// let session = Session::new(
 ///     "session-id".to_string(),
@@ -80,7 +80,7 @@ impl RestClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::{RestClient, Session, ShopDomain};
+    /// use shopify_sdk::{RestClient, Session, ShopDomain};
     ///
     /// let session = Session::new(
     ///     "session-id".to_string(),
@@ -116,7 +116,7 @@ impl RestClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::{RestClient, Session, ShopDomain, ApiVersion};
+    /// use shopify_sdk::{RestClient, Session, ShopDomain, ApiVersion};
     ///
     /// let session = Session::new(
     ///     "session-id".to_string(),

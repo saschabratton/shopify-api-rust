@@ -23,7 +23,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{RestClient, Session, ShopDomain, ShopifyConfig, ApiKey, ApiSecretKey};
+//! use shopify_sdk::{RestClient, Session, ShopDomain, ShopifyConfig, ApiKey, ApiSecretKey};
 //!
 //! // Create a session
 //! let session = Session::new(

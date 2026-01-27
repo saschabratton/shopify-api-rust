@@ -21,7 +21,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::auth::oauth::OAuthError;
+//! use shopify_sdk::auth::oauth::OAuthError;
 //!
 //! let error = OAuthError::InvalidHmac;
 //! assert_eq!(error.to_string(), "HMAC signature validation failed");
@@ -66,7 +66,7 @@ use thiserror::Error;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::auth::oauth::OAuthError;
+/// use shopify_sdk::auth::oauth::OAuthError;
 ///
 /// fn handle_oauth_error(err: OAuthError) {
 ///     match err {
@@ -150,7 +150,7 @@ pub enum OAuthError {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::OAuthError;
+    /// use shopify_sdk::auth::oauth::OAuthError;
     ///
     /// let error = OAuthError::ClientCredentialsFailed {
     ///     status: 401,
@@ -176,7 +176,7 @@ pub enum OAuthError {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::OAuthError;
+    /// use shopify_sdk::auth::oauth::OAuthError;
     ///
     /// let error = OAuthError::TokenRefreshFailed {
     ///     status: 400,
@@ -224,7 +224,7 @@ pub enum OAuthError {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::OAuthError;
+    /// use shopify_sdk::auth::oauth::OAuthError;
     ///
     /// let error = OAuthError::InvalidJwt {
     ///     reason: "Session token had invalid API key".to_string(),
@@ -246,7 +246,7 @@ pub enum OAuthError {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::OAuthError;
+    /// use shopify_sdk::auth::oauth::OAuthError;
     ///
     /// let error = OAuthError::NotEmbeddedApp;
     /// assert!(error.to_string().contains("embedded app"));
@@ -267,7 +267,7 @@ pub enum OAuthError {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::OAuthError;
+    /// use shopify_sdk::auth::oauth::OAuthError;
     ///
     /// let error = OAuthError::NotPrivateApp;
     /// assert!(error.to_string().contains("non-embedded"));

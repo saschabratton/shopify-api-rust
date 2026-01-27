@@ -3,8 +3,8 @@
 //! These tests verify the GraphQL client construction, error handling,
 //! and API method behavior.
 
-use shopify_api::clients::graphql::{GraphqlClient, GraphqlError};
-use shopify_api::{ApiVersion, AuthScopes, Session, ShopDomain};
+use shopify_sdk::clients::graphql::{GraphqlClient, GraphqlError};
+use shopify_sdk::{ApiVersion, AuthScopes, Session, ShopDomain};
 
 /// Creates a test session with the given shop domain.
 fn create_test_session(shop: &str, access_token: &str) -> Session {
@@ -54,7 +54,7 @@ fn test_graphql_client_constructor_is_infallible() {
 
 #[test]
 fn test_graphql_client_with_config_uses_config_version() {
-    use shopify_api::{ApiKey, ApiSecretKey, ShopifyConfig};
+    use shopify_sdk::{ApiKey, ApiSecretKey, ShopifyConfig};
 
     let session = create_test_session("test-shop", "test-token");
     let config = ShopifyConfig::builder()
@@ -75,7 +75,7 @@ fn test_graphql_client_with_config_uses_config_version() {
 
 #[test]
 fn test_graphql_error_http_variant_wraps_http_error() {
-    use shopify_api::clients::{HttpError, HttpResponseError};
+    use shopify_sdk::clients::{HttpError, HttpResponseError};
 
     let http_error = HttpError::Response(HttpResponseError {
         code: 401,
@@ -91,7 +91,7 @@ fn test_graphql_error_http_variant_wraps_http_error() {
 
 #[test]
 fn test_graphql_error_from_http_error_conversion() {
-    use shopify_api::clients::{HttpError, HttpResponseError};
+    use shopify_sdk::clients::{HttpError, HttpResponseError};
 
     let http_error = HttpError::Response(HttpResponseError {
         code: 500,
@@ -106,7 +106,7 @@ fn test_graphql_error_from_http_error_conversion() {
 
 #[test]
 fn test_graphql_error_wraps_max_retries_exceeded() {
-    use shopify_api::clients::{HttpError, MaxHttpRetriesExceededError};
+    use shopify_sdk::clients::{HttpError, MaxHttpRetriesExceededError};
 
     let http_error = HttpError::MaxRetries(MaxHttpRetriesExceededError {
         code: 429,
@@ -157,22 +157,22 @@ fn test_clients_with_different_api_versions() {
 #[test]
 fn test_types_exported_at_crate_root() {
     // Verify types are accessible from crate root
-    let _: fn(shopify_api::GraphqlClient) = |_| {};
-    let _: fn(shopify_api::GraphqlError) = |_| {};
+    let _: fn(shopify_sdk::GraphqlClient) = |_| {};
+    let _: fn(shopify_sdk::GraphqlError) = |_| {};
 }
 
 #[test]
 fn test_types_exported_from_clients_module() {
     // Verify types are accessible from clients module
-    let _: fn(shopify_api::clients::GraphqlClient) = |_| {};
-    let _: fn(shopify_api::clients::GraphqlError) = |_| {};
+    let _: fn(shopify_sdk::clients::GraphqlClient) = |_| {};
+    let _: fn(shopify_sdk::clients::GraphqlError) = |_| {};
 }
 
 #[test]
 fn test_types_exported_from_clients_graphql_module() {
     // Verify types are accessible from clients::graphql module
-    let _: fn(shopify_api::clients::graphql::GraphqlClient) = |_| {};
-    let _: fn(shopify_api::clients::graphql::GraphqlError) = |_| {};
+    let _: fn(shopify_sdk::clients::graphql::GraphqlClient) = |_| {};
+    let _: fn(shopify_sdk::clients::graphql::GraphqlError) = |_| {};
 }
 
 // ============================================================================
@@ -314,7 +314,7 @@ async fn test_graphql_client_can_be_shared_across_tasks() {
 
 #[test]
 fn test_graphql_error_display_is_informative() {
-    use shopify_api::clients::{HttpError, HttpResponseError};
+    use shopify_sdk::clients::{HttpError, HttpResponseError};
 
     let http_error = HttpError::Response(HttpResponseError {
         code: 404,
@@ -331,7 +331,7 @@ fn test_graphql_error_display_is_informative() {
 
 #[test]
 fn test_graphql_error_implements_std_error() {
-    use shopify_api::clients::{HttpError, HttpResponseError};
+    use shopify_sdk::clients::{HttpError, HttpResponseError};
 
     let http_error = HttpError::Response(HttpResponseError {
         code: 400,

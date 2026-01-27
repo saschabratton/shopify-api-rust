@@ -14,8 +14,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Variant, VariantListParams, WeightUnit};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Variant, VariantListParams, WeightUnit};
 //!
 //! // Find a variant by ID (standalone path)
 //! let variant = Variant::find(&client, 123, None).await?;

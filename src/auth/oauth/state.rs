@@ -24,7 +24,7 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::auth::oauth::StateParam;
+//! use shopify_sdk::auth::oauth::StateParam;
 //! use serde::{Serialize, Deserialize};
 //!
 //! // Simple CSRF protection
@@ -61,7 +61,7 @@ use std::fmt;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::auth::oauth::StateParam;
+/// use shopify_sdk::auth::oauth::StateParam;
 ///
 /// // Generate a simple state for CSRF protection
 /// let state = StateParam::new();
@@ -111,7 +111,7 @@ impl StateParam {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::StateParam;
+    /// use shopify_sdk::auth::oauth::StateParam;
     ///
     /// let state = StateParam::new();
     /// assert_eq!(state.nonce().len(), 15);
@@ -144,7 +144,7 @@ impl StateParam {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::StateParam;
+    /// use shopify_sdk::auth::oauth::StateParam;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Serialize, Deserialize)]
@@ -192,7 +192,7 @@ impl StateParam {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::StateParam;
+    /// use shopify_sdk::auth::oauth::StateParam;
     ///
     /// let state = StateParam::from_raw("custom-state-value");
     /// assert_eq!(state.as_ref(), "custom-state-value");
@@ -216,7 +216,7 @@ impl StateParam {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::StateParam;
+    /// use shopify_sdk::auth::oauth::StateParam;
     ///
     /// // Simple state - nonce() returns the 15-char nonce
     /// let simple = StateParam::new();
@@ -248,7 +248,7 @@ impl StateParam {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::StateParam;
+    /// use shopify_sdk::auth::oauth::StateParam;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -290,7 +290,7 @@ impl StateParam {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::auth::oauth::StateParam;
+    /// use shopify_sdk::auth::oauth::StateParam;
     ///
     /// // Simple state
     /// let simple = StateParam::new();

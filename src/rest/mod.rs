@@ -17,8 +17,8 @@
 //! # Example: Using a Resource
 //!
 //! ```rust,ignore
-//! use shopify_api::{RestClient, Session, ShopDomain, AuthScopes};
-//! use shopify_api::rest::{RestResource, ResourceResponse, TrackedResource};
+//! use shopify_sdk::{RestClient, Session, ShopDomain, AuthScopes};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse, TrackedResource};
 //!
 //! // Create a client
 //! let session = Session::new(/* ... */);

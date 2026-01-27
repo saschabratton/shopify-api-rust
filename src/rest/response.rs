@@ -27,7 +27,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
 //!
 //! // Fetch products with pagination
 //! let response: ResourceResponse<Vec<Product>> = Product::all(&client, None).await?;
@@ -77,8 +77,8 @@ use crate::rest::ResourceError;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::ResourceResponse;
-/// use shopify_api::clients::{ApiCallLimit, PaginationInfo};
+/// use shopify_sdk::rest::ResourceResponse;
+/// use shopify_sdk::clients::{ApiCallLimit, PaginationInfo};
 ///
 /// // Create a response with a vector of items
 /// let response = ResourceResponse::new(
@@ -143,7 +143,7 @@ impl<T> ResourceResponse<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::ResourceResponse;
+    /// use shopify_sdk::rest::ResourceResponse;
     ///
     /// let response = ResourceResponse::new(
     ///     vec![1, 2, 3],
@@ -182,8 +182,8 @@ impl<T> ResourceResponse<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::ResourceResponse;
-    /// use shopify_api::clients::PaginationInfo;
+    /// use shopify_sdk::rest::ResourceResponse;
+    /// use shopify_sdk::clients::PaginationInfo;
     ///
     /// let response = ResourceResponse::new(
     ///     vec!["item"],
@@ -241,8 +241,8 @@ impl<T> ResourceResponse<T> {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::ResourceResponse;
-    /// use shopify_api::clients::ApiCallLimit;
+    /// use shopify_sdk::rest::ResourceResponse;
+    /// use shopify_sdk::clients::ApiCallLimit;
     ///
     /// let response = ResourceResponse::new(
     ///     "data",
@@ -303,7 +303,7 @@ impl<T: DeserializeOwned> ResourceResponse<T> {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::ResourceResponse;
+    /// use shopify_sdk::rest::ResourceResponse;
     ///
     /// // Assuming response.body = {"product": {"id": 123, "title": "Test"}}
     /// let response: ResourceResponse<Product> = ResourceResponse::from_http_response(

@@ -19,9 +19,9 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::{Metafield, MetafieldListParams};
-//! use shopify_api::rest::resources::v2025_10::common::MetafieldOwner;
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::v2025_10::{Metafield, MetafieldListParams};
+//! use shopify_sdk::rest::resources::v2025_10::common::MetafieldOwner;
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // List metafields for a specific product
 //! let metafields = Metafield::all_for_owner(
@@ -87,7 +87,7 @@ use super::common::MetafieldOwner;
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::Metafield;
+/// use shopify_sdk::rest::resources::v2025_10::Metafield;
 ///
 /// let metafield = Metafield {
 ///     namespace: Some("inventory".to_string()),
@@ -549,8 +549,8 @@ impl Metafield {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::resources::v2025_10::{Metafield, MetafieldListParams};
-    /// use shopify_api::rest::resources::v2025_10::common::MetafieldOwner;
+    /// use shopify_sdk::rest::resources::v2025_10::{Metafield, MetafieldListParams};
+    /// use shopify_sdk::rest::resources::v2025_10::common::MetafieldOwner;
     ///
     /// // Get all metafields for a product
     /// let metafields = Metafield::all_for_owner(
@@ -625,8 +625,8 @@ impl Metafield {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::resources::v2025_10::Metafield;
-    /// use shopify_api::rest::resources::v2025_10::common::MetafieldOwner;
+    /// use shopify_sdk::rest::resources::v2025_10::Metafield;
+    /// use shopify_sdk::rest::resources::v2025_10::common::MetafieldOwner;
     ///
     /// let count = Metafield::count_for_owner(
     ///     &client,

@@ -19,8 +19,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Article, ArticleListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Article, ArticleListParams};
 //!
 //! // List articles under a specific blog
 //! let articles = Article::all_with_parent(&client, "blog_id", 123, None).await?;

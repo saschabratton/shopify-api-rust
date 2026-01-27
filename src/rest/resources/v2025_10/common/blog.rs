@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::BlogCommentable;
+/// use shopify_sdk::rest::resources::v2025_10::common::BlogCommentable;
 ///
 /// let setting = BlogCommentable::Moderate;
 /// let json = serde_json::to_string(&setting).unwrap();

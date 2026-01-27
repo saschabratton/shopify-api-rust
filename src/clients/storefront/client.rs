@@ -16,7 +16,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{StorefrontClient, StorefrontToken, ShopDomain};
+//! use shopify_sdk::{StorefrontClient, StorefrontToken, ShopDomain};
 //! use serde_json::json;
 //!
 //! // Create a shop domain
@@ -73,7 +73,7 @@ use crate::config::{ApiVersion, ShopDomain, ShopifyConfig};
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::{StorefrontClient, StorefrontToken, ShopDomain};
+/// use shopify_sdk::{StorefrontClient, StorefrontToken, ShopDomain};
 /// use serde_json::json;
 ///
 /// let shop = ShopDomain::new("my-store").unwrap();
@@ -131,7 +131,7 @@ impl StorefrontClient {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{StorefrontClient, StorefrontToken, ShopDomain};
+    /// use shopify_sdk::{StorefrontClient, StorefrontToken, ShopDomain};
     ///
     /// let shop = ShopDomain::new("my-store").unwrap();
     ///
@@ -167,7 +167,7 @@ impl StorefrontClient {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{StorefrontClient, StorefrontToken, ShopDomain, ApiVersion};
+    /// use shopify_sdk::{StorefrontClient, StorefrontToken, ShopDomain, ApiVersion};
     ///
     /// let shop = ShopDomain::new("my-store").unwrap();
     /// let token = StorefrontToken::Public("my-token".to_string());
@@ -257,7 +257,7 @@ impl StorefrontClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::StorefrontClient;
+    /// use shopify_sdk::StorefrontClient;
     /// use serde_json::json;
     ///
     /// // Simple query
@@ -320,7 +320,7 @@ impl StorefrontClient {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::StorefrontClient;
+    /// use shopify_sdk::StorefrontClient;
     ///
     /// let response = client.query_with_debug(
     ///     "query { products(first: 10) { edges { node { title } } } }",

@@ -15,7 +15,7 @@ use std::fmt;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::ApiKey;
+/// use shopify_sdk::ApiKey;
 ///
 /// let key = ApiKey::new("my-api-key").unwrap();
 /// assert_eq!(key.as_ref(), "my-api-key");
@@ -57,7 +57,7 @@ impl AsRef<str> for ApiKey {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::ApiSecretKey;
+/// use shopify_sdk::ApiSecretKey;
 ///
 /// let secret = ApiSecretKey::new("my-secret").unwrap();
 /// assert_eq!(format!("{:?}", secret), "ApiSecretKey(*****)");
@@ -107,7 +107,7 @@ impl fmt::Debug for ApiSecretKey {
 /// `ShopDomain` serializes to and deserializes from the full domain string:
 ///
 /// ```rust
-/// use shopify_api::ShopDomain;
+/// use shopify_sdk::ShopDomain;
 ///
 /// let domain = ShopDomain::new("my-store").unwrap();
 /// let json = serde_json::to_string(&domain).unwrap();
@@ -117,7 +117,7 @@ impl fmt::Debug for ApiSecretKey {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::ShopDomain;
+/// use shopify_sdk::ShopDomain;
 ///
 /// // Short format is normalized
 /// let domain = ShopDomain::new("my-store").unwrap();
@@ -230,7 +230,7 @@ impl<'de> Deserialize<'de> for ShopDomain {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::HostUrl;
+/// use shopify_sdk::HostUrl;
 ///
 /// let url = HostUrl::new("https://myapp.example.com").unwrap();
 /// assert_eq!(url.scheme(), "https");

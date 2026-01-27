@@ -3,9 +3,9 @@
 //! These tests verify the Storefront client construction, error handling,
 //! and API method behavior.
 
-use shopify_api::clients::graphql::GraphqlError;
-use shopify_api::clients::storefront::{StorefrontClient, StorefrontToken};
-use shopify_api::{ApiVersion, ShopDomain};
+use shopify_sdk::clients::graphql::GraphqlError;
+use shopify_sdk::clients::storefront::{StorefrontClient, StorefrontToken};
+use shopify_sdk::{ApiVersion, ShopDomain};
 
 // ============================================================================
 // StorefrontToken Tests
@@ -114,7 +114,7 @@ fn test_storefront_client_tokenless() {
 
 #[test]
 fn test_storefront_client_with_config_uses_config_version() {
-    use shopify_api::{ApiKey, ApiSecretKey, ShopifyConfig};
+    use shopify_sdk::{ApiKey, ApiSecretKey, ShopifyConfig};
 
     let shop = ShopDomain::new("test-shop").unwrap();
     let config = ShopifyConfig::builder()
@@ -136,22 +136,22 @@ fn test_storefront_client_with_config_uses_config_version() {
 #[test]
 fn test_types_exported_at_crate_root() {
     // Verify types are accessible from crate root
-    let _: fn(shopify_api::StorefrontClient) = |_| {};
-    let _: fn(shopify_api::StorefrontToken) = |_| {};
+    let _: fn(shopify_sdk::StorefrontClient) = |_| {};
+    let _: fn(shopify_sdk::StorefrontToken) = |_| {};
 }
 
 #[test]
 fn test_types_exported_from_clients_module() {
     // Verify types are accessible from clients module
-    let _: fn(shopify_api::clients::StorefrontClient) = |_| {};
-    let _: fn(shopify_api::clients::StorefrontToken) = |_| {};
+    let _: fn(shopify_sdk::clients::StorefrontClient) = |_| {};
+    let _: fn(shopify_sdk::clients::StorefrontToken) = |_| {};
 }
 
 #[test]
 fn test_types_exported_from_clients_storefront_module() {
     // Verify types are accessible from clients::storefront module
-    let _: fn(shopify_api::clients::storefront::StorefrontClient) = |_| {};
-    let _: fn(shopify_api::clients::storefront::StorefrontToken) = |_| {};
+    let _: fn(shopify_sdk::clients::storefront::StorefrontClient) = |_| {};
+    let _: fn(shopify_sdk::clients::storefront::StorefrontToken) = |_| {};
 }
 
 // ============================================================================
@@ -161,7 +161,7 @@ fn test_types_exported_from_clients_storefront_module() {
 /// Helper to verify query method attempts to make a network call.
 /// The test passes if we get an error (expected for fake shops) or
 /// a response (in case DNS resolves and Shopify returns something).
-fn assert_query_attempted(result: Result<shopify_api::HttpResponse, GraphqlError>) {
+fn assert_query_attempted(result: Result<shopify_sdk::HttpResponse, GraphqlError>) {
     match result {
         Err(GraphqlError::Http(_)) => {
             // Expected: network error for fake shop domain
@@ -304,7 +304,7 @@ async fn test_storefront_client_can_be_shared_across_tasks() {
 
 #[test]
 fn test_graphql_error_http_variant_wraps_http_error() {
-    use shopify_api::clients::{HttpError, HttpResponseError};
+    use shopify_sdk::clients::{HttpError, HttpResponseError};
 
     let http_error = HttpError::Response(HttpResponseError {
         code: 401,

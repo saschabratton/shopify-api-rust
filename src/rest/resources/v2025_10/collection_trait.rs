@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     Collection, CustomCollection, SmartCollection, ProductListParams
 //! };
 //!
@@ -68,7 +68,7 @@ use super::smart_collection::SmartCollection;
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::{Collection, CustomCollection};
+/// use shopify_sdk::rest::resources::v2025_10::{Collection, CustomCollection};
 ///
 /// let collection = CustomCollection::find(&client, 123, None).await?.into_inner();
 ///
@@ -116,7 +116,7 @@ pub trait Collection: Send + Sync {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::resources::v2025_10::{Collection, CustomCollection, ProductListParams};
+    /// use shopify_sdk::rest::resources::v2025_10::{Collection, CustomCollection, ProductListParams};
     ///
     /// let collection = CustomCollection::find(&client, 123, None).await?.into_inner();
     ///
@@ -156,7 +156,7 @@ pub trait Collection: Send + Sync {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::resources::v2025_10::{Collection, SmartCollection};
+    /// use shopify_sdk::rest::resources::v2025_10::{Collection, SmartCollection};
     ///
     /// let collection = SmartCollection::find(&client, 456, None).await?.into_inner();
     /// let count = collection.product_count(&client).await?;

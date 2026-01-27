@@ -20,10 +20,10 @@
 //! The latest stable version is re-exported at this module level for convenience:
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::Product;  // Uses latest version
+//! use shopify_sdk::rest::resources::Product;  // Uses latest version
 //!
 //! // Or explicitly specify a version:
-//! use shopify_api::rest::resources::v2025_10::Product;
+//! use shopify_sdk::rest::resources::v2025_10::Product;
 //! ```
 //!
 //! # Available Resources
@@ -33,8 +33,8 @@
 //! Products are the goods or services that merchants sell.
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::{Product, ProductListParams, ProductStatus};
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::{Product, ProductListParams, ProductStatus};
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a single product
 //! let product = Product::find(&client, 123, None).await?;
@@ -54,8 +54,8 @@
 //! Supports dual path patterns for nested and standalone access.
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::{Variant, VariantListParams};
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::{Variant, VariantListParams};
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a variant by ID (standalone path)
 //! let variant = Variant::find(&client, 456, None).await?;
@@ -69,8 +69,8 @@
 //! Customers represent people who have created accounts with the store.
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::{Customer, CustomerListParams};
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::{Customer, CustomerListParams};
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a customer
 //! let customer = Customer::find(&client, 789, None).await?;
@@ -81,8 +81,8 @@
 //! Orders represent completed checkout transactions.
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::{Order, OrderListParams, FinancialStatus};
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::{Order, OrderListParams, FinancialStatus};
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // Find an order
 //! let order = Order::find(&client, 123, None).await?;
@@ -104,8 +104,8 @@
 //! Nested under orders: `/orders/{order_id}/fulfillments/{id}`
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::{Fulfillment, TrackingInfo};
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::{Fulfillment, TrackingInfo};
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // List fulfillments for an order
 //! let fulfillments = Fulfillment::all_with_parent(&client, "order_id", 123, None).await?;
@@ -124,8 +124,8 @@
 //! Inventory items are linked to product variants via `inventory_item_id`.
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::{InventoryItem, InventoryItemListParams};
-//! use shopify_api::rest::RestResource;
+//! use shopify_sdk::rest::resources::{InventoryItem, InventoryItemListParams};
+//! use shopify_sdk::rest::RestResource;
 //!
 //! // List inventory items by IDs (required parameter)
 //! let params = InventoryItemListParams {

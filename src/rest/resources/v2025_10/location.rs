@@ -13,8 +13,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse, ReadOnlyResource};
-//! use shopify_api::rest::resources::v2025_10::{Location, LocationListParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse, ReadOnlyResource};
+//! use shopify_sdk::rest::resources::v2025_10::{Location, LocationListParams};
 //!
 //! // Find a single location
 //! let location = Location::find(&client, 123, None).await?;

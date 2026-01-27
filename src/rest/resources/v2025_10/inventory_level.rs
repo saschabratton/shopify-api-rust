@@ -21,7 +21,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::{InventoryLevel, InventoryLevelListParams};
+//! use shopify_sdk::rest::resources::v2025_10::{InventoryLevel, InventoryLevelListParams};
 //!
 //! // List inventory levels
 //! let params = InventoryLevelListParams {

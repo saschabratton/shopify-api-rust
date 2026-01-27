@@ -27,8 +27,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{RefundResource, RefundListParams, RefundCalculateParams};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{RefundResource, RefundListParams, RefundCalculateParams};
 //!
 //! // List refunds under a specific order
 //! let refunds = RefundResource::all_with_parent(&client, "order_id", 450789469, None).await?;

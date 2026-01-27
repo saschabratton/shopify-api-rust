@@ -7,9 +7,9 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Webhook, WebhookListParams};
-//! use shopify_api::rest::resources::v2025_10::common::{WebhookTopic, WebhookFormat};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Webhook, WebhookListParams};
+//! use shopify_sdk::rest::resources::v2025_10::common::{WebhookTopic, WebhookFormat};
 //!
 //! // Find a single webhook
 //! let webhook = Webhook::find(&client, 123, None).await?;

@@ -6,8 +6,8 @@
 //! # Example
 //!
 //! ```rust
-//! use shopify_api::webhooks::{WebhookRegistration, WebhookRegistrationBuilder, WebhookDeliveryMethod};
-//! use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+//! use shopify_sdk::webhooks::{WebhookRegistration, WebhookRegistrationBuilder, WebhookDeliveryMethod};
+//! use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
 //!
 //! // Create a registration using the builder with HTTP delivery
 //! let registration = WebhookRegistrationBuilder::new(
@@ -50,7 +50,7 @@ pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::{WebhookHandler, WebhookContext, WebhookError, BoxFuture};
+/// use shopify_sdk::webhooks::{WebhookHandler, WebhookContext, WebhookError, BoxFuture};
 /// use serde_json::Value;
 ///
 /// struct OrderCreatedHandler;
@@ -108,7 +108,7 @@ pub trait WebhookHandler: Send + Sync {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::WebhookDeliveryMethod;
+/// use shopify_sdk::webhooks::WebhookDeliveryMethod;
 ///
 /// // HTTP delivery
 /// let http = WebhookDeliveryMethod::Http {
@@ -175,8 +175,8 @@ pub enum WebhookDeliveryMethod {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::{WebhookRegistration, WebhookRegistrationBuilder, WebhookDeliveryMethod};
-/// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+/// use shopify_sdk::webhooks::{WebhookRegistration, WebhookRegistrationBuilder, WebhookDeliveryMethod};
+/// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
 ///
 /// let registration = WebhookRegistrationBuilder::new(
 ///     WebhookTopic::OrdersCreate,
@@ -251,8 +251,8 @@ impl fmt::Debug for WebhookRegistration {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
-/// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+/// use shopify_sdk::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
+/// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
 ///
 /// let registration = WebhookRegistrationBuilder::new(
 ///     WebhookTopic::ProductsUpdate,
@@ -309,8 +309,8 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
-    /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+    /// use shopify_sdk::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
+    /// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let builder = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
@@ -338,8 +338,8 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
-    /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+    /// use shopify_sdk::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
+    /// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
@@ -366,8 +366,8 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
-    /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+    /// use shopify_sdk::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
+    /// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::ProductsUpdate,
@@ -391,8 +391,8 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
-    /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+    /// use shopify_sdk::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
+    /// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::OrdersCreate,
@@ -419,11 +419,11 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{
+    /// use shopify_sdk::webhooks::{
     ///     WebhookRegistrationBuilder, WebhookHandler, WebhookContext, WebhookError, BoxFuture,
     ///     WebhookDeliveryMethod
     /// };
-    /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+    /// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
     /// use serde_json::Value;
     ///
     /// struct MyHandler;
@@ -463,8 +463,8 @@ impl WebhookRegistrationBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
-    /// use shopify_api::rest::resources::v2025_10::common::WebhookTopic;
+    /// use shopify_sdk::webhooks::{WebhookRegistrationBuilder, WebhookDeliveryMethod};
+    /// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
     ///
     /// let registration = WebhookRegistrationBuilder::new(
     ///     WebhookTopic::CustomersCreate,
@@ -498,7 +498,7 @@ impl WebhookRegistrationBuilder {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::webhooks::WebhookRegistrationResult;
+/// use shopify_sdk::webhooks::WebhookRegistrationResult;
 ///
 /// let result = WebhookRegistrationResult::Created {
 ///     id: "gid://shopify/WebhookSubscription/12345".to_string(),

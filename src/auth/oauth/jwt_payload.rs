@@ -31,7 +31,7 @@
 //! # Reference
 //!
 //! This implementation matches the Ruby SDK's `ShopifyAPI::Auth::JwtPayload`:
-//! - File: `lib/shopify_api/auth/jwt_payload.rb`
+//! - File: `lib/shopify_sdk/auth/jwt_payload.rb`
 //! - JWT leeway: 10 seconds for time-based claims
 
 use crate::auth::oauth::OAuthError;
@@ -113,7 +113,7 @@ impl JwtPayload {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::auth::oauth::jwt_payload::JwtPayload;
+    /// use shopify_sdk::auth::oauth::jwt_payload::JwtPayload;
     ///
     /// let payload = JwtPayload::decode(session_token, &config)?;
     /// println!("Shop: {}", payload.shop());

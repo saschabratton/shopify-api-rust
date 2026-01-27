@@ -11,7 +11,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::Shop;
+//! use shopify_sdk::rest::resources::v2025_10::Shop;
 //!
 //! // Get current shop information
 //! let shop = Shop::current(&client).await?;
@@ -45,7 +45,7 @@ use crate::HttpMethod;
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::Shop;
+/// use shopify_sdk::rest::resources::v2025_10::Shop;
 ///
 /// let shop = Shop::current(&client).await?;
 /// println!("Shop name: {}", shop.name.as_deref().unwrap_or("Unknown"));
@@ -291,7 +291,7 @@ impl Shop {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use shopify_api::rest::resources::v2025_10::Shop;
+    /// use shopify_sdk::rest::resources::v2025_10::Shop;
     ///
     /// let shop = Shop::current(&client).await?;
     /// println!("Shop: {}", shop.name.as_deref().unwrap_or(""));

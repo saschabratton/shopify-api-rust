@@ -6,8 +6,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{Product, ProductListParams, ProductStatus};
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{Product, ProductListParams, ProductStatus};
 //!
 //! // Find a single product
 //! let product = Product::find(&client, 123, None).await?;

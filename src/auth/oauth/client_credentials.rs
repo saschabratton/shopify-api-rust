@@ -34,8 +34,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ShopDomain, ApiKey, ApiSecretKey};
-//! use shopify_api::auth::oauth::exchange_client_credentials;
+//! use shopify_sdk::{ShopifyConfig, ShopDomain, ApiKey, ApiSecretKey};
+//! use shopify_sdk::auth::oauth::exchange_client_credentials;
 //!
 //! // Configure the SDK (must NOT be embedded)
 //! let config = ShopifyConfig::builder()
@@ -56,7 +56,7 @@
 //! # Reference
 //!
 //! This implementation matches the Ruby SDK's `ShopifyAPI::Auth::ClientCredentials`:
-//! - File: `lib/shopify_api/auth/client_credentials.rb`
+//! - File: `lib/shopify_sdk/auth/client_credentials.rb`
 
 use crate::auth::oauth::OAuthError;
 use crate::auth::session::AccessTokenResponse;
@@ -101,7 +101,7 @@ struct ClientCredentialsRequest<'a> {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::auth::oauth::exchange_client_credentials;
+/// use shopify_sdk::auth::oauth::exchange_client_credentials;
 ///
 /// let session = exchange_client_credentials(&config, &shop).await?;
 /// assert!(!session.is_online);

@@ -15,7 +15,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::clients::{HttpClient, HttpRequest, HttpMethod, HttpError};
+//! use shopify_sdk::clients::{HttpClient, HttpRequest, HttpMethod, HttpError};
 //!
 //! match client.request(request).await {
 //!     Ok(response) => println!("Success: {}", response.body),
@@ -52,7 +52,7 @@ use thiserror::Error;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::clients::HttpResponseError;
+/// use shopify_sdk::clients::HttpResponseError;
 ///
 /// let error = HttpResponseError {
 ///     code: 404,
@@ -81,7 +81,7 @@ pub struct HttpResponseError {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::clients::MaxHttpRetriesExceededError;
+/// use shopify_sdk::clients::MaxHttpRetriesExceededError;
 ///
 /// let error = MaxHttpRetriesExceededError {
 ///     code: 429,
@@ -116,7 +116,7 @@ pub struct MaxHttpRetriesExceededError {
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::clients::InvalidHttpRequestError;
+/// use shopify_sdk::clients::InvalidHttpRequestError;
 ///
 /// let error = InvalidHttpRequestError::MissingBody {
 ///     method: "post".to_string(),
@@ -154,7 +154,7 @@ pub enum InvalidHttpRequestError {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::HttpError;
+/// use shopify_sdk::HttpError;
 ///
 /// let result = client.request(request).await;
 /// match result {

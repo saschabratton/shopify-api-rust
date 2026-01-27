@@ -14,7 +14,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::clients::rest::{RestClient, RestError};
+//! use shopify_sdk::clients::rest::{RestClient, RestError};
 //!
 //! match client.get("products", None).await {
 //!     Ok(response) => println!("Products: {}", response.body),
@@ -41,7 +41,7 @@ use thiserror::Error;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::clients::rest::RestError;
+/// use shopify_sdk::clients::rest::RestError;
 ///
 /// // REST API disabled error
 /// let error = RestError::RestApiDisabled;

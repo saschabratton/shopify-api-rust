@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::rest::resources::v2025_10::common::ThemeRole;
+/// use shopify_sdk::rest::resources::v2025_10::common::ThemeRole;
 ///
 /// let role = ThemeRole::Main;
 /// let json = serde_json::to_string(&role).unwrap();

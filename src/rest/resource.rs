@@ -19,8 +19,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourcePath, ResourceOperation, ResourceResponse, ResourceError};
-//! use shopify_api::{HttpMethod, RestClient};
+//! use shopify_sdk::rest::{RestResource, ResourcePath, ResourceOperation, ResourceResponse, ResourceError};
+//! use shopify_sdk::{HttpMethod, RestClient};
 //! use serde::{Serialize, Deserialize};
 //!
 //! #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,7 +101,7 @@ use crate::rest::{
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::{RestResource, ReadOnlyResource};
+/// use shopify_sdk::rest::{RestResource, ReadOnlyResource};
 ///
 /// // Location only supports GET operations
 /// impl RestResource for Location {

@@ -28,8 +28,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::Asset;
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::Asset;
 //!
 //! // List all assets in a theme
 //! let assets = Asset::all_with_parent(&client, "theme_id", 123, None).await?;
@@ -213,7 +213,7 @@ impl Asset {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::resources::v2025_10::Asset;
+    /// use shopify_sdk::rest::resources::v2025_10::Asset;
     ///
     /// let image_data = vec![0x89, 0x50, 0x4E, 0x47]; // PNG header bytes
     /// let asset = Asset::upload_from_bytes("assets/logo.png", &image_data);
@@ -250,7 +250,7 @@ impl Asset {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::resources::v2025_10::Asset;
+    /// use shopify_sdk::rest::resources::v2025_10::Asset;
     ///
     /// // Text asset
     /// let asset = Asset {
@@ -306,7 +306,7 @@ impl Asset {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::rest::resources::v2025_10::Asset;
+    /// use shopify_sdk::rest::resources::v2025_10::Asset;
     ///
     /// let binary_asset = Asset {
     ///     key: "assets/logo.png".to_string(),

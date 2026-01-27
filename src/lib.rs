@@ -24,7 +24,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion, AuthScopes};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion, AuthScopes};
 //!
 //! // Create configuration using the builder pattern
 //! let config = ShopifyConfig::builder()
@@ -41,8 +41,8 @@
 //! For apps that need to authenticate with Shopify stores:
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl};
-//! use shopify_api::auth::oauth::{begin_auth, validate_auth_callback, AuthQuery};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl};
+//! use shopify_sdk::auth::oauth::{begin_auth, validate_auth_callback, AuthQuery};
 //!
 //! // Step 1: Configure the SDK
 //! let config = ShopifyConfig::builder()
@@ -69,8 +69,8 @@
 //! For embedded apps using App Bridge session tokens:
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
-//! use shopify_api::auth::oauth::{exchange_online_token, exchange_offline_token};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_sdk::auth::oauth::{exchange_online_token, exchange_offline_token};
 //!
 //! // Configure the SDK (must be embedded)
 //! let config = ShopifyConfig::builder()
@@ -95,8 +95,8 @@
 //! For private or organization apps without user interaction:
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
-//! use shopify_api::auth::oauth::exchange_client_credentials;
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_sdk::auth::oauth::exchange_client_credentials;
 //!
 //! // Configure the SDK (must NOT be embedded)
 //! let config = ShopifyConfig::builder()
@@ -118,8 +118,8 @@
 //! For apps using expiring offline access tokens:
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
-//! use shopify_api::auth::oauth::{refresh_access_token, migrate_to_expiring_token};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_sdk::auth::oauth::{refresh_access_token, migrate_to_expiring_token};
 //!
 //! // Refresh an expiring access token
 //! if session.expired() {
@@ -139,7 +139,7 @@
 //! either offline (app-level) or online (user-specific):
 //!
 //! ```rust
-//! use shopify_api::{Session, ShopDomain, AuthScopes, AssociatedUser};
+//! use shopify_sdk::{Session, ShopDomain, AuthScopes, AssociatedUser};
 //!
 //! // Create an offline session (no expiration, no user)
 //! let offline_session = Session::new(
@@ -160,7 +160,7 @@
 //! The [`GraphqlClient`] provides methods for GraphQL Admin API operations:
 //!
 //! ```rust,ignore
-//! use shopify_api::{GraphqlClient, Session, ShopDomain, AuthScopes};
+//! use shopify_sdk::{GraphqlClient, Session, ShopDomain, AuthScopes};
 //! use serde_json::json;
 //!
 //! // Create a session
@@ -199,7 +199,7 @@
 //! The [`StorefrontClient`] provides methods for Storefront API operations:
 //!
 //! ```rust,ignore
-//! use shopify_api::{StorefrontClient, StorefrontToken, ShopDomain};
+//! use shopify_sdk::{StorefrontClient, StorefrontToken, ShopDomain};
 //! use serde_json::json;
 //!
 //! let shop = ShopDomain::new("my-store").unwrap();
@@ -233,7 +233,7 @@
 //! for HTTP, Amazon EventBridge, and Google Cloud Pub/Sub delivery methods:
 //!
 //! ```rust
-//! use shopify_api::{
+//! use shopify_sdk::{
 //!     WebhookRegistry, WebhookRegistrationBuilder, WebhookTopic, WebhookDeliveryMethod
 //! };
 //!
@@ -283,7 +283,7 @@
 //! The [`RestClient`] provides convenient methods for REST API operations:
 //!
 //! ```rust,ignore
-//! use shopify_api::{RestClient, Session, ShopDomain, AuthScopes};
+//! use shopify_sdk::{RestClient, Session, ShopDomain, AuthScopes};
 //!
 //! // Create a session
 //! let session = Session::new(
@@ -311,8 +311,8 @@
 //! For more control, use the low-level [`HttpClient`]:
 //!
 //! ```rust,ignore
-//! use shopify_api::{Session, ShopDomain, AuthScopes};
-//! use shopify_api::clients::{HttpClient, HttpRequest, HttpMethod};
+//! use shopify_sdk::{Session, ShopDomain, AuthScopes};
+//! use shopify_sdk::clients::{HttpClient, HttpRequest, HttpMethod};
 //!
 //! // Create a session
 //! let session = Session::new(

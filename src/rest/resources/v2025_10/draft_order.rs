@@ -13,8 +13,8 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::{RestResource, ResourceResponse};
-//! use shopify_api::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::{RestResource, ResourceResponse};
+//! use shopify_sdk::rest::resources::v2025_10::{
 //!     DraftOrder, DraftOrderListParams, DraftOrderStatus,
 //!     DraftOrderLineItem, AppliedDiscount, DraftOrderInvoice,
 //!     DraftOrderCompleteParams
@@ -247,7 +247,7 @@ pub struct DraftOrderCompleteParams {
 /// # Example
 ///
 /// ```rust,ignore
-/// use shopify_api::rest::resources::v2025_10::{DraftOrder, DraftOrderLineItem};
+/// use shopify_sdk::rest::resources::v2025_10::{DraftOrder, DraftOrderLineItem};
 ///
 /// let draft = DraftOrder {
 ///     line_items: Some(vec![DraftOrderLineItem {

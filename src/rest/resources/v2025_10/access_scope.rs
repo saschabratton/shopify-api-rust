@@ -17,7 +17,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use shopify_api::rest::resources::v2025_10::AccessScope;
+//! use shopify_sdk::rest::resources::v2025_10::AccessScope;
 //!
 //! // List all access scopes for the current token
 //! let scopes = AccessScope::all(&client).await?;

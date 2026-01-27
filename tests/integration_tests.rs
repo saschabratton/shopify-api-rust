@@ -3,7 +3,7 @@
 //! These tests verify end-to-end functionality of the SDK configuration system
 //! and session management.
 
-use shopify_api::{
+use shopify_sdk::{
     ApiKey, ApiSecretKey, ApiVersion, AssociatedUser, AuthScopes, ConfigError, HostUrl, Session,
     ShopDomain, ShopifyConfig,
 };
@@ -136,7 +136,7 @@ fn test_config_can_be_cloned_and_shared() {
 
 #[test]
 fn test_offline_session_workflow_with_factory_method() {
-    use shopify_api::auth::session::AccessTokenResponse;
+    use shopify_sdk::auth::session::AccessTokenResponse;
 
     let shop = ShopDomain::new("my-store").unwrap();
 
@@ -174,7 +174,7 @@ fn test_offline_session_workflow_with_factory_method() {
 
 #[test]
 fn test_online_session_workflow_with_associated_user() {
-    use shopify_api::auth::session::{AccessTokenResponse, AssociatedUserResponse};
+    use shopify_sdk::auth::session::{AccessTokenResponse, AssociatedUserResponse};
 
     let shop = ShopDomain::new("test-shop").unwrap();
 

@@ -59,8 +59,8 @@
 //! # Example: Authorization Code Flow
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl, AuthScopes};
-//! use shopify_api::auth::oauth::{begin_auth, validate_auth_callback, AuthQuery, OAuthError};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain, HostUrl, AuthScopes};
+//! use shopify_sdk::auth::oauth::{begin_auth, validate_auth_callback, AuthQuery, OAuthError};
 //!
 //! // Step 1: Configure the SDK
 //! let config = ShopifyConfig::builder()
@@ -101,8 +101,8 @@
 //! # Example: Token Exchange Flow (Embedded Apps)
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
-//! use shopify_api::auth::oauth::{exchange_online_token, exchange_offline_token, OAuthError};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_sdk::auth::oauth::{exchange_online_token, exchange_offline_token, OAuthError};
 //!
 //! // Configure the SDK (must be embedded app)
 //! let config = ShopifyConfig::builder()
@@ -128,8 +128,8 @@
 //! # Example: Client Credentials Flow (Private/Organization Apps)
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
-//! use shopify_api::auth::oauth::{exchange_client_credentials, OAuthError};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_sdk::auth::oauth::{exchange_client_credentials, OAuthError};
 //!
 //! // Configure the SDK (must NOT be embedded)
 //! let config = ShopifyConfig::builder()
@@ -150,8 +150,8 @@
 //! # Example: Token Refresh Flow (Expiring Tokens)
 //!
 //! ```rust,ignore
-//! use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
-//! use shopify_api::auth::oauth::{refresh_access_token, migrate_to_expiring_token, OAuthError};
+//! use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ShopDomain};
+//! use shopify_sdk::auth::oauth::{refresh_access_token, migrate_to_expiring_token, OAuthError};
 //!
 //! // Refresh an expiring access token
 //! if session.expired() {
@@ -188,7 +188,7 @@
 //! For advanced use cases, you can embed custom data in the state parameter:
 //!
 //! ```rust
-//! use shopify_api::auth::oauth::StateParam;
+//! use shopify_sdk::auth::oauth::StateParam;
 //! use serde::{Serialize, Deserialize};
 //!
 //! #[derive(Serialize, Deserialize)]
