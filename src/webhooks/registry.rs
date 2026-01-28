@@ -46,7 +46,6 @@ use crate::config::ShopifyConfig;
 
 use super::errors::WebhookError;
 use super::types::{
-    WebhookRegistrationBuilder,
     WebhookDeliveryMethod, WebhookHandler, WebhookRegistration, WebhookRegistrationResult,
     WebhookTopic,
 };
