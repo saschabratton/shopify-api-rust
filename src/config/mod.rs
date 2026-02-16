@@ -59,7 +59,7 @@ use std::sync::Arc;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, DeprecationCallback};
+/// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, DeprecationCallback};
 /// use std::sync::Arc;
 ///
 /// let callback: DeprecationCallback = Arc::new(|info| {
@@ -383,7 +383,7 @@ impl ShopifyConfigBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion, ConfigError};
+    /// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey, ApiVersion, ConfigError};
     ///
     /// // This will fail because V2024_01 is deprecated
     /// let result = ShopifyConfig::builder()
@@ -410,7 +410,7 @@ impl ShopifyConfigBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::{ShopifyConfig, ApiKey, ApiSecretKey};
+    /// use shopify_sdk::{ShopifyConfig, ApiKey, ApiSecretKey};
     /// use std::sync::atomic::{AtomicUsize, Ordering};
     /// use std::sync::Arc;
     ///

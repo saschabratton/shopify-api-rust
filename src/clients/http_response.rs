@@ -14,7 +14,7 @@ use std::collections::HashMap;
 /// # Example
 ///
 /// ```rust
-/// use shopify_api::ApiDeprecationInfo;
+/// use shopify_sdk::ApiDeprecationInfo;
 ///
 /// let info = ApiDeprecationInfo {
 ///     reason: "This endpoint will be removed in 2025-07".to_string(),
@@ -260,7 +260,7 @@ impl HttpResponse {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::HttpResponse;
+    /// use shopify_sdk::HttpResponse;
     /// use std::collections::HashMap;
     /// use serde_json::json;
     ///
@@ -291,7 +291,7 @@ impl HttpResponse {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::HttpResponse;
+    /// use shopify_sdk::HttpResponse;
     /// use std::collections::HashMap;
     /// use serde_json::json;
     ///

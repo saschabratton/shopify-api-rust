@@ -993,6 +993,7 @@ mod tests {
     use crate::auth::oauth::hmac::compute_signature_base64;
     use crate::config::{ApiKey, ApiSecretKey};
     use crate::webhooks::types::BoxFuture;
+    use crate::WebhookRegistrationBuilder;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
 

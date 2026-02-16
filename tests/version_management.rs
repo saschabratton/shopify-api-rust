@@ -1,6 +1,6 @@
 //! Integration tests for API version management.
 
-use shopify_api::{
+use shopify_sdk::{
     ApiDeprecationInfo, ApiKey, ApiSecretKey, ApiVersion, ConfigError, HttpResponse,
     ShopifyConfig,
 };

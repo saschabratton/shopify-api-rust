@@ -161,10 +161,10 @@
 //!
 //! ```rust,ignore
 //! // Recommended: Use the default (latest) version
-//! use shopify_api::rest::resources::Product;
+//! use shopify_sdk::rest::resources::Product;
 //!
 //! // Explicit version selection (for version-specific behavior)
-//! use shopify_api::rest::resources::v2025_10::Product;
+//! use shopify_sdk::rest::resources::v2025_10::Product;
 //! ```
 //!
 //! When Shopify introduces breaking changes in a new API version, a new

@@ -80,7 +80,7 @@ impl ApiVersion {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::ApiVersion;
+    /// use shopify_sdk::ApiVersion;
     ///
     /// let versions = ApiVersion::supported_versions();
     /// assert!(!versions.is_empty());
@@ -105,7 +105,7 @@ impl ApiVersion {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::ApiVersion;
+    /// use shopify_sdk::ApiVersion;
     ///
     /// let minimum = ApiVersion::minimum_supported();
     /// assert!(minimum.is_supported());
@@ -125,7 +125,7 @@ impl ApiVersion {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::ApiVersion;
+    /// use shopify_sdk::ApiVersion;
     ///
     /// assert!(ApiVersion::V2025_10.is_supported());
     /// assert!(ApiVersion::Unstable.is_supported());
@@ -150,7 +150,7 @@ impl ApiVersion {
     /// # Example
     ///
     /// ```rust
-    /// use shopify_api::ApiVersion;
+    /// use shopify_sdk::ApiVersion;
     ///
     /// assert!(ApiVersion::V2024_01.is_deprecated());
     /// assert!(!ApiVersion::V2025_10.is_deprecated());
