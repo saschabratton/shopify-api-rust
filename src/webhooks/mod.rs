@@ -260,4 +260,4 @@ pub use verification::{
 };
 
 // Re-export WebhookTopic for convenience
-pub use crate::rest::resources::v2025_10::common::WebhookTopic;
+pub use crate::rest::resources::v2026_04::common::WebhookTopic;

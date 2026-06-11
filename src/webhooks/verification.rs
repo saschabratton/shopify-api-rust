@@ -35,7 +35,7 @@
 //!     hmac,
 //!     Some("orders/create".to_string()),
 //!     Some("example.myshopify.com".to_string()),
-//!     Some("2025-10".to_string()),
+//!     Some("2026-04".to_string()),
 //!     Some("webhook-123".to_string()),
 //! );
 //!
@@ -57,7 +57,7 @@
 
 use crate::auth::oauth::hmac::{compute_signature_base64, constant_time_compare};
 use crate::config::ShopifyConfig;
-use crate::rest::resources::v2025_10::common::WebhookTopic;
+use crate::rest::resources::v2026_04::common::WebhookTopic;
 use crate::webhooks::WebhookError;
 
 // ============================================================================
@@ -85,7 +85,7 @@ pub const HEADER_SHOP_DOMAIN: &str = "X-Shopify-Shop-Domain";
 /// HTTP header name for the API version.
 ///
 /// Contains the API version used for the webhook payload format
-/// (e.g., "2025-10").
+/// (e.g., "2026-04").
 pub const HEADER_API_VERSION: &str = "X-Shopify-API-Version";
 
 /// HTTP header name for the webhook ID.
@@ -113,7 +113,7 @@ pub const HEADER_WEBHOOK_ID: &str = "X-Shopify-Webhook-Id";
 ///     "hmac-signature".to_string(),
 ///     Some("orders/create".to_string()),
 ///     Some("example.myshopify.com".to_string()),
-///     Some("2025-10".to_string()),
+///     Some("2026-04".to_string()),
 ///     Some("webhook-123".to_string()),
 /// );
 ///
@@ -474,7 +474,7 @@ mod tests {
             "hmac-value".to_string(),
             Some("orders/create".to_string()),
             Some("example.myshopify.com".to_string()),
-            Some("2025-10".to_string()),
+            Some("2026-04".to_string()),
             Some("webhook-123".to_string()),
         );
 
@@ -482,7 +482,7 @@ mod tests {
         assert_eq!(request.hmac_header(), "hmac-value");
         assert_eq!(request.topic(), Some("orders/create"));
         assert_eq!(request.shop_domain(), Some("example.myshopify.com"));
-        assert_eq!(request.api_version(), Some("2025-10"));
+        assert_eq!(request.api_version(), Some("2026-04"));
         assert_eq!(request.webhook_id(), Some("webhook-123"));
     }
 
@@ -515,14 +515,14 @@ mod tests {
             Some(WebhookTopic::OrdersCreate),
             "orders/create".to_string(),
             Some("shop.myshopify.com".to_string()),
-            Some("2025-10".to_string()),
+            Some("2026-04".to_string()),
             Some("id-123".to_string()),
         );
 
         assert_eq!(context.topic(), Some(WebhookTopic::OrdersCreate));
         assert_eq!(context.topic_raw(), "orders/create");
         assert_eq!(context.shop_domain(), Some("shop.myshopify.com"));
-        assert_eq!(context.api_version(), Some("2025-10"));
+        assert_eq!(context.api_version(), Some("2026-04"));
         assert_eq!(context.webhook_id(), Some("id-123"));
     }
 
@@ -615,7 +615,7 @@ mod tests {
             hmac,
             Some("orders/create".to_string()),
             Some("shop.myshopify.com".to_string()),
-            Some("2025-10".to_string()),
+            Some("2026-04".to_string()),
             Some("webhook-id".to_string()),
         );
 
@@ -679,7 +679,7 @@ mod tests {
             hmac,
             Some("products/update".to_string()),
             Some("test.myshopify.com".to_string()),
-            Some("2025-10".to_string()),
+            Some("2026-04".to_string()),
             Some("wh-id-123".to_string()),
         );
 
@@ -687,7 +687,7 @@ mod tests {
         assert_eq!(context.topic(), Some(WebhookTopic::ProductsUpdate));
         assert_eq!(context.topic_raw(), "products/update");
         assert_eq!(context.shop_domain(), Some("test.myshopify.com"));
-        assert_eq!(context.api_version(), Some("2025-10"));
+        assert_eq!(context.api_version(), Some("2026-04"));
         assert_eq!(context.webhook_id(), Some("wh-id-123"));
     }
 

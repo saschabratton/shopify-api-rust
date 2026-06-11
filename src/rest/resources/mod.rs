@@ -13,6 +13,8 @@
 //!   mod.rs           <- This file (re-exports latest version)
 //!   v2025_10/
 //!     mod.rs         <- Version-specific resources
+//!   v2026_04/
+//!     mod.rs         <- Version-specific resources
 //! ```
 //!
 //! # Using Resources
@@ -23,7 +25,7 @@
 //! use shopify_sdk::rest::resources::Product;  // Uses latest version
 //!
 //! // Or explicitly specify a version:
-//! use shopify_sdk::rest::resources::v2025_10::Product;
+//! use shopify_sdk::rest::resources::v2026_04::Product;
 //! ```
 //!
 //! # Available Resources
@@ -138,7 +140,8 @@
 //! # Version Support
 //!
 //! Currently supported API versions:
-//! - `v2025_10` (2025-10) - Latest stable
+//! - `v2026_04` (2026-04) - Latest stable
+//! - `v2025_10` (2025-10) - Supported
 //!
 //! Future versions will be added as needed without breaking existing code.
 //!
@@ -164,13 +167,14 @@
 //! use shopify_sdk::rest::resources::Product;
 //!
 //! // Explicit version selection (for version-specific behavior)
-//! use shopify_sdk::rest::resources::v2025_10::Product;
+//! use shopify_sdk::rest::resources::v2026_04::Product;
 //! ```
 //!
 //! When Shopify introduces breaking changes in a new API version, a new
 //! version-specific module will be added without breaking existing code.
 
 pub mod v2025_10;
+pub mod v2026_04;
 
 // Re-export types from the latest version for convenience
-pub use v2025_10::*;
+pub use v2026_04::*;

@@ -60,19 +60,21 @@ fn test_deprecated_versions() {
     assert!(ApiVersion::V2024_07.is_deprecated());
     assert!(ApiVersion::V2024_10.is_deprecated());
 
-    // 2025-01 is now deprecated (outside 12-month window)
+    // 2025-01 and 2025-04 are now deprecated (outside 12-month window)
     assert!(ApiVersion::V2025_01.is_deprecated());
+    assert!(ApiVersion::V2025_04.is_deprecated());
 
-    // 2025-04 and later are supported
-    assert!(!ApiVersion::V2025_04.is_deprecated());
+    // 2025-07 and later are supported
+    assert!(!ApiVersion::V2025_07.is_deprecated());
     assert!(!ApiVersion::V2025_10.is_deprecated());
     assert!(!ApiVersion::V2026_01.is_deprecated());
+    assert!(!ApiVersion::V2026_04.is_deprecated());
 
     // Unstable is never deprecated
     assert!(!ApiVersion::Unstable.is_deprecated());
 
     // Custom versions are never deprecated (assumed newer)
-    assert!(!ApiVersion::Custom("2026-04".to_string()).is_deprecated());
+    assert!(!ApiVersion::Custom("2026-07".to_string()).is_deprecated());
 }
 
 #[test]
@@ -86,24 +88,25 @@ fn test_version_ordering_stable_versions() {
     assert!(ApiVersion::V2025_04 < ApiVersion::V2025_07);
     assert!(ApiVersion::V2025_07 < ApiVersion::V2025_10);
     assert!(ApiVersion::V2025_10 < ApiVersion::V2026_01);
+    assert!(ApiVersion::V2026_01 < ApiVersion::V2026_04);
 }
 
 #[test]
 fn test_version_ordering_special_versions() {
     // Unstable sorts after all stable versions
-    assert!(ApiVersion::V2026_01 < ApiVersion::Unstable);
+    assert!(ApiVersion::V2026_04 < ApiVersion::Unstable);
 
     // Custom sorts after unstable
-    assert!(ApiVersion::Unstable < ApiVersion::Custom("2026-04".to_string()));
+    assert!(ApiVersion::Unstable < ApiVersion::Custom("2026-07".to_string()));
 }
 
 #[test]
 fn test_version_ordering_custom_versions() {
     // Custom versions compare lexicographically
-    let v2026_04 = ApiVersion::Custom("2026-04".to_string());
     let v2026_07 = ApiVersion::Custom("2026-07".to_string());
+    let v2026_10 = ApiVersion::Custom("2026-10".to_string());
 
-    assert!(v2026_04 < v2026_07);
+    assert!(v2026_07 < v2026_10);
 }
 
 // =============================================================================
@@ -172,7 +175,7 @@ fn test_config_allows_custom_version_when_strict() {
     let config = ShopifyConfig::builder()
         .api_key(ApiKey::new("test-key").unwrap())
         .api_secret_key(ApiSecretKey::new("test-secret").unwrap())
-        .api_version(ApiVersion::Custom("2026-04".to_string()))
+        .api_version(ApiVersion::Custom("2026-07".to_string()))
         .reject_deprecated_versions(true)
         .build();
 

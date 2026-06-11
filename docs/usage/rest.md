@@ -21,7 +21,7 @@ REST resources provide an ActiveRecord-like pattern for CRUD operations with dir
 ```rust
 use shopify_sdk::{RestClient, Session, ShopDomain, AuthScopes};
 use shopify_sdk::rest::{RestResource, ResourceResponse};
-use shopify_sdk::rest::resources::v2025_10::Product;
+use shopify_sdk::rest::resources::v2026_04::Product;
 
 // Create client
 let session = Session::new(
@@ -53,7 +53,7 @@ println!("Total products: {}", count);
 
 ```rust
 use shopify_sdk::rest::{RestResource, TrackedResource};
-use shopify_sdk::rest::resources::v2025_10::Product;
+use shopify_sdk::rest::resources::v2026_04::Product;
 
 let product = Product {
     id: None,
@@ -74,7 +74,7 @@ println!("Created product ID: {:?}", saved.id);
 
 ```rust
 use shopify_sdk::rest::{RestResource, TrackedResource, ResourceResponse};
-use shopify_sdk::rest::resources::v2025_10::Product;
+use shopify_sdk::rest::resources::v2026_04::Product;
 
 // Fetch existing product
 let response: ResourceResponse<Product> = Product::find(&client, 123456789, None).await?;
@@ -99,7 +99,7 @@ if tracked.is_dirty() {
 
 ```rust
 use shopify_sdk::rest::{RestResource, ResourceResponse};
-use shopify_sdk::rest::resources::v2025_10::Product;
+use shopify_sdk::rest::resources::v2026_04::Product;
 
 let response: ResourceResponse<Product> = Product::find(&client, 123456789, None).await?;
 let product = response.into_inner();
@@ -157,7 +157,7 @@ REST responses include pagination information:
 
 ```rust
 use shopify_sdk::rest::{RestResource, ResourceResponse};
-use shopify_sdk::rest::resources::v2025_10::Product;
+use shopify_sdk::rest::resources::v2026_04::Product;
 
 let response: ResourceResponse<Vec<Product>> = Product::all(&client, None).await?;
 
@@ -185,7 +185,7 @@ if response.has_prev_page() {
 
 ```rust
 use shopify_sdk::rest::{RestResource, ResourceResponse};
-use shopify_sdk::rest::resources::v2025_10::Product;
+use shopify_sdk::rest::resources::v2026_04::Product;
 use std::collections::HashMap;
 
 let mut all_products = Vec::new();
@@ -216,7 +216,7 @@ println!("Total products fetched: {}", all_products.len());
 
 ## Available Resources
 
-The SDK provides REST resources for API version 2025-10:
+The SDK provides REST resources for API version 2026-04 (the `v2025_10` module remains available for the previous version):
 
 ### Products & Inventory
 - `Product` - Products

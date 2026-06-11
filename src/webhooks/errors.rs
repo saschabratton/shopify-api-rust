@@ -18,7 +18,7 @@
 //!
 //! ```rust
 //! use shopify_sdk::webhooks::WebhookError;
-//! use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
+//! use shopify_sdk::rest::resources::v2026_04::common::WebhookTopic;
 //!
 //! let error = WebhookError::RegistrationNotFound {
 //!     topic: WebhookTopic::OrdersCreate,
@@ -27,7 +27,7 @@
 //! ```
 
 use crate::clients::GraphqlError;
-use crate::rest::resources::v2025_10::common::WebhookTopic;
+use crate::rest::resources::v2026_04::common::WebhookTopic;
 use thiserror::Error;
 
 /// Error type for webhook registration and verification operations.
@@ -40,7 +40,7 @@ use thiserror::Error;
 ///
 /// ```rust
 /// use shopify_sdk::webhooks::WebhookError;
-/// use shopify_sdk::rest::resources::v2025_10::common::WebhookTopic;
+/// use shopify_sdk::rest::resources::v2026_04::common::WebhookTopic;
 ///
 /// // Create a registration not found error
 /// let error = WebhookError::RegistrationNotFound {

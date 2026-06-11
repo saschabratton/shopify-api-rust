@@ -13,7 +13,7 @@
 //!
 //! ```rust,ignore
 //! use shopify_sdk::rest::{RestResource, ResourceResponse};
-//! use shopify_sdk::rest::resources::v2025_10::{
+//! use shopify_sdk::rest::resources::v2026_04::{
 //!     FulfillmentService, FulfillmentServiceListParams
 //! };
 //!
@@ -65,7 +65,6 @@ use crate::HttpMethod;
 /// - `inventory_management` - Whether service manages inventory
 /// - `requires_shipping_method` - Whether shipping method is required
 /// - `fulfillment_orders_opt_in` - Whether service uses fulfillment orders
-/// - `permits_sku_sharing` - Whether SKUs can be shared
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct FulfillmentService {
     /// The unique identifier of the fulfillment service.
@@ -110,13 +109,6 @@ pub struct FulfillmentService {
     /// Whether the service has opted into fulfillment orders.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fulfillment_orders_opt_in: Option<bool>,
-
-    /// Whether SKU sharing is permitted.
-    ///
-    /// Removed in API version 2026-04; all fulfillment services
-    /// implicitly permit SKU sharing.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub permits_sku_sharing: Option<bool>,
 
     /// The admin GraphQL API ID for this service.
     /// Read-only field.
@@ -210,7 +202,6 @@ mod tests {
             inventory_management: Some(true),
             requires_shipping_method: Some(false),
             fulfillment_orders_opt_in: Some(true),
-            permits_sku_sharing: Some(false),
             admin_graphql_api_id: Some("gid://shopify/FulfillmentService/61629186".to_string()),
         };
 
@@ -225,7 +216,6 @@ mod tests {
         assert_eq!(parsed["inventory_management"], true);
         assert_eq!(parsed["requires_shipping_method"], false);
         assert_eq!(parsed["fulfillment_orders_opt_in"], true);
-        assert_eq!(parsed["permits_sku_sharing"], false);
 
         // Read-only fields should be omitted
         assert!(parsed.get("id").is_none());
@@ -247,7 +237,6 @@ mod tests {
             "inventory_management": true,
             "requires_shipping_method": false,
             "fulfillment_orders_opt_in": true,
-            "permits_sku_sharing": false,
             "admin_graphql_api_id": "gid://shopify/FulfillmentService/61629186"
         }"#;
 
@@ -266,7 +255,6 @@ mod tests {
         assert_eq!(service.inventory_management, Some(true));
         assert_eq!(service.requires_shipping_method, Some(false));
         assert_eq!(service.fulfillment_orders_opt_in, Some(true));
-        assert_eq!(service.permits_sku_sharing, Some(false));
         assert_eq!(
             service.admin_graphql_api_id,
             Some("gid://shopify/FulfillmentService/61629186".to_string())
