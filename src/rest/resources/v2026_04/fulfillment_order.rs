@@ -1065,8 +1065,7 @@ impl CancellationRequest {
         fulfillment_order_id: u64,
         message: Option<&str>,
     ) -> Result<FulfillmentOrder, ResourceError> {
-        let path =
-            format!("fulfillment_orders/{fulfillment_order_id}/cancellation_request/accept");
+        let path = format!("fulfillment_orders/{fulfillment_order_id}/cancellation_request/accept");
 
         let body = if let Some(msg) = message {
             serde_json::json!({
@@ -1111,8 +1110,7 @@ impl CancellationRequest {
         fulfillment_order_id: u64,
         message: Option<&str>,
     ) -> Result<FulfillmentOrder, ResourceError> {
-        let path =
-            format!("fulfillment_orders/{fulfillment_order_id}/cancellation_request/reject");
+        let path = format!("fulfillment_orders/{fulfillment_order_id}/cancellation_request/reject");
 
         let body = if let Some(msg) = message {
             serde_json::json!({

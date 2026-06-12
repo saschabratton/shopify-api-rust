@@ -182,7 +182,7 @@ impl ApiVersion {
             Self::V2025_10 => 8,
             Self::V2026_01 => 9,
             Self::V2026_04 => 10,
-            Self::Unstable => 100, // Always sorts after stable versions
+            Self::Unstable => 100,  // Always sorts after stable versions
             Self::Custom(_) => 101, // Custom sorts after unstable
         }
     }

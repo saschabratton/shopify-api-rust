@@ -429,21 +429,18 @@ impl DiscountCode {
         }
 
         // Parse the batch result from the response
-        let result = response
-            .body
-            .get("discount_code_creation")
-            .ok_or_else(|| {
-                ResourceError::Http(crate::clients::HttpError::Response(
-                    crate::clients::HttpResponseError {
-                        code: response.code,
-                        message: "Missing 'discount_code_creation' in response".to_string(),
-                        error_reference: response.request_id().map(ToString::to_string),
-                    },
-                ))
-            })?;
+        let result = response.body.get("discount_code_creation").ok_or_else(|| {
+            ResourceError::Http(crate::clients::HttpError::Response(
+                crate::clients::HttpResponseError {
+                    code: response.code,
+                    message: "Missing 'discount_code_creation' in response".to_string(),
+                    error_reference: response.request_id().map(ToString::to_string),
+                },
+            ))
+        })?;
 
-        let batch_result: DiscountCodeBatchResult =
-            serde_json::from_value(result.clone()).map_err(|e| {
+        let batch_result: DiscountCodeBatchResult = serde_json::from_value(result.clone())
+            .map_err(|e| {
                 ResourceError::Http(crate::clients::HttpError::Response(
                     crate::clients::HttpResponseError {
                         code: response.code,
@@ -493,21 +490,18 @@ impl DiscountCode {
             ));
         }
 
-        let result = response
-            .body
-            .get("discount_code_creation")
-            .ok_or_else(|| {
-                ResourceError::Http(crate::clients::HttpError::Response(
-                    crate::clients::HttpResponseError {
-                        code: response.code,
-                        message: "Missing 'discount_code_creation' in response".to_string(),
-                        error_reference: response.request_id().map(ToString::to_string),
-                    },
-                ))
-            })?;
+        let result = response.body.get("discount_code_creation").ok_or_else(|| {
+            ResourceError::Http(crate::clients::HttpError::Response(
+                crate::clients::HttpResponseError {
+                    code: response.code,
+                    message: "Missing 'discount_code_creation' in response".to_string(),
+                    error_reference: response.request_id().map(ToString::to_string),
+                },
+            ))
+        })?;
 
-        let batch_result: DiscountCodeBatchResult =
-            serde_json::from_value(result.clone()).map_err(|e| {
+        let batch_result: DiscountCodeBatchResult = serde_json::from_value(result.clone())
+            .map_err(|e| {
                 ResourceError::Http(crate::clients::HttpError::Response(
                     crate::clients::HttpResponseError {
                         code: response.code,
@@ -559,18 +553,15 @@ impl DiscountCode {
             ));
         }
 
-        let codes_value = response
-            .body
-            .get(Self::PLURAL)
-            .ok_or_else(|| {
-                ResourceError::Http(crate::clients::HttpError::Response(
-                    crate::clients::HttpResponseError {
-                        code: response.code,
-                        message: format!("Missing '{}' in response", Self::PLURAL),
-                        error_reference: response.request_id().map(ToString::to_string),
-                    },
-                ))
-            })?;
+        let codes_value = response.body.get(Self::PLURAL).ok_or_else(|| {
+            ResourceError::Http(crate::clients::HttpError::Response(
+                crate::clients::HttpResponseError {
+                    code: response.code,
+                    message: format!("Missing '{}' in response", Self::PLURAL),
+                    error_reference: response.request_id().map(ToString::to_string),
+                },
+            ))
+        })?;
 
         let codes: Vec<Self> = serde_json::from_value(codes_value.clone()).map_err(|e| {
             ResourceError::Http(crate::clients::HttpError::Response(

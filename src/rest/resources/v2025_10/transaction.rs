@@ -584,7 +584,11 @@ mod tests {
         // All paths should require order_id (nested under orders)
 
         // Find requires both order_id and id
-        let find_path = get_path(Transaction::PATHS, ResourceOperation::Find, &["order_id", "id"]);
+        let find_path = get_path(
+            Transaction::PATHS,
+            ResourceOperation::Find,
+            &["order_id", "id"],
+        );
         assert!(find_path.is_some());
         assert_eq!(
             find_path.unwrap().template,
@@ -598,10 +602,7 @@ mod tests {
         // All requires order_id
         let all_path = get_path(Transaction::PATHS, ResourceOperation::All, &["order_id"]);
         assert!(all_path.is_some());
-        assert_eq!(
-            all_path.unwrap().template,
-            "orders/{order_id}/transactions"
-        );
+        assert_eq!(all_path.unwrap().template, "orders/{order_id}/transactions");
 
         // All without order_id should fail
         let all_without_order = get_path(Transaction::PATHS, ResourceOperation::All, &[]);
@@ -725,10 +726,7 @@ mod tests {
         assert_eq!(transaction.amount, Some("199.99".to_string()));
         assert_eq!(transaction.status, Some(TransactionStatus::Success));
         assert_eq!(transaction.gateway, Some("bogus".to_string()));
-        assert_eq!(
-            transaction.authorization,
-            Some("ch_1234567890".to_string())
-        );
+        assert_eq!(transaction.authorization, Some("ch_1234567890".to_string()));
         assert!(transaction.authorization_expires_at.is_some());
         assert_eq!(transaction.currency, Some("USD".to_string()));
         assert_eq!(transaction.test, Some(true));
@@ -742,7 +740,10 @@ mod tests {
 
         let payment_details = transaction.payment_details.unwrap();
         assert_eq!(payment_details.credit_card_bin, Some("424242".to_string()));
-        assert_eq!(payment_details.credit_card_company, Some("Visa".to_string()));
+        assert_eq!(
+            payment_details.credit_card_company,
+            Some("Visa".to_string())
+        );
     }
 
     #[test]

@@ -281,7 +281,10 @@ impl std::fmt::Debug for ShopifyConfigBuilder {
             .field("api_version", &self.api_version)
             .field("is_embedded", &self.is_embedded)
             .field("user_agent_prefix", &self.user_agent_prefix)
-            .field("reject_deprecated_versions", &self.reject_deprecated_versions)
+            .field(
+                "reject_deprecated_versions",
+                &self.reject_deprecated_versions,
+            )
             .field(
                 "deprecation_callback",
                 &self.deprecation_callback.as_ref().map(|_| "<callback>"),

@@ -488,14 +488,8 @@ mod tests {
 
     #[test]
     fn test_webhook_request_with_minimal_headers() {
-        let request = WebhookRequest::new(
-            b"body".to_vec(),
-            "hmac".to_string(),
-            None,
-            None,
-            None,
-            None,
-        );
+        let request =
+            WebhookRequest::new(b"body".to_vec(), "hmac".to_string(), None, None, None, None);
 
         assert_eq!(request.body(), b"body");
         assert_eq!(request.hmac_header(), "hmac");
@@ -541,13 +535,8 @@ mod tests {
 
     #[test]
     fn test_webhook_context_topic_returns_none_for_unknown_topics() {
-        let context = WebhookContext::new(
-            None,
-            "custom/unknown_topic".to_string(),
-            None,
-            None,
-            None,
-        );
+        let context =
+            WebhookContext::new(None, "custom/unknown_topic".to_string(), None, None, None);
 
         assert_eq!(context.topic(), None);
         assert_eq!(context.topic_raw(), "custom/unknown_topic");
@@ -744,7 +733,10 @@ mod tests {
 
     #[test]
     fn test_parse_topic_known_topics() {
-        assert_eq!(parse_topic("orders/create"), Some(WebhookTopic::OrdersCreate));
+        assert_eq!(
+            parse_topic("orders/create"),
+            Some(WebhookTopic::OrdersCreate)
+        );
         assert_eq!(
             parse_topic("products/update"),
             Some(WebhookTopic::ProductsUpdate)

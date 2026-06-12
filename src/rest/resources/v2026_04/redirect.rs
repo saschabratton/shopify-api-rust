@@ -93,7 +93,12 @@ impl RestResource for Redirect {
             &[],
             "redirects/count",
         ),
-        ResourcePath::new(HttpMethod::Post, ResourceOperation::Create, &[], "redirects"),
+        ResourcePath::new(
+            HttpMethod::Post,
+            ResourceOperation::Create,
+            &[],
+            "redirects",
+        ),
         ResourcePath::new(
             HttpMethod::Put,
             ResourceOperation::Update,

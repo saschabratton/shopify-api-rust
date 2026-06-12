@@ -336,10 +336,11 @@ impl WebhookRegistry {
         })?;
 
         // Step 3: Parse request body as JSON
-        let payload: serde_json::Value =
-            serde_json::from_slice(request.body()).map_err(|e| WebhookError::PayloadParseError {
+        let payload: serde_json::Value = serde_json::from_slice(request.body()).map_err(|e| {
+            WebhookError::PayloadParseError {
                 message: e.to_string(),
-            })?;
+            }
+        })?;
 
         // Step 4: Invoke handler
         handler.handle(context, payload).await
@@ -392,11 +393,11 @@ impl WebhookRegistry {
         topic: &WebhookTopic,
     ) -> Result<WebhookRegistrationResult, WebhookError> {
         // Check that registration exists
-        let registration = self
-            .get_registration(topic)
-            .ok_or_else(|| WebhookError::RegistrationNotFound {
-                topic: topic.clone(),
-            })?;
+        let registration =
+            self.get_registration(topic)
+                .ok_or_else(|| WebhookError::RegistrationNotFound {
+                    topic: topic.clone(),
+                })?;
 
         // Convert topic to GraphQL format
         let graphql_topic = topic_to_graphql_format(topic);
@@ -510,11 +511,11 @@ impl WebhookRegistry {
         topic: &WebhookTopic,
     ) -> Result<(), WebhookError> {
         // Get the registration to know the delivery method
-        let registration = self
-            .get_registration(topic)
-            .ok_or_else(|| WebhookError::RegistrationNotFound {
-                topic: topic.clone(),
-            })?;
+        let registration =
+            self.get_registration(topic)
+                .ok_or_else(|| WebhookError::RegistrationNotFound {
+                    topic: topic.clone(),
+                })?;
 
         // Convert topic to GraphQL format
         let graphql_topic = topic_to_graphql_format(topic);
@@ -981,10 +982,7 @@ fn topic_to_graphql_format(topic: &WebhookTopic) -> String {
     let json_str = serde_json::to_string(topic).unwrap_or_default();
 
     // Remove quotes, replace "/" and "_" with "_", and uppercase
-    json_str
-        .trim_matches('"')
-        .replace('/', "_")
-        .to_uppercase()
+    json_str.trim_matches('"').replace('/', "_").to_uppercase()
 }
 
 #[cfg(test)]
@@ -1318,7 +1316,9 @@ mod tests {
             .build(),
         );
 
-        let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
+        let registration = registry
+            .get_registration(&WebhookTopic::OrdersCreate)
+            .unwrap();
         assert!(matches!(
             registration.delivery_method,
             WebhookDeliveryMethod::Http { .. }
@@ -1339,7 +1339,9 @@ mod tests {
             .build(),
         );
 
-        let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
+        let registration = registry
+            .get_registration(&WebhookTopic::OrdersCreate)
+            .unwrap();
         assert!(matches!(
             registration.delivery_method,
             WebhookDeliveryMethod::EventBridge { .. }
@@ -1361,7 +1363,9 @@ mod tests {
             .build(),
         );
 
-        let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
+        let registration = registry
+            .get_registration(&WebhookTopic::OrdersCreate)
+            .unwrap();
         assert!(matches!(
             registration.delivery_method,
             WebhookDeliveryMethod::PubSub { .. }
@@ -1453,7 +1457,9 @@ mod tests {
         );
 
         assert_eq!(registry.list_registrations().len(), 1);
-        assert!(registry.get_registration(&WebhookTopic::OrdersCreate).is_some());
+        assert!(registry
+            .get_registration(&WebhookTopic::OrdersCreate)
+            .is_some());
     }
 
     #[test]
@@ -1484,7 +1490,9 @@ mod tests {
 
         assert_eq!(registry.list_registrations().len(), 1);
 
-        let registration = registry.get_registration(&WebhookTopic::OrdersCreate).unwrap();
+        let registration = registry
+            .get_registration(&WebhookTopic::OrdersCreate)
+            .unwrap();
         match &registration.delivery_method {
             WebhookDeliveryMethod::Http { uri } => {
                 assert_eq!(uri, "https://example.com/webhooks/v2/orders");
@@ -1496,7 +1504,9 @@ mod tests {
     #[test]
     fn test_get_registration_returns_none_for_missing_topic() {
         let registry = WebhookRegistry::new();
-        assert!(registry.get_registration(&WebhookTopic::OrdersCreate).is_none());
+        assert!(registry
+            .get_registration(&WebhookTopic::OrdersCreate)
+            .is_none());
     }
 
     #[test]
@@ -1624,7 +1634,9 @@ mod tests {
         );
 
         // Verify registration exists
-        assert!(registry.get_registration(&WebhookTopic::OrdersCreate).is_some());
+        assert!(registry
+            .get_registration(&WebhookTopic::OrdersCreate)
+            .is_some());
 
         // Verify handler was stored separately in the handlers map
         assert!(registry.handlers.contains_key(&WebhookTopic::OrdersCreate));

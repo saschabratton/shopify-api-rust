@@ -38,7 +38,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::clients::RestClient;
-use crate::rest::{ReadOnlyResource, ResourceError, ResourceOperation, ResourcePath, ResourceResponse, RestResource};
+use crate::rest::{
+    ReadOnlyResource, ResourceError, ResourceOperation, ResourcePath, ResourceResponse,
+    RestResource,
+};
 use crate::HttpMethod;
 
 /// A staff user in a Shopify store.
@@ -291,7 +294,15 @@ mod tests {
         // The current() method is a static method that returns the current user
         // We can't test the actual HTTP call, but we verify the method exists
         // by checking the struct has the expected signature
-        let _: fn(&RestClient) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ResourceResponse<User>, ResourceError>> + Send + '_>> = |client| Box::pin(User::current(client));
+        let _: fn(
+            &RestClient,
+        ) -> std::pin::Pin<
+            Box<
+                dyn std::future::Future<Output = Result<ResourceResponse<User>, ResourceError>>
+                    + Send
+                    + '_,
+            >,
+        > = |client| Box::pin(User::current(client));
     }
 
     #[test]

@@ -343,7 +343,9 @@ impl RecurringApplicationCharge {
                     ResourceError::Http(crate::clients::HttpError::Response(
                         crate::clients::HttpResponseError {
                             code: response.code,
-                            message: format!("Failed to deserialize recurring_application_charge: {e}"),
+                            message: format!(
+                                "Failed to deserialize recurring_application_charge: {e}"
+                            ),
                             error_reference: response.request_id().map(ToString::to_string),
                         },
                     ))
@@ -671,7 +673,11 @@ mod tests {
         );
 
         // All path
-        let all_path = get_path(RecurringApplicationCharge::PATHS, ResourceOperation::All, &[]);
+        let all_path = get_path(
+            RecurringApplicationCharge::PATHS,
+            ResourceOperation::All,
+            &[],
+        );
         assert!(all_path.is_some());
         assert_eq!(all_path.unwrap().template, "recurring_application_charges");
 
@@ -682,7 +688,10 @@ mod tests {
             &[],
         );
         assert!(create_path.is_some());
-        assert_eq!(create_path.unwrap().template, "recurring_application_charges");
+        assert_eq!(
+            create_path.unwrap().template,
+            "recurring_application_charges"
+        );
         assert_eq!(create_path.unwrap().http_method, HttpMethod::Post);
 
         // Delete path
@@ -738,7 +747,10 @@ mod tests {
 
     #[test]
     fn test_recurring_application_charge_constants() {
-        assert_eq!(RecurringApplicationCharge::NAME, "RecurringApplicationCharge");
+        assert_eq!(
+            RecurringApplicationCharge::NAME,
+            "RecurringApplicationCharge"
+        );
         assert_eq!(
             RecurringApplicationCharge::PLURAL,
             "recurring_application_charges"
@@ -779,7 +791,9 @@ mod tests {
         fn _assert_current_signature<F, Fut>(f: F)
         where
             F: Fn(&RestClient) -> Fut,
-            Fut: std::future::Future<Output = Result<Option<RecurringApplicationCharge>, ResourceError>>,
+            Fut: std::future::Future<
+                Output = Result<Option<RecurringApplicationCharge>, ResourceError>,
+            >,
         {
             let _ = f;
         }

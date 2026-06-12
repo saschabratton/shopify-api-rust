@@ -205,8 +205,11 @@ mod tests {
         assert_eq!(create_path.unwrap().template, "storefront_access_tokens");
 
         // Delete
-        let delete_path =
-            get_path(StorefrontAccessToken::PATHS, ResourceOperation::Delete, &["id"]);
+        let delete_path = get_path(
+            StorefrontAccessToken::PATHS,
+            ResourceOperation::Delete,
+            &["id"],
+        );
         assert!(delete_path.is_some());
         assert_eq!(
             delete_path.unwrap().template,
@@ -214,12 +217,19 @@ mod tests {
         );
 
         // No Find
-        let find_path = get_path(StorefrontAccessToken::PATHS, ResourceOperation::Find, &["id"]);
+        let find_path = get_path(
+            StorefrontAccessToken::PATHS,
+            ResourceOperation::Find,
+            &["id"],
+        );
         assert!(find_path.is_none());
 
         // No Update
-        let update_path =
-            get_path(StorefrontAccessToken::PATHS, ResourceOperation::Update, &["id"]);
+        let update_path = get_path(
+            StorefrontAccessToken::PATHS,
+            ResourceOperation::Update,
+            &["id"],
+        );
         assert!(update_path.is_none());
 
         // No Count

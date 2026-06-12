@@ -410,7 +410,10 @@ mod tests {
         assert_eq!(parsed["position"], 1);
         assert_eq!(parsed["src"], "https://cdn.shopify.com/product.jpg");
         assert_eq!(parsed["alt"], "Product main image");
-        assert_eq!(parsed["variant_ids"], serde_json::json!([808950810, 49148385]));
+        assert_eq!(
+            parsed["variant_ids"],
+            serde_json::json!([808950810, 49148385])
+        );
 
         // Read-only fields should be omitted
         assert!(parsed.get("id").is_none());
@@ -467,16 +470,28 @@ mod tests {
         );
 
         // Find with only id should fail
-        let find_without_parent = get_path(ProductImageResource::PATHS, ResourceOperation::Find, &["id"]);
+        let find_without_parent = get_path(
+            ProductImageResource::PATHS,
+            ResourceOperation::Find,
+            &["id"],
+        );
         assert!(find_without_parent.is_none());
 
         // All requires product_id
-        let all_path = get_path(ProductImageResource::PATHS, ResourceOperation::All, &["product_id"]);
+        let all_path = get_path(
+            ProductImageResource::PATHS,
+            ResourceOperation::All,
+            &["product_id"],
+        );
         assert!(all_path.is_some());
         assert_eq!(all_path.unwrap().template, "products/{product_id}/images");
 
         // Count requires product_id
-        let count_path = get_path(ProductImageResource::PATHS, ResourceOperation::Count, &["product_id"]);
+        let count_path = get_path(
+            ProductImageResource::PATHS,
+            ResourceOperation::Count,
+            &["product_id"],
+        );
         assert!(count_path.is_some());
         assert_eq!(
             count_path.unwrap().template,

@@ -514,8 +514,11 @@ mod tests {
         // All paths should require order_id (nested under orders)
 
         // Find requires both order_id and id
-        let find_path =
-            get_path(RefundResource::PATHS, ResourceOperation::Find, &["order_id", "id"]);
+        let find_path = get_path(
+            RefundResource::PATHS,
+            ResourceOperation::Find,
+            &["order_id", "id"],
+        );
         assert!(find_path.is_some());
         assert_eq!(
             find_path.unwrap().template,
@@ -536,12 +539,20 @@ mod tests {
         assert!(all_without_order.is_none());
 
         // Create requires order_id
-        let create_path = get_path(RefundResource::PATHS, ResourceOperation::Create, &["order_id"]);
+        let create_path = get_path(
+            RefundResource::PATHS,
+            ResourceOperation::Create,
+            &["order_id"],
+        );
         assert!(create_path.is_some());
         assert_eq!(create_path.unwrap().template, "orders/{order_id}/refunds");
 
         // No Count path
-        let count_path = get_path(RefundResource::PATHS, ResourceOperation::Count, &["order_id"]);
+        let count_path = get_path(
+            RefundResource::PATHS,
+            ResourceOperation::Count,
+            &["order_id"],
+        );
         assert!(count_path.is_none());
 
         // No Update path
@@ -698,13 +709,11 @@ mod tests {
                 full_refund: Some(true),
                 amount: None,
             }),
-            refund_line_items: Some(vec![
-                RefundLineItemInput {
-                    line_item_id: 669751112,
-                    quantity: 1,
-                    restock_type: Some("return".to_string()),
-                },
-            ]),
+            refund_line_items: Some(vec![RefundLineItemInput {
+                line_item_id: 669751112,
+                quantity: 1,
+                restock_type: Some("return".to_string()),
+            }]),
             currency: Some("USD".to_string()),
         };
 

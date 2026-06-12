@@ -1,8 +1,7 @@
 //! Integration tests for API version management.
 
 use shopify_sdk::{
-    ApiDeprecationInfo, ApiKey, ApiSecretKey, ApiVersion, ConfigError, HttpResponse,
-    ShopifyConfig,
+    ApiDeprecationInfo, ApiKey, ApiSecretKey, ApiVersion, ConfigError, HttpResponse, ShopifyConfig,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};

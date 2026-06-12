@@ -874,8 +874,8 @@ pub use fulfillment_order::{
     CancellationRequest, DeliveryMethod, FulfillmentHold, FulfillmentOrder,
     FulfillmentOrderCountParams, FulfillmentOrderDestination, FulfillmentOrderFindParams,
     FulfillmentOrderHoldParams, FulfillmentOrderLineItem, FulfillmentOrderLineItemInput,
-    FulfillmentOrderListParams, FulfillmentOrderMoveParams, FulfillmentOrderRescheduleParams,
-    FulfillmentOrderRequestStatus, FulfillmentOrderStatus, FulfillmentRequest, HoldReason,
+    FulfillmentOrderListParams, FulfillmentOrderMoveParams, FulfillmentOrderRequestStatus,
+    FulfillmentOrderRescheduleParams, FulfillmentOrderStatus, FulfillmentRequest, HoldReason,
 };
 
 // Re-export GiftCard resource types
@@ -889,9 +889,8 @@ pub use transaction::{
 
 // Re-export RefundResource types
 pub use refund::{
-    OrderAdjustment, RefundCalculateParams, RefundCountParams, RefundFindParams,
-    RefundLineItem, RefundLineItemInput, RefundListParams, RefundResource, RefundShipping,
-    RefundShippingLine,
+    OrderAdjustment, RefundCalculateParams, RefundCountParams, RefundFindParams, RefundLineItem,
+    RefundLineItemInput, RefundListParams, RefundResource, RefundShipping, RefundShippingLine,
 };
 
 // Re-export Fulfillment resource types
@@ -1002,9 +1001,7 @@ pub use fulfillment_service::{
 pub use country::{Country, CountryCountParams, CountryFindParams, CountryListParams};
 
 // Re-export Province resource types (nested under Country)
-pub use province::{
-    Province, ProvinceCountParams, ProvinceFindParams, ProvinceListParams,
-};
+pub use province::{Province, ProvinceCountParams, ProvinceFindParams, ProvinceListParams};
 
 // Re-export ProductImageResource types (nested under Product)
 // Note: This is distinct from common::ProductImage which is an embedded struct

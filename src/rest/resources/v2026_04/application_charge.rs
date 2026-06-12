@@ -369,11 +369,7 @@ mod tests {
     #[test]
     fn test_application_charge_paths() {
         // Find path
-        let find_path = get_path(
-            ApplicationCharge::PATHS,
-            ResourceOperation::Find,
-            &["id"],
-        );
+        let find_path = get_path(ApplicationCharge::PATHS, ResourceOperation::Find, &["id"]);
         assert!(find_path.is_some());
         assert_eq!(find_path.unwrap().template, "application_charges/{id}");
 
@@ -389,19 +385,11 @@ mod tests {
         assert_eq!(create_path.unwrap().http_method, HttpMethod::Post);
 
         // No Update path
-        let update_path = get_path(
-            ApplicationCharge::PATHS,
-            ResourceOperation::Update,
-            &["id"],
-        );
+        let update_path = get_path(ApplicationCharge::PATHS, ResourceOperation::Update, &["id"]);
         assert!(update_path.is_none());
 
         // No Delete path
-        let delete_path = get_path(
-            ApplicationCharge::PATHS,
-            ResourceOperation::Delete,
-            &["id"],
-        );
+        let delete_path = get_path(ApplicationCharge::PATHS, ResourceOperation::Delete, &["id"]);
         assert!(delete_path.is_none());
 
         // No Count path

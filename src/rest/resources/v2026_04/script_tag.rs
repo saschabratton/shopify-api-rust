@@ -148,12 +148,7 @@ impl RestResource for ScriptTag {
             &["id"],
             "script_tags/{id}",
         ),
-        ResourcePath::new(
-            HttpMethod::Get,
-            ResourceOperation::All,
-            &[],
-            "script_tags",
-        ),
+        ResourcePath::new(HttpMethod::Get, ResourceOperation::All, &[], "script_tags"),
         ResourcePath::new(
             HttpMethod::Get,
             ResourceOperation::Count,
@@ -293,8 +288,14 @@ mod tests {
 
         assert_eq!(script_tag.id, Some(596726825));
         assert_eq!(script_tag.event, Some(ScriptTagEvent::Onload));
-        assert_eq!(script_tag.src, Some("https://myapp.com/script.js".to_string()));
-        assert_eq!(script_tag.display_scope, Some(ScriptTagDisplayScope::OnlineStore));
+        assert_eq!(
+            script_tag.src,
+            Some("https://myapp.com/script.js".to_string())
+        );
+        assert_eq!(
+            script_tag.display_scope,
+            Some(ScriptTagDisplayScope::OnlineStore)
+        );
         assert_eq!(script_tag.cache, Some(false));
         assert!(script_tag.created_at.is_some());
         assert!(script_tag.updated_at.is_some());

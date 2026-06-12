@@ -274,7 +274,10 @@ pub struct PrerequisiteRange {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct PrerequisiteToEntitlement {
     /// The type: "prerequisite_quantity" or "prerequisite_amount".
-    #[serde(rename = "prerequisite_amount", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "prerequisite_amount",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub prerequisite_amount: Option<String>,
 }
 
@@ -309,12 +312,7 @@ impl RestResource for PriceRule {
             &["id"],
             "price_rules/{id}",
         ),
-        ResourcePath::new(
-            HttpMethod::Get,
-            ResourceOperation::All,
-            &[],
-            "price_rules",
-        ),
+        ResourcePath::new(HttpMethod::Get, ResourceOperation::All, &[], "price_rules"),
         ResourcePath::new(
             HttpMethod::Get,
             ResourceOperation::Count,
@@ -545,10 +543,16 @@ mod tests {
         assert_eq!(rule.title, Some("Summer Sale".to_string()));
         assert_eq!(rule.value_type, Some(PriceRuleValueType::FixedAmount));
         assert_eq!(rule.value, Some("-10.0".to_string()));
-        assert_eq!(rule.customer_selection, Some(PriceRuleCustomerSelection::All));
+        assert_eq!(
+            rule.customer_selection,
+            Some(PriceRuleCustomerSelection::All)
+        );
         assert_eq!(rule.target_type, Some(PriceRuleTargetType::LineItem));
         assert_eq!(rule.target_selection, Some(PriceRuleTargetSelection::All));
-        assert_eq!(rule.allocation_method, Some(PriceRuleAllocationMethod::Across));
+        assert_eq!(
+            rule.allocation_method,
+            Some(PriceRuleAllocationMethod::Across)
+        );
         assert_eq!(rule.once_per_customer, Some(false));
         assert_eq!(rule.times_used, Some(25));
         assert!(rule.created_at.is_some());

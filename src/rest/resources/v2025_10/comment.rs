@@ -159,7 +159,10 @@ impl Comment {
     /// let comment = Comment::find(&client, 653537639, None).await?.into_inner();
     /// let approved = comment.approve(&client).await?;
     /// ```
-    pub async fn approve(&self, client: &RestClient) -> Result<ResourceResponse<Self>, ResourceError> {
+    pub async fn approve(
+        &self,
+        client: &RestClient,
+    ) -> Result<ResourceResponse<Self>, ResourceError> {
         let id = self.get_id().ok_or(ResourceError::PathResolutionFailed {
             resource: Self::NAME,
             operation: "approve",
@@ -229,7 +232,10 @@ impl Comment {
     /// let comment = Comment::find(&client, 653537639, None).await?.into_inner();
     /// let marked = comment.not_spam(&client).await?;
     /// ```
-    pub async fn not_spam(&self, client: &RestClient) -> Result<ResourceResponse<Self>, ResourceError> {
+    pub async fn not_spam(
+        &self,
+        client: &RestClient,
+    ) -> Result<ResourceResponse<Self>, ResourceError> {
         let id = self.get_id().ok_or(ResourceError::PathResolutionFailed {
             resource: Self::NAME,
             operation: "not_spam",
@@ -266,7 +272,10 @@ impl Comment {
     /// let comment = Comment::find(&client, 653537639, None).await?.into_inner();
     /// let removed = comment.remove(&client).await?;
     /// ```
-    pub async fn remove(&self, client: &RestClient) -> Result<ResourceResponse<Self>, ResourceError> {
+    pub async fn remove(
+        &self,
+        client: &RestClient,
+    ) -> Result<ResourceResponse<Self>, ResourceError> {
         let id = self.get_id().ok_or(ResourceError::PathResolutionFailed {
             resource: Self::NAME,
             operation: "remove",
@@ -303,7 +312,10 @@ impl Comment {
     /// let comment = Comment::find(&client, 653537639, None).await?.into_inner();
     /// let restored = comment.restore(&client).await?;
     /// ```
-    pub async fn restore(&self, client: &RestClient) -> Result<ResourceResponse<Self>, ResourceError> {
+    pub async fn restore(
+        &self,
+        client: &RestClient,
+    ) -> Result<ResourceResponse<Self>, ResourceError> {
         let id = self.get_id().ok_or(ResourceError::PathResolutionFailed {
             resource: Self::NAME,
             operation: "restore",
@@ -442,12 +454,7 @@ impl RestResource for Comment {
             &[],
             "comments/count",
         ),
-        ResourcePath::new(
-            HttpMethod::Post,
-            ResourceOperation::Create,
-            &[],
-            "comments",
-        ),
+        ResourcePath::new(HttpMethod::Post, ResourceOperation::Create, &[], "comments"),
         ResourcePath::new(
             HttpMethod::Put,
             ResourceOperation::Update,

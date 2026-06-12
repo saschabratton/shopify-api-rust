@@ -369,7 +369,10 @@ impl InventoryLevel {
     ) -> Result<(), ResourceError> {
         let path = "inventory_levels";
         let mut query = HashMap::new();
-        query.insert("inventory_item_id".to_string(), inventory_item_id.to_string());
+        query.insert(
+            "inventory_item_id".to_string(),
+            inventory_item_id.to_string(),
+        );
         query.insert("location_id".to_string(), location_id.to_string());
 
         let response = client.delete(path, Some(query)).await?;
@@ -517,7 +520,10 @@ mod tests {
         // These are NOT in the PATHS constant but are used by the associated functions
 
         // adjust -> inventory_levels/adjust
-        assert_eq!(format!("inventory_levels/adjust"), "inventory_levels/adjust");
+        assert_eq!(
+            format!("inventory_levels/adjust"),
+            "inventory_levels/adjust"
+        );
 
         // connect -> inventory_levels/connect
         assert_eq!(

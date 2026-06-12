@@ -29,7 +29,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::clients::RestClient;
-use crate::rest::{ReadOnlyResource, ResourceError, ResourceResponse, RestResource, ResourceOperation, ResourcePath};
+use crate::rest::{
+    ReadOnlyResource, ResourceError, ResourceOperation, ResourcePath, ResourceResponse,
+    RestResource,
+};
 use crate::HttpMethod;
 
 /// An OAuth access scope associated with an access token.
@@ -201,7 +204,10 @@ mod tests {
         let scope_with_handle = AccessScope {
             handle: Some("read_products".to_string()),
         };
-        assert_eq!(scope_with_handle.get_id(), Some("read_products".to_string()));
+        assert_eq!(
+            scope_with_handle.get_id(),
+            Some("read_products".to_string())
+        );
 
         let scope_without_handle = AccessScope::default();
         assert_eq!(scope_without_handle.get_id(), None);

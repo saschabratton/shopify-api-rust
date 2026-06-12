@@ -469,10 +469,7 @@ mod tests {
         );
         assert_eq!(event.description, Some("Product created".to_string()));
         assert!(event.body.is_none());
-        assert_eq!(
-            event.path,
-            Some("/admin/products/921728736".to_string())
-        );
+        assert_eq!(event.path, Some("/admin/products/921728736".to_string()));
         assert!(event.created_at.is_some());
     }
 
@@ -507,10 +504,7 @@ mod tests {
         // Order events path
         let order_events = get_path(Event::PATHS, ResourceOperation::All, &["order_id"]);
         assert!(order_events.is_some());
-        assert_eq!(
-            order_events.unwrap().template,
-            "orders/{order_id}/events"
-        );
+        assert_eq!(order_events.unwrap().template, "orders/{order_id}/events");
 
         // Order events count path
         let order_count = get_path(Event::PATHS, ResourceOperation::Count, &["order_id"]);

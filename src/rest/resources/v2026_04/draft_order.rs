@@ -808,10 +808,7 @@ mod tests {
         assert_eq!(draft_order.order_id, None);
         assert_eq!(draft_order.name.as_deref(), Some("#D2"));
         assert_eq!(draft_order.status, Some(DraftOrderStatus::Open));
-        assert_eq!(
-            draft_order.email.as_deref(),
-            Some("bob.norman@example.com")
-        );
+        assert_eq!(draft_order.email.as_deref(), Some("bob.norman@example.com"));
         assert_eq!(draft_order.currency.as_deref(), Some("USD"));
         assert_eq!(draft_order.total_tax.as_deref(), Some("11.94"));
         assert_eq!(draft_order.subtotal_price.as_deref(), Some("398.00"));

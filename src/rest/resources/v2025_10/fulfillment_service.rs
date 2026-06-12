@@ -295,12 +295,20 @@ mod tests {
         assert_eq!(create_path.unwrap().template, "fulfillment_services");
 
         // Update
-        let update_path = get_path(FulfillmentService::PATHS, ResourceOperation::Update, &["id"]);
+        let update_path = get_path(
+            FulfillmentService::PATHS,
+            ResourceOperation::Update,
+            &["id"],
+        );
         assert!(update_path.is_some());
         assert_eq!(update_path.unwrap().template, "fulfillment_services/{id}");
 
         // Delete
-        let delete_path = get_path(FulfillmentService::PATHS, ResourceOperation::Delete, &["id"]);
+        let delete_path = get_path(
+            FulfillmentService::PATHS,
+            ResourceOperation::Delete,
+            &["id"],
+        );
         assert!(delete_path.is_some());
         assert_eq!(delete_path.unwrap().template, "fulfillment_services/{id}");
     }

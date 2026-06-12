@@ -151,7 +151,6 @@ pub struct GiftCard {
     // --- Write-only fields (only deserialized, not serialized back) ---
     // Note: We use a custom approach here - code is included in serialization
     // for create, but won't be returned in responses
-
     /// The gift card code.
     ///
     /// **Write-only**: This field is only used when creating a gift card.
