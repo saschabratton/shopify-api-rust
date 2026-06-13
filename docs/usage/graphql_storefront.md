@@ -230,7 +230,7 @@ use shopify_sdk::{StorefrontClient, StorefrontToken, ShopDomain, ApiVersion};
 let client = StorefrontClient::new(
     &shop,
     Some(token),
-    Some(ApiVersion::V2024_10)
+    Some(ApiVersion::V2026_01)
 );
 ```
 

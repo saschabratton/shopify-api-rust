@@ -126,12 +126,8 @@ use shopify_sdk::ApiVersion;
 // Use the latest stable version (recommended)
 let version = ApiVersion::latest();
 
-// Or specify a specific version
-let version = ApiVersion::V2024_10;
-let version = ApiVersion::V2025_01;
-let version = ApiVersion::V2025_04;
-let version = ApiVersion::V2025_07;
-let version = ApiVersion::V2025_10;
+// Or pin a specific version
+let version = ApiVersion::V2026_01;
 ```
 
 > **Note:** Using `ApiVersion::latest()` ensures you always use the most recent stable API version.

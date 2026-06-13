@@ -28,7 +28,7 @@ let client = GraphqlClient::new(&session, None);
 
 // Or with a custom API version
 use shopify_sdk::ApiVersion;
-let client = GraphqlClient::new(&session, Some(ApiVersion::V2024_10));
+let client = GraphqlClient::new(&session, Some(ApiVersion::V2026_01));
 ```
 
 ## Simple Queries
@@ -202,7 +202,7 @@ use shopify_sdk::{GraphqlClient, ApiVersion};
 let client = GraphqlClient::new(&session, None);
 
 // Use a specific version
-let client = GraphqlClient::new(&session, Some(ApiVersion::V2024_10));
+let client = GraphqlClient::new(&session, Some(ApiVersion::V2026_01));
 ```
 
 ## Error Handling
