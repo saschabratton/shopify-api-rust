@@ -13,6 +13,10 @@ use std::str::FromStr;
 /// This enum provides variants for known stable versions, plus an `Unstable`
 /// variant for development and a `Custom` variant for future versions.
 ///
+/// This enum is `#[non_exhaustive]`: new variants are added as Shopify
+/// releases new API versions, so `match` expressions must include a
+/// wildcard arm.
+///
 /// # Example
 ///
 /// ```rust
@@ -30,6 +34,7 @@ use std::str::FromStr;
 /// assert_eq!(format!("{}", ApiVersion::V2024_10), "2024-10");
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum ApiVersion {
     /// API version 2024-01 (January 2024)
     V2024_01,

@@ -10,7 +10,7 @@
 //!
 //! ```text
 //! resources/
-//!   mod.rs           <- This file (re-exports latest version)
+//!   mod.rs           <- This file
 //!   v2025_10/
 //!     mod.rs         <- Version-specific resources
 //!   v2026_04/
@@ -19,14 +19,16 @@
 //!
 //! # Using Resources
 //!
-//! The latest stable version is re-exported at this module level for convenience:
+//! Import resources from the version module matching your configured
+//! [`ApiVersion`](crate::ApiVersion):
 //!
 //! ```rust,ignore
-//! use shopify_sdk::rest::resources::Product;  // Uses latest version
-//!
-//! // Or explicitly specify a version:
 //! use shopify_sdk::rest::resources::v2026_04::Product;
 //! ```
+//!
+//! There is intentionally no unversioned re-export: resource fields can be
+//! removed between API versions, so pinning to an explicit version module
+//! keeps upgrades of this crate non-breaking.
 //!
 //! # Available Resources
 //!
@@ -35,7 +37,7 @@
 //! Products are the goods or services that merchants sell.
 //!
 //! ```rust,ignore
-//! use shopify_sdk::rest::resources::{Product, ProductListParams, ProductStatus};
+//! use shopify_sdk::rest::resources::v2026_04::{Product, ProductListParams, ProductStatus};
 //! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a single product
@@ -56,7 +58,7 @@
 //! Supports dual path patterns for nested and standalone access.
 //!
 //! ```rust,ignore
-//! use shopify_sdk::rest::resources::{Variant, VariantListParams};
+//! use shopify_sdk::rest::resources::v2026_04::{Variant, VariantListParams};
 //! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a variant by ID (standalone path)
@@ -71,7 +73,7 @@
 //! Customers represent people who have created accounts with the store.
 //!
 //! ```rust,ignore
-//! use shopify_sdk::rest::resources::{Customer, CustomerListParams};
+//! use shopify_sdk::rest::resources::v2026_04::{Customer, CustomerListParams};
 //! use shopify_sdk::rest::RestResource;
 //!
 //! // Find a customer
@@ -83,7 +85,7 @@
 //! Orders represent completed checkout transactions.
 //!
 //! ```rust,ignore
-//! use shopify_sdk::rest::resources::{Order, OrderListParams, FinancialStatus};
+//! use shopify_sdk::rest::resources::v2026_04::{Order, OrderListParams, FinancialStatus};
 //! use shopify_sdk::rest::RestResource;
 //!
 //! // Find an order
@@ -106,7 +108,7 @@
 //! Nested under orders: `/orders/{order_id}/fulfillments/{id}`
 //!
 //! ```rust,ignore
-//! use shopify_sdk::rest::resources::{Fulfillment, TrackingInfo};
+//! use shopify_sdk::rest::resources::v2026_04::{Fulfillment, TrackingInfo};
 //! use shopify_sdk::rest::RestResource;
 //!
 //! // List fulfillments for an order
@@ -126,7 +128,7 @@
 //! Inventory items are linked to product variants via `inventory_item_id`.
 //!
 //! ```rust,ignore
-//! use shopify_sdk::rest::resources::{InventoryItem, InventoryItemListParams};
+//! use shopify_sdk::rest::resources::v2026_04::{InventoryItem, InventoryItemListParams};
 //! use shopify_sdk::rest::RestResource;
 //!
 //! // List inventory items by IDs (required parameter)
@@ -159,14 +161,9 @@
 //!
 //! ## Multi-Version Resources
 //!
-//! Resources are organized by API version to support version-specific differences.
-//! The latest stable version is re-exported at the module root for convenience:
+//! Resources are organized by API version to support version-specific differences:
 //!
 //! ```rust,ignore
-//! // Recommended: Use the default (latest) version
-//! use shopify_sdk::rest::resources::Product;
-//!
-//! // Explicit version selection (for version-specific behavior)
 //! use shopify_sdk::rest::resources::v2026_04::Product;
 //! ```
 //!
@@ -175,6 +172,3 @@
 
 pub mod v2025_10;
 pub mod v2026_04;
-
-// Re-export types from the latest version for convenience
-pub use v2026_04::*;

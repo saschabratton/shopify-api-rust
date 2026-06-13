@@ -16,7 +16,7 @@
 
 use std::collections::HashMap;
 
-use shopify_sdk::rest::resources::{
+use shopify_sdk::rest::resources::v2026_04::{
     // Article types
     Article,
     ArticleCountParams,
