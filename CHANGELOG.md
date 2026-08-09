@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0](https://github.com/saschabratton/shopify-api-rust/compare/v2.0.0...v2.1.0) - 2026-08-09
+
+### Added
+
+- *(version)* add API version 2026-07 support
+
+### Other
+
+- update stale API version examples
+
 ## [2.0.0](https://github.com/saschabratton/shopify-api-rust/compare/v1.0.0...v2.0.0) - 2026-06-13
 
 ### Added
