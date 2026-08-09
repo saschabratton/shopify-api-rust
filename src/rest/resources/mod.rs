@@ -19,8 +19,17 @@
 //!
 //! # Using Resources
 //!
-//! Import resources from the version module matching your configured
-//! [`ApiVersion`](crate::ApiVersion):
+//! A version module exists per REST *payload shape*, not per Shopify release:
+//! a new module is added only when Shopify changes REST payload shapes, not on
+//! every quarterly release. Import the newest module at or below your
+//! configured [`ApiVersion`](crate::ApiVersion):
+//!
+//! | `ApiVersion` | Resource module |
+//! |--------------|-----------------|
+//! | 2025-10      | `v2025_10`      |
+//! | 2026-01      | `v2025_10`      |
+//! | 2026-04      | `v2026_04`      |
+//! | 2026-07      | `v2026_04`      |
 //!
 //! ```rust,ignore
 //! use shopify_sdk::rest::resources::v2026_04::Product;
@@ -141,11 +150,11 @@
 //!
 //! # Version Support
 //!
-//! Currently supported API versions:
-//! - `v2026_04` (2026-04) - Latest stable
-//! - `v2025_10` (2025-10) - Supported
+//! Currently available resource modules:
+//! - `v2026_04` - payload shape for API versions 2026-04 and 2026-07 (latest stable)
+//! - `v2025_10` - payload shape for API versions 2025-10 and 2026-01
 //!
-//! Future versions will be added as needed without breaking existing code.
+//! Future modules will be added as needed without breaking existing code.
 //!
 //! ## API Version Lifecycle
 //!

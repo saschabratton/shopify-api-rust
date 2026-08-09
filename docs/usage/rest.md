@@ -216,7 +216,7 @@ println!("Total products fetched: {}", all_products.len());
 
 ## Available Resources
 
-The SDK provides REST resources for API version 2026-04 (the `v2025_10` module remains available for the previous version):
+Resource modules track REST payload shapes rather than individual releases — import the newest module at or below your configured `ApiVersion`. The `v2026_04` module covers API versions 2026-04 and 2026-07; the `v2025_10` module covers 2025-10 and 2026-01.
 
 ### Products & Inventory
 - `Product` - Products

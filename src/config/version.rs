@@ -56,6 +56,8 @@ pub enum ApiVersion {
     V2026_01,
     /// API version 2026-04 (April 2026)
     V2026_04,
+    /// API version 2026-07 (July 2026)
+    V2026_07,
     /// Unstable API version for development and testing.
     Unstable,
     /// Custom version string for future or unrecognized versions.
@@ -68,7 +70,7 @@ impl ApiVersion {
     /// This should be updated when new stable versions are released.
     #[must_use]
     pub const fn latest() -> Self {
-        Self::V2026_04
+        Self::V2026_07
     }
 
     /// Returns `true` if this is a known stable API version.
@@ -96,10 +98,10 @@ impl ApiVersion {
     #[must_use]
     pub fn supported_versions() -> Vec<Self> {
         vec![
-            Self::V2025_07,
             Self::V2025_10,
             Self::V2026_01,
             Self::V2026_04,
+            Self::V2026_07,
         ]
     }
 
@@ -119,7 +121,7 @@ impl ApiVersion {
     /// ```
     #[must_use]
     pub const fn minimum_supported() -> Self {
-        Self::V2025_07
+        Self::V2025_10
     }
 
     /// Returns `true` if this version is within Shopify's support window.
@@ -187,6 +189,7 @@ impl ApiVersion {
             Self::V2025_10 => 8,
             Self::V2026_01 => 9,
             Self::V2026_04 => 10,
+            Self::V2026_07 => 11,
             Self::Unstable => 100,  // Always sorts after stable versions
             Self::Custom(_) => 101, // Custom sorts after unstable
         }
@@ -223,6 +226,7 @@ impl fmt::Display for ApiVersion {
             Self::V2025_10 => "2025-10",
             Self::V2026_01 => "2026-01",
             Self::V2026_04 => "2026-04",
+            Self::V2026_07 => "2026-07",
             Self::Unstable => "unstable",
             Self::Custom(s) => s,
         };
@@ -247,6 +251,7 @@ impl FromStr for ApiVersion {
             "2025-10" => Ok(Self::V2025_10),
             "2026-01" => Ok(Self::V2026_01),
             "2026-04" => Ok(Self::V2026_04),
+            "2026-07" => Ok(Self::V2026_07),
             "unstable" => Ok(Self::Unstable),
             _ => {
                 // Check if it matches the version format YYYY-MM
@@ -319,10 +324,11 @@ mod tests {
         assert_eq!(format!("{}", ApiVersion::V2024_10), "2024-10");
         assert_eq!(format!("{}", ApiVersion::V2026_01), "2026-01");
         assert_eq!(format!("{}", ApiVersion::V2026_04), "2026-04");
+        assert_eq!(format!("{}", ApiVersion::V2026_07), "2026-07");
         assert_eq!(format!("{}", ApiVersion::Unstable), "unstable");
         assert_eq!(
-            format!("{}", ApiVersion::Custom("2026-07".to_string())),
-            "2026-07"
+            format!("{}", ApiVersion::Custom("2026-10".to_string())),
+            "2026-10"
         );
     }
 
@@ -332,22 +338,23 @@ mod tests {
         assert!(ApiVersion::V2025_10.is_stable());
         assert!(ApiVersion::V2026_01.is_stable());
         assert!(ApiVersion::V2026_04.is_stable());
+        assert!(ApiVersion::V2026_07.is_stable());
         assert!(!ApiVersion::Unstable.is_stable());
-        assert!(!ApiVersion::Custom("2026-07".to_string()).is_stable());
+        assert!(!ApiVersion::Custom("2026-10".to_string()).is_stable());
     }
 
     #[test]
     fn test_api_version_latest() {
         let latest = ApiVersion::latest();
         assert!(latest.is_stable());
-        assert_eq!(latest, ApiVersion::V2026_04);
+        assert_eq!(latest, ApiVersion::V2026_07);
     }
 
     #[test]
     fn test_api_version_parses_future_versions() {
         // Future versions should be parsed as Custom
-        let version: ApiVersion = "2026-07".parse().unwrap();
-        assert_eq!(version, ApiVersion::Custom("2026-07".to_string()));
+        let version: ApiVersion = "2026-10".parse().unwrap();
+        assert_eq!(version, ApiVersion::Custom("2026-10".to_string()));
         assert!(!version.is_stable());
     }
 
@@ -401,6 +408,7 @@ mod tests {
         assert!(ApiVersion::V2024_10.is_deprecated());
         assert!(ApiVersion::V2025_01.is_deprecated());
         assert!(ApiVersion::V2025_04.is_deprecated());
+        assert!(ApiVersion::V2025_07.is_deprecated());
     }
 
     #[test]
@@ -412,27 +420,28 @@ mod tests {
         assert!(ApiVersion::V2024_10.is_deprecated());
         assert!(ApiVersion::V2025_01.is_deprecated());
         assert!(ApiVersion::V2025_04.is_deprecated());
+        assert!(ApiVersion::V2025_07.is_deprecated());
 
         // Current versions are not deprecated
-        assert!(!ApiVersion::V2025_07.is_deprecated());
         assert!(!ApiVersion::V2025_10.is_deprecated());
         assert!(!ApiVersion::V2026_01.is_deprecated());
         assert!(!ApiVersion::V2026_04.is_deprecated());
+        assert!(!ApiVersion::V2026_07.is_deprecated());
 
         // Unstable and Custom are never deprecated
         assert!(!ApiVersion::Unstable.is_deprecated());
-        assert!(!ApiVersion::Custom("2026-07".to_string()).is_deprecated());
+        assert!(!ApiVersion::Custom("2026-10".to_string()).is_deprecated());
     }
 
     #[test]
     fn test_is_supported() {
         // Supported versions
-        assert!(ApiVersion::V2025_07.is_supported());
         assert!(ApiVersion::V2025_10.is_supported());
         assert!(ApiVersion::V2026_01.is_supported());
         assert!(ApiVersion::V2026_04.is_supported());
+        assert!(ApiVersion::V2026_07.is_supported());
         assert!(ApiVersion::Unstable.is_supported());
-        assert!(ApiVersion::Custom("2026-07".to_string()).is_supported());
+        assert!(ApiVersion::Custom("2026-10".to_string()).is_supported());
 
         // Unsupported versions
         assert!(!ApiVersion::V2024_01.is_supported());
@@ -441,6 +450,7 @@ mod tests {
         assert!(!ApiVersion::V2024_10.is_supported());
         assert!(!ApiVersion::V2025_01.is_supported());
         assert!(!ApiVersion::V2025_04.is_supported());
+        assert!(!ApiVersion::V2025_07.is_supported());
     }
 
     #[test]
@@ -455,16 +465,17 @@ mod tests {
         assert!(ApiVersion::V2025_07 < ApiVersion::V2025_10);
         assert!(ApiVersion::V2025_10 < ApiVersion::V2026_01);
         assert!(ApiVersion::V2026_01 < ApiVersion::V2026_04);
+        assert!(ApiVersion::V2026_04 < ApiVersion::V2026_07);
 
         // Unstable sorts after all stable versions
-        assert!(ApiVersion::V2026_04 < ApiVersion::Unstable);
+        assert!(ApiVersion::V2026_07 < ApiVersion::Unstable);
 
         // Custom sorts after unstable
-        assert!(ApiVersion::Unstable < ApiVersion::Custom("2026-07".to_string()));
+        assert!(ApiVersion::Unstable < ApiVersion::Custom("2026-10".to_string()));
 
         // Custom versions compare lexicographically
         assert!(
-            ApiVersion::Custom("2026-07".to_string()) < ApiVersion::Custom("2026-10".to_string())
+            ApiVersion::Custom("2026-10".to_string()) < ApiVersion::Custom("2027-01".to_string())
         );
     }
 
@@ -472,10 +483,10 @@ mod tests {
     fn test_version_equality() {
         assert_eq!(ApiVersion::V2024_01, ApiVersion::V2024_01);
         assert_ne!(ApiVersion::V2024_01, ApiVersion::V2024_04);
-        assert_eq!(ApiVersion::V2026_04, ApiVersion::V2026_04);
+        assert_eq!(ApiVersion::V2026_07, ApiVersion::V2026_07);
         assert_eq!(
-            ApiVersion::Custom("2026-07".to_string()),
-            ApiVersion::Custom("2026-07".to_string())
+            ApiVersion::Custom("2026-10".to_string()),
+            ApiVersion::Custom("2026-10".to_string())
         );
     }
 }
