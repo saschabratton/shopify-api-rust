@@ -120,12 +120,12 @@ mod tests {
     fn test_deprecated_api_version_error_message() {
         let error = ConfigError::DeprecatedApiVersion {
             version: "2024-01".to_string(),
-            latest: "2026-07".to_string(),
+            latest: "2026-10".to_string(),
         };
         let message = error.to_string();
         assert!(message.contains("2024-01"));
         assert!(message.contains("deprecated"));
-        assert!(message.contains("2026-07"));
+        assert!(message.contains("2026-10"));
         assert!(message.contains("upgrade"));
     }
 }

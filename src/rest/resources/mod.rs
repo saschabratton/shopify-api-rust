@@ -30,6 +30,7 @@
 //! | 2026-01      | `v2025_10`      |
 //! | 2026-04      | `v2026_04`      |
 //! | 2026-07      | `v2026_04`      |
+//! | 2026-10      | `v2026_04`      |
 //!
 //! ```rust,ignore
 //! use shopify_sdk::rest::resources::v2026_04::Product;
@@ -151,7 +152,7 @@
 //! # Version Support
 //!
 //! Currently available resource modules:
-//! - `v2026_04` - payload shape for API versions 2026-04 and 2026-07 (latest stable)
+//! - `v2026_04` - payload shape for API versions 2026-04, 2026-07 and 2026-10 (latest stable)
 //! - `v2025_10` - payload shape for API versions 2025-10 and 2026-01
 //!
 //! Future modules will be added as needed without breaking existing code.

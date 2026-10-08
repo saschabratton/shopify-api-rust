@@ -640,7 +640,7 @@ mod tests {
         let result = ShopifyConfig::builder()
             .api_key(ApiKey::new("key").unwrap())
             .api_secret_key(ApiSecretKey::new("secret").unwrap())
-            .api_version(ApiVersion::V2025_10)
+            .api_version(ApiVersion::V2026_01)
             .reject_deprecated_versions(true)
             .build();
 
